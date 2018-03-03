@@ -1,0 +1,3 @@
+exclude: ['readme.md', 'license.md']
+include: ['.well-known']
+auto: true
