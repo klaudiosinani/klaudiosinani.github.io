@@ -1,0 +1,68 @@
+==================================================================
+https://keybase.io/klauscfhq
+--------------------------------------------------------------------
+
+I hereby claim:
+
+  * I am an admin of https://klauscfhq.github.io
+  * I am klauscfhq (https://keybase.io/klauscfhq) on keybase.
+  * I have a public key with fingerprint 7BC4 EF08 A193 2301 EC84  F166 7EB2 30FC A2F5 4DBF
+
+To do so, I am signing this object:
+
+{
+  "body": {
+    "key": {
+      "eldest_kid": "0101b21c15046fda9c11c207f2ba1bcc5d9853329c7276c36f5d55f12385acf5ef330a",
+      "fingerprint": "7bc4ef08a1932301ec84f1667eb230fca2f54dbf",
+      "host": "keybase.io",
+      "key_id": "7eb230fca2f54dbf",
+      "kid": "0101b21c15046fda9c11c207f2ba1bcc5d9853329c7276c36f5d55f12385acf5ef330a",
+      "uid": "40181b19617f048281abd21b37727219",
+      "username": "klauscfhq"
+    },
+    "service": {
+      "hostname": "klauscfhq.github.io",
+      "protocol": "https:"
+    },
+    "type": "web_service_binding",
+    "version": 1
+  },
+  "ctime": 1520099163,
+  "expire_in": 157680000,
+  "prev": "59d3715e418f574f0635eb6d4c6b778ea1e1379c7b9bf52233cdbc9d492fdec8",
+  "seqno": 40,
+  "tag": "signature"
+}
+
+which yields the signature:
+
+-----BEGIN PGP MESSAGE-----
+Version: Keybase OpenPGP v2.0.76
+Comment: https://keybase.io/crypto
+
+yMIrAnicrZJbSBVBGMfPqSwUtJIyH7JgDSOU2pnd2d05ElFgST6cglIy47AzO+PZ
+POfsueyxRCzEIuxCF4JuDxVElGU9iNGN7tnFSgjSsqi0Mgii4EAPBtGs1Uv02LwM
+38f//5vv++a7kzvel+M/cbFrzcC3wi/+3pvH0r7aw2/WNkvEsZqkQLPUwMYuFrFY
+yg012JYUkGQgAwIBBUhWNW6ZmAJAoaxzSExAKEUWNpCiQEx1qGtU0TiyEOIAKgYy
+KUeMK4psSmUSt2P1LBlP2jFXYHVCVcZlwwRYgYoMGDVUDjRNZ0SEnJqQI9UiXBjD
+TspziOKImWLzbUfkRBAaK+8f+v9cd3oMp8rAAARgDehcVg1oAJNYEBBFF3YIsCdM
+sWTMjDKv1oiZTlEeTkgtZZJIN9qUeZP1WvlbMr/edsNp8quveNJxHepEhCDsuvFU
+wAO4TXHPsYGR0G9WiNgxS8xTOBpZMmU7MSkAhJK6tgcHCMoyxkBTyiS2MW4nWcj2
+FEjXDFkc7x3WKJAIW4oOEFOBwZGucllTECOapVKN6LrBTMCAoosREUw4glBRqEUo
+tlQMuSW+TPK6S8QcKaAKqGvWC2bKro+ZbjrJpJZbN+om+Pw5volZ47xF8+VkT/mz
+fqXtk35og5un4zqUX75y1bemm9FZ8WbzQNvyqfa8T8Gi6OXzu5f1PA8NHL9w6mNk
+TsfckYMd4fLgwLS9waXH9/ec6SkrGaXFq7VENN7x4NL6yg6c2f4s05rPuwq6X4fw
+jURjZ2VDS98FbQkc7h9anLl7uybr2p7i/KsfVmQm5dzLqxt3f9076f1gyaqnL7va
+IlUnpWml2bXBRa0z8eTqQD58UTR13qO5Zu3XAi139OyLla8fH+1/0vr18qGq9tMz
+dg6ZQ8f6qmvuj3xkn7dteTix4nrFVpyZ4y/BlS3j3xbnfckcWfBj15RC91WA3Gtn
+m0r6Z1QPV7X1Ds5eeOv7vs4tNd07+s9d+QnoekXH
+=wnRt
+-----END PGP MESSAGE-----
+
+And finally, I am proving ownership of this host by posting or
+appending to this document.
+
+View my publicly-auditable identity here: https://keybase.io/klauscfhq
+
+==================================================================
