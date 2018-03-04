@@ -257,7 +257,7 @@
         var projectName = userMeta[0].repo.name;
         var commitDate = new Date(userMeta[0].created_at).toDateString();
 
-        var ghLatestActivity = '<a class="chip grey lighten-4">Latest commit</a>"' + '<a class="text-link" href="' + commitURL + '"' + '>' + commitMessage + '</a>' + '" at ' + '<a class="text-link" href="' + projectURL + '"' + '>' + projectName + '</a>' + ' on ' + commitDate + '.';
+        var ghLatestActivity = '<a class="chip yellow lighten-2">Latest commit</a>"' + '<a class="text-link" href="' + commitURL + '"' + '>' + commitMessage + '</a>' + '" at ' + '<a class="text-link" href="' + projectURL + '"' + '>' + projectName + '</a>' + ' on ' + commitDate + '.';
 
         document.getElementById("gh-latest").innerHTML = ghLatestActivity;
       }
