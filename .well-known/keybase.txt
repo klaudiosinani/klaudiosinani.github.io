@@ -1,11 +1,11 @@
 ==================================================================
-https://keybase.io/klauscfhq
+https://keybase.io/klaussinani
 --------------------------------------------------------------------
 
 I hereby claim:
 
-  * I am an admin of https://klauscfhq.github.io
-  * I am klauscfhq (https://keybase.io/klauscfhq) on keybase.
+  * I am an admin of https://klaussinani.github.io
+  * I am klaussinani (https://keybase.io/klaussinani) on keybase.
   * I have a public key with fingerprint 7BC4 EF08 A193 2301 EC84  F166 7EB2 30FC A2F5 4DBF
 
 To do so, I am signing this object:
@@ -13,56 +13,57 @@ To do so, I am signing this object:
 {
   "body": {
     "key": {
-      "eldest_kid": "0101b21c15046fda9c11c207f2ba1bcc5d9853329c7276c36f5d55f12385acf5ef330a",
+      "eldest_kid": "01202e53218728fa124b503a4defc0aa85c86d0b497587d5895636d05c24795448340a",
       "fingerprint": "7bc4ef08a1932301ec84f1667eb230fca2f54dbf",
       "host": "keybase.io",
       "key_id": "7eb230fca2f54dbf",
       "kid": "0101b21c15046fda9c11c207f2ba1bcc5d9853329c7276c36f5d55f12385acf5ef330a",
-      "uid": "40181b19617f048281abd21b37727219",
-      "username": "klauscfhq"
+      "uid": "0938eff4b2d1d04e4e3f647f0d673119",
+      "username": "klaussinani"
     },
     "service": {
-      "hostname": "klauscfhq.github.io",
+      "hostname": "klaussinani.github.io",
       "protocol": "https:"
     },
     "type": "web_service_binding",
     "version": 1
   },
-  "ctime": 1520099163,
+  "ctime": 1542564184,
   "expire_in": 157680000,
-  "prev": "59d3715e418f574f0635eb6d4c6b778ea1e1379c7b9bf52233cdbc9d492fdec8",
-  "seqno": 40,
+  "prev": "40d1074840bd7b1fa8ce74fb84b81095729e2bad815695922f966cbdc8fac907",
+  "seqno": 13,
   "tag": "signature"
 }
 
 which yields the signature:
 
 -----BEGIN PGP MESSAGE-----
-Version: Keybase OpenPGP v2.0.76
+Version: Keybase OpenPGP v2.0.80
 Comment: https://keybase.io/crypto
 
-yMIrAnicrZJbSBVBGMfPqSwUtJIyH7JgDSOU2pnd2d05ElFgST6cglIy47AzO+PZ
-POfsueyxRCzEIuxCF4JuDxVElGU9iNGN7tnFSgjSsqi0Mgii4EAPBtGs1Uv02LwM
-38f//5vv++a7kzvel+M/cbFrzcC3wi/+3pvH0r7aw2/WNkvEsZqkQLPUwMYuFrFY
-yg012JYUkGQgAwIBBUhWNW6ZmAJAoaxzSExAKEUWNpCiQEx1qGtU0TiyEOIAKgYy
-KUeMK4psSmUSt2P1LBlP2jFXYHVCVcZlwwRYgYoMGDVUDjRNZ0SEnJqQI9UiXBjD
-TspziOKImWLzbUfkRBAaK+8f+v9cd3oMp8rAAARgDehcVg1oAJNYEBBFF3YIsCdM
-sWTMjDKv1oiZTlEeTkgtZZJIN9qUeZP1WvlbMr/edsNp8quveNJxHepEhCDsuvFU
-wAO4TXHPsYGR0G9WiNgxS8xTOBpZMmU7MSkAhJK6tgcHCMoyxkBTyiS2MW4nWcj2
-FEjXDFkc7x3WKJAIW4oOEFOBwZGucllTECOapVKN6LrBTMCAoosREUw4glBRqEUo
-tlQMuSW+TPK6S8QcKaAKqGvWC2bKro+ZbjrJpJZbN+om+Pw5volZ47xF8+VkT/mz
-fqXtk35og5un4zqUX75y1bemm9FZ8WbzQNvyqfa8T8Gi6OXzu5f1PA8NHL9w6mNk
-TsfckYMd4fLgwLS9waXH9/ec6SkrGaXFq7VENN7x4NL6yg6c2f4s05rPuwq6X4fw
-jURjZ2VDS98FbQkc7h9anLl7uybr2p7i/KsfVmQm5dzLqxt3f9076f1gyaqnL7va
-IlUnpWml2bXBRa0z8eTqQD58UTR13qO5Zu3XAi139OyLla8fH+1/0vr18qGq9tMz
-dg6ZQ8f6qmvuj3xkn7dteTix4nrFVpyZ4y/BlS3j3xbnfckcWfBj15RC91WA3Gtn
-m0r6Z1QPV7X1Ds5eeOv7vs4tNd07+s9d+QnoekXH
-=wnRt
+yMJgAnicbZJbbFVFFIZPbSnQAKmR4IkEQjYND9rUue6ZXWygD1BolARjlAbtca7t
+Ttt9jmfv0woNBQKHBy4BFYhcIjVWEx+IkkoAJVUuCcFGHzDRkBLjgxgxRrRyCUSB
+2QWeYF4ma82/vvnXyjo7vTJTUzF0fLjtpxvZqxWjp4ZKmdX/fLqq35N5vcZr7Pe6
+zMRlurWJk1xXqL1GD0AEkKEYQc4QtwIiIinAgmhjFRCCU8V9DSQJGOVMUx5QH7sE
+VYiwgBLCMQHCq/dsGHWYYqEYRonDMqmIsYALGGCEATSKEwt9nxnpQqsEspRoaV1h
+Zz5OK5w5KWLTEOZdzgW5CXuP0T/0DaBEUEEKiG+1CBSECgFmkRRQKkV1wCnGKFAM
+MV9h31JNqYUIcyqUpcZiPOG7dB8XYG6sJRJpqAExxGDrE2aB9hmGMEiFsSlGosek
+XrtFKY7DSESht67ecw+9oTLpbNNmHhU1dIRJZ0ne761QzCd5le92ks4kKcSNKSJZ
+U0hr+ozMPaDlZBhpN1NX0WuKcZiPvEbolCoJUzykBFGfQE7qPfN2ISyaXJgqKPM5
+cCf9x/Q6JAEaAkY4AVIzCa3gyjBiJSeSQxBQhgLjZqY5pH5AA4Rs4PtKauWWQQWA
+eWl/b0V5x8bOp+hwzDjsiERSKhpv3elvXq/KVNRkqic9kS5bpmZq7cMV/Ltq8h1v
+pPzvU7N6bg782N53/fKTlbteef7POfH+rADFGUMndlfhU9Ubq8tfHBv7aMmZ/Qen
+LXp61Y6juqtptPXCJyPvyeZnzN7zV3t/OfLZ4YF91eBOc92C7xq+vLC8XDdlxZvb
+1y6jI6+CgR7wzspd0cYPj3Z9315eP9fbseT98aZ5Lx6+RTb8cO7lK4MXB2uzG766
+tqjl41+Ty0lu9nP+1j1b3lhaGB0vJ2A8vrml6gPvW3WtDe+r2d3636HJ9QeuD1de
+nPX59iMzNw2vXnDy56b1C9/9v3nbpUO89Hv8Wmv7iZ1fL+73/xrclj35wryWY7Nr
+s33nZrScnzvz0vyXxqacrjv+27Njdzff+KPtNmy5B5zORXI=
+=jlOD
 -----END PGP MESSAGE-----
 
 And finally, I am proving ownership of this host by posting or
 appending to this document.
 
-View my publicly-auditable identity here: https://keybase.io/klauscfhq
+View my publicly-auditable identity here: https://keybase.io/klaussinani
 
 ==================================================================
