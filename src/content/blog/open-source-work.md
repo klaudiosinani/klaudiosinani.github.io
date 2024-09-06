@@ -2,6 +2,7 @@
 author: Klaudio Sinani
 pubDatetime: 2024-09-05T19:57:02Z 
 modDatetime:
+ogImage: header.jpeg
 title: Open-Source Work
 slug: open-source-work
 featured: false
