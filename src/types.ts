@@ -11,6 +11,7 @@ export type Site = {
   postPerIndex: number;
   postPerPage: number;
   scheduledPostMargin: number;
+  googleSiteVerification: string;
 };
 
 export type SocialObjects = {

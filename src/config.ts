@@ -10,7 +10,8 @@ export const SITE: Site = {
   lightAndDarkMode: true,
   postPerIndex: 3,
   postPerPage: 5,
-  scheduledPostMargin: 15 * 60 * 1000, // 15 minutes
+  scheduledPostMargin: 15 * 60 * 1000, // 15 minutes,
+  googleSiteVerification: "O0W6AXDlyi2YDtR5ZriJsxii7-UHdy363XJd95Vdi0M"
 };
 
 export const LOCALE = {
