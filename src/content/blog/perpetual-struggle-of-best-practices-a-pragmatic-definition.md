@@ -14,6 +14,8 @@ description:
   A pragmatic definition 
 ---
 
+*A pragmatic definition.*
+
 ## Purpose
 
 The sole puprose of this publication is to inform, appeal, gain the attention of you as a reader and motivate you think about the following question: What is a Best Practice?
