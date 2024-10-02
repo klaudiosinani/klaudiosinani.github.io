@@ -18,23 +18,23 @@ description:
 
 ## Purpose
 
-The sole puprose of this publication is to inform, appeal, gain the attention of you as a reader and motivate you think about the following question: What is a Best Practice?
+The sole purpose of this publication is to inform, appeal, gain the attention of you as a reader, and motivate you to contemplate over the question: What is a Best Practice?
 
 ## Index
 
 - [Purpose](#purpose)
 - [Introduction](#introduction)
 - [5W1H](#5w1h)
-    - [What](#what)
-    - [Why](#why)
-    - [Where](#where)
-    - [Who](#who)
-    - [When](#when)
-    - [How](#how)
+  - [What](#what)
+  - [Why](#why)
+  - [Where](#where)
+  - [Who](#who)
+  - [When](#when)
+  - [How](#how)
 - [Pros & Cons](#pros--cons)
-    - [Pros](#pros)
-    - [Cons](#cons)
-    - [Conclusion](#conclusion)
+  - [Pros](#pros)
+  - [Cons](#cons)
+  - [Conclusion](#conclusion)
 - [Cost-Benefit Aspect](#cost-benefit-aspect)
 - [What makes a practice a Best Practice?](#what-makes-a-practice-a-best-practice)
 - [Ok, but which Best Practices are the best for me, my project or my team?](#ok-but-which-best-practices-are-the-best-for-me--my-project-or-my-team)
@@ -43,7 +43,7 @@ The sole puprose of this publication is to inform, appeal, gain the attention of
 
 Best Practices encompass a set of methodologies, principles and guidelines used to improve the quality, efficiency and maintainability of the software engineering process.
 
-By adhering to them, teams of engineers can achieve a streamlined development process and are able to deliver reliable and scalable software solutions, while minimizing risks, errors and technical debt. 
+By adhering to them, teams of engineers can achieve a streamlined development process and are able to deliver reliable and scalable software solutions, while minimizing risks, errors and technical debt.
 
 ## 5W1H
 
@@ -56,10 +56,10 @@ Simply expressed: Best Practices are a set of fundamental methodologies to achi
 Best Practices are used for the following main reasons:
 
 - Enhance software traits
-    - Quality
-    - Reliability
-    - Scalability
-    - Maintainability
+  - Quality
+  - Reliability
+  - Scalability
+  - Maintainability
 - Minimize risk
 - Reduce development time and cost
 - Improve collaboration
@@ -78,7 +78,7 @@ Best Practices shine when building mission-critical, large-scale, long-term, hig
 
 ### Where
 
-Best Practises are used during the entire software engineering lifecycle, specifically:
+Best Practices are used during the entire software engineering lifecycle, specifically:
 
 - Designing
 - Developing
@@ -110,7 +110,7 @@ The implementation of Best Practices involves the adoption of specific methodolo
 - **Improved Code Quality**  
     Software is more reliable and stable, reducing the likelihood of crashes or error in production.
 - **Consistency Across Team**  
-    Promote efficient collaboration between teams and minimizs integration issues.
+    Promote efficient collaboration between teams and minimize integration issues.
 - **Scalability**  
     Ensure software can be scaled effectively.
 - **Maintainability**  
@@ -120,9 +120,9 @@ The implementation of Best Practices involves the adoption of specific methodolo
 - **Enhanced Security**  
     Protect software from vulnerabilities and risks.
 - **Seamless Onboarding**  
-    Promote a shoallow learning curve for new members
-- **Compiance/Auditability**  
-    Easier alignment with regulatory requirements and stardards.
+    Promote a shallow learning curve for new members
+- **Compliance/Auditability**  
+    Easier alignment with regulatory requirements and standards.
 
 ### Cons
 
@@ -130,18 +130,18 @@ The implementation of Best Practices involves the adoption of specific methodolo
     Additional overhead may be introduced that could slow down some processes.
 - **Inflexibility**  
     May lead to inflexibility making it difficult to adapt to new technologies or methodologies.
-- **Cost-Ineffectivess**  
+- **Cost-Ineffectiveness**  
     May require additional resources not always justifiable by the project's scope/size, ie: PoC-s, prototypes, etc.
 - **No 1-Size-Fits-All**  
     May not always be the best fit for every project or team.
 - **Over-Engineering**  
     Solutions may become unnecessarily complex in an effort to follow every single Best Practice.
 - **Complacency**  
-    May create a false sense of security, where teams assume that just by following specific Best Practices uncompromised security is guaranteed. 
+    May create a false sense of security, where teams assume that just by following specific Best Practices uncompromised security is guaranteed.
 
 ### Conclusion
 
-Balancing Best Practises with pagramtic decision-making is crusial to maximize their benefits while minimizing potential downsides.
+Balancing Best Practices with pragmatic decision-making is crucial to maximize their benefits while minimizing potential downsides.
 
 ## Cost-Benefit Aspect
 
@@ -152,7 +152,7 @@ Most best practices reduce long-term costs by improving key processes within a t
 - Automated testing and CI/CD may have an upfront implementation cost but in the long term, they help to reduce bugs and deployment failures.
 - Using Agile methodologies to manage a project can help teams to use their time and resources more effectively, thus improving their productivity.
 
-Overall, a group of engineers must balance the cost of adopting and implementing a Best Practice with the benefits it brigns, to ensure that the outcome is both high-quality and viable. A few examples:
+Overall, a group of engineers must balance the cost of adopting and implementing a Best Practice with the benefits it brings, to ensure that the outcome is both high-quality and viable. A few examples:
 
 - Prioritizing focus on security Best Practices for a high-risk application.
 - Deprioritizing documentation Best Practices in a low-risk, short-lived application.
@@ -162,11 +162,11 @@ Overall, a group of engineers must balance the cost of adopting and implementing
 A practice can be considered a Best Practice when a few key criteria are fully met:
 
 1. **Well proven results**  
-    It has consistenly led to positive results across project and applications, and it is supported by tangible data, studies or even research which demonstrate its effectiveness.
+    It has consistently led to positive results across project and applications, and it is supported by tangible data, studies or even research which demonstrate its effectiveness.
 2. **High adoption rate**  
     It is broadly adopted across the industry or academia, becoming part of core standards, ie: Agile, DevOps etc.
 3. **High efficiency**  
-    It helps achieve goals more efficiently by optimizing the use of resouces, ie: time, people, money etc
+    It helps achieve goals more efficiently by optimizing the use of resources, ie: time, people, money etc
 4. **High scalability**  
     It is easily scalable, so that it can be successfully applied to small or large contexts.
 5. **High quality**  
@@ -178,12 +178,12 @@ A practice can be considered a Best Practice when a few key criteria are fully m
 
 ## Ok, but which Best Practices are the best for me,  my project or my team?
 
-Chosing the most suitable Best Practices for your case is not always straightforward.
+Choosing the most suitable Best Practices for your case is not always straightforward.
 
 When multiple meet your needs, you should evaluate and prioritize them based on several factors:
 
-1. **Aligment with Goals**  
-    Choose the Best Practises that align the most with your project deliverables and goals. Prioritize your most improtant requirements (whether it is performance, security etc) and go for the Best Practices that favour them the most.
+1. **Alignment with Goals**  
+    Choose the Best Practices that align the most with your project deliverables and goals. Prioritize your most important requirements (whether it is performance, security etc) and go for the Best Practices that favour them the most.
 2. **Resource Availability**  
     Assess the cost for your team to adopt a specific set of Best Practices. Go for the Best Practices that strike the best balance between the benefits they bring and the time, effort, maintenance they require.
 3. **Team Consensus**  
@@ -195,6 +195,6 @@ When multiple meet your needs, you should evaluate and prioritize them based on 
 6. **Size and Scope**  
     Always keep in mind the size, complexity and scope of your project. Choose the Best Practices that are better suited for the quantitative qualities of your project.
 7. **Scalability**  
-    Consider the Best Practices that can scale easily alsong with your project's growth and team size, both in the short term and the long term.
+    Consider the Best Practices that can scale easily along with your project's growth and team size, both in the short term and the long term.
 8. **Product and User Impact**  
     Check which Best Practices contribute the most to the overall quality of your final deliverable, thus providing a better experience and outcome for your users.
