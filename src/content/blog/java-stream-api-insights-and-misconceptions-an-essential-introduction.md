@@ -39,7 +39,7 @@ For that reason, via clear and practical examples, we will attempt to illustrate
   - [Streams can fuse loops](#streams-can-fuse-loops)
   - [Streams can be parallelized](#streams-can-be-parallelized)
   - [Streams can be costly](#streams-can-be-costly)
-- [Conclusions](#conclusion)
+- [Conclusion](#conclusion)
 
 ## Introduction
 
