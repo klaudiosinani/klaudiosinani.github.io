@@ -19,13 +19,13 @@ description:
 
 ## Purpose
 
-The main purpose of this publication is to focus on and clarify a few common misconceptions about the Stream API while highlighting some key properties of Java streams.
+The main purpose of this publication is to focus on and clarify a few common misconceptions about the Stream API while highlighting the key properties of Java streams.
 
-Usually, these misconceptions present themselves during the design, implementation, or review phase of solutions involving streams in their implementation, and can act as a trigger for very interesting discussions among engineers.
+Usually, these misconceptions present themselves during the design, implementation, or review phase of software solutions involving streams, and can act as a trigger for very interesting discussions among engineers.
 
 In order to manage to dispel any misconceptions surrounding the Stream API, someone needs to understand and internalize the actual behavior of streams in Java.
 
-For that reason, via clear and practical examples, we will attempt to illustrate these misconceptions and provide insight into key properties of streams, aiming to help you as the reader avoid common pitfalls and write more efficient, maintainable code when working with Java streams.
+For that reason, via clear and practical examples, we will attempt to illustrate these misconceptions and provide insight into the fundamental properties of streams, aiming to help you as the reader avoid common pitfalls and write more efficient, maintainable code when working with the Java Stream API.
 
 ## Index
 
@@ -43,11 +43,11 @@ For that reason, via clear and practical examples, we will attempt to illustrate
 
 ## Introduction
 
-The Java Stream API was introduced back in Java 8, as a feature that would enable the processing of element sequences in a functional and declarative style. By design, the API aimed to simplify and optimize complex data manipulation tasks, which previously relied on iterative, verbose, costly, maintenance and scalability-wise, constructs.
+The Java Stream API was introduced back in Java 8, as a feature that would enable the processing of element sequences in a functional and declarative style. By design, the API aimed to simplify and optimize complex data manipulation tasks, which previously relied on iterative, verbose, costly maintenance and scalability-wise, constructs.
 
-Their introduction, along with the introduction of other features, like lambda expressions and the `java.util.function` package in general, marked a significant point in the evolution of Java, adding significant new capabilities inspired by the functional paradigm. This enabled the production of cleaner, more expressive, concise, and easier-to-parallelize code.
+Their introduction, along with the introduction of other features, like lambda expressions and the `java.util.function` package in general, marked a significant point in the evolution of Java, adding important new capabilities inspired by the functional paradigm. This enabled the production of cleaner, more expressive, concise, and easier-to-parallelize code.
 
-In practical terms, the Stream API provides a framework for processing data structures, like lists, sets, etc,  through a series of streamlined operations, that include filtering, mapping, reducing, etc. By using these declarative operations we can express data transformations more intuitively and work with collections of objects in a more functional, efficient, and effective approach.
+In practical terms, the Stream API provides a framework for processing data structures, like lists and sets,  through a series of streamlined operations, that include filtering, mapping, reducing, etc. By using these declarative operations we can express data transformations more intuitively and work with collections of objects in a more functional, efficient, and effective approach.
 
 ## Properties
 
@@ -55,11 +55,11 @@ In practical terms, the Stream API provides a framework for processing data stru
 
 ### Common misconception
 
-> Execution of operations on streams is immediate.
+> The execution of operations on streams is immediate.
 
 ### Explanation
 
-One of the defining feature of streams is *lazy evaluation*. Intermediate operations, such as `map`, `filter`, & `sorted` do not process data until a terminal operation, e.g. `collect`, `forEach`, is invoked. This enables to only process as much data as required and when it is absolutely required, optimizing performance by avoiding unnecessary computations.
+One of the defining features of streams is lazy evaluation. Intermediate operations, such as `map` and `filter` do not process data until a terminal operation, e.g. `reduce`, `forEach`, is invoked. This enables the optimization of the overall performance by only processing as much data as is required and only when it is required.
 
 Let's look into an example demonstrating stream laziness.
 
@@ -85,15 +85,15 @@ numbersStream.forEach(number -> logger.log("ForEach operation: " + number));
 
 In the example, we can observe the following:
 
-1. A stream is created out of the list of numbers: `numbers.stream()`
-2. Intermediate operations are declared:
-    - `peek`: logs each number
-    - `filter`: filters in even numbers
-    - `map`: multiples each even number by 2
+1. A stream is created out of a list of numbers via the expression: `numbers.stream()`
+2. The following intermediate operations are declared:
+    - `peek`: is used to log each number
+    - `filter`: is used to filter in even numbers
+    - `map`: is used to multiply each even number by 2
 3. None of the operations are executed immediately, that's why the message: `"Stream defined, awaiting execution."` is logged first
-4. The terminal operation `forEach` is invoked and the stream processes each element on demand.
-    - For each element, the stream navigates through peek, filter, map, and finally forEach
-    - The logs display each step as it happens, validating the claim that each element is processed only when needed by the terminal operation.
+4. The terminal operation `forEach` is invoked and the stream processes each element on demand
+    - For each element, the stream navigates through `peek`, `filter`, `map`, and finally `forEach`
+    - The logs display each step as it happens, validating the claim that each element is processed only when needed by the terminal operation
 
 Our observations can be validated by the log output of our code below.
 
@@ -120,7 +120,7 @@ Filter operation: 5
 
 ### Common misconception
 
-> Streams can be re-used like collections or iterators
+> Streams can be re-used like collections or iterators.
 
 ### Explanation
 
@@ -128,7 +128,7 @@ Once a terminal operation is invoked on a stream, the stream is considered `clos
 
 Attempting to reuse the same stream results in an `IllegalStateException`.
 
-This single-use property allows the API to stay efficient, stateless, and predictable, making it easier to build complex data transformations while managing resources effectively and aligning with the functional paradigm, discouraging side effects.
+This single-use property allows the API to stay efficient, stateless, and predictable. This makes it easier to build complex data transformations while managing resources effectively and aligning with the functional paradigm, discouraging side effects.
 
 Let's look into an example demonstrating the single-use property of streams.
 
@@ -147,10 +147,10 @@ nameStream.forEach(name -> logger.log("This will cause an error!"));
 
 In our code example, we can observe the following:
 
-1. We first create a stream from the list of names
-2. Using `forEach` we print a greeting for each name.
-3. `ForEach` is a terminal operation, thus it consumes the stream.
-4. When we attempt to use `forEach` again, an `IllegalStateException` is thrown since `nameStream` is exhausted after the first use.
+1. We first create a stream from a list of names
+2. Using the `forEach` operation we log a greeting for each name
+3. `ForEach` is a terminal operation, thus it consumes the stream
+4. When we attempt to use `forEach` again, an `IllegalStateException` is thrown since `nameStream` is exhausted after the first use
 
 We can confirm our observations via the log output of our code example.
 
@@ -172,9 +172,9 @@ Exception in thread "main" java.lang.IllegalStateException: stream has already b
 
 ### Explanation
 
-The short-circuiting property of Java streams allows certain operations to stop processing as soon as a condition is fulfilled. This can optimize our stream's performance by reducing unnecessary computations.
+The short-circuiting property of Java streams allows certain operations to stop processing as soon as a condition is fulfilled. This can optimize a stream's performance by reducing unnecessary computations.
 
-The short-circuiting property is particularly useful when working with large data sets where unnecessary processing can be avoided. It can take place when using terminal operations, e.g. `findFirst`, `findAny`, etc, as well as when using the `limit` operation in combination with other intermediate operations.
+The short-circuiting property is particularly useful when working with large datasets where unnecessary processing can be avoided. It can take place when using terminal operations, e.g. `findFirst`, `findAny`, as well as when using the `limit` operation in combination with other intermediate operations.
 
 Let's view an example demonstrating the short-circuiting property of streams.
 
@@ -190,9 +190,9 @@ boolean hasEvenNumber = numbers.stream()
 logger.log("hasEvenNumber? " + hasEvenNumber);
 ```
 
-In the example we can observe the following:
+In the example, we can observe the following:
 
-1. The `peek` operation is used to log each element as it's processed by the stream
+1. The `peek` operation is used to log each element as it is processed by the stream
 2. The`anymatch` operation checks if there are any even numbers in the list
 3. `anyMatch` stops the processing once it finds the first even number, in our case that number is `6`
 4. The elements of the underlying `number` collection, `7` and `8`, are never consumed by the stream
@@ -220,13 +220,13 @@ hasEvenNumber? true
 
 Java streams can be `infinite`, meaning they can generate an unbounded sequence of elements without a predefined end.
 
-This capability is particularly useful for modeling data sources that grow continuously, like event logs, sensor data, or even mathematical sequences. 
+This capability is particularly useful for modeling data sources that grow continuously, like event logs, sensor data, or even mathematical sequences.
 
-Infinite streams are typically created using the `Stream.generate` or `Stream.iterate` factory methods. These methods, also known as *stream sources*, create an infinite sequence of elements based on a supplier function (`generate`) or a seed and a unary operator (`iterate`).
+Infinite streams are typically created using the `Stream.generate` or `Stream.iterate` factory methods. These methods, also known as **stream sources**, create an infinite sequence of elements based on a supplier function (`generate`) or a seed and a unary operator (`iterate`).
 
 However, infinite streams must be combined with short-circuiting operations to avoid infinite processing. Without such operations, processing an infinite stream would run indefinitely, leading to resource exhaustion.
 
-Let's dive into an "infinite" example.
+Let's dive into an *infinite* example.
 
 ```java
 logger.log("Generating an infinite stream of natural numbers");
@@ -237,12 +237,12 @@ Stream.iterate(1, number -> number + 1) // Starts from 1 and keeps adding 1 inde
     .forEach(number -> logger.log("ForEach operation: " + number));
 ```
 
-We can make the following observation for our example:
+We can make the following observations for our example:
 
-1. The invoke `Stream.iterate` stream source with a seed value of `1` and the unary operator `number -> number + 1`
-2. The outcome is the creation of an infinite stream of natural numbers starting from 1
+1. We invoke the `Stream.iterate` stream source with a seed value of `1` and the unary operator `number -> number + 1`
+2. The outcome is the creation of an infinite stream of natural numbers starting from `1`
 3. The `peek` operation logs each number processed by the stream
-4. The `limit(5)`  short-circuiting intermediate operation stops the stream after processing the first five numbers 
+4. The `limit(5)` short-circuiting intermediate operation stops the stream after processing the first five numbers
 5. That prevents the infinite execution of our stream
 6. Finally, we invoke the `forEach` terminal operation to re-log the first five natural numbers and consume the stream
 
@@ -272,13 +272,13 @@ ForEach operation: 5
 
 ### Explanation
 
-The Java Stream API internally employees an optimization mechanism, called Loop Fusion. This mechanism aims to combine multiple sequential operations on a stream into a single pass, thereby reducing the overhead of iterating through the underlying data source multiple times.
+The Java Stream API internally employs an optimization mechanism, called loop fusion. This mechanism aims to combine multiple sequential operations on a stream into a single pass, thereby reducing the overhead of iterating through the underlying data source multiple times.
 
-This significantly favors and improves performance, particularly when dealing with large datasets that require the execution of multiple operations for filtering, mapping, and collecting.
+This significantly favors and improves performance, particularly when dealing with large datasets that require the execution of multiple operations like filtering, mapping, and reducing.
 
 By merging operations, loop fusion minimizes the number of temporary objects created, leading to lower memory consumption and garbage collection overhead.
 
-In other words, this optimization mechanism can enhance the efficiency of code while allowing us to preserve a clean, readable, and declarative syntax.
+In other words, this optimization mechanism can enhance the efficiency of our code while allowing us to preserve a clean, readable, and declarative syntax.
 
 Let's look into a short practical example.
 
@@ -341,14 +341,14 @@ Now, based on the structure of the code in our example and the log output we can
 
 - **Single Traversal**: The Stream API processes the source data in a single pass, applying the multiple operations (mapping, filtering, and reducing) efficiently without separate iterations for each operation.
 - **Immediate Execution**: Each element is transformed and evaluated sequentially. Intermediate operations, like `map` and `filter`, are applied directly to the results of the previous operation, allowing for immediate processing without intermediate collections.
-- **Efficient Reduction**: The `reduce` terminal operation accumulates results only from elements that have passed through the state of the `filter` operation, thus ensuring that the final computation is performed efficiently in a single pass, thus again minimizing overhead.
-- **Clear Data Flow**: The stream's processing model promotes readable and maintainable code. It clearly expresses the data transformation of our constructed pipeline, while highlighting purely on what is our final objective rather than how the mechanics of the iteration are structured.
+- **Efficient Reduction**: The `reduce` terminal operation accumulates results only from elements that have passed through the state of the `filter` operation, thus ensuring that the final computation is performed efficiently in a single pass, therefore minimizing the overhead.
+- **Clear Data Flow**: The stream's processing model promotes readable and maintainable code. It clearly expresses the data transformation of our constructed pipeline, while purely highlighting what is our final objective rather than how the mechanics of the iteration are structured.
 
 ## Streams can be parallelized
 
 ### Common misconception
 
-> Converting a sequential stream to parallel always leads to better performance
+> Converting a sequential stream into a parallel always leads to better performance.
 
 ### Explanation
 
@@ -362,7 +362,7 @@ That is why in some cases, it can very well be that a sequential stream may outp
 
 Now, let's look into an example show-casing this behavior.
 
-First, we define a simple time measuring method, that accepts a `Runnable` and logs its total execution time in microseconds.
+First, we define a simple time measuring method, that accepts a `Runnable` operation and logs its total execution time in microseconds.
 
 ```java
 public void logExecutionTime(String taskTitle, Runnable task) {
@@ -376,7 +376,7 @@ public void logExecutionTime(String taskTitle, Runnable task) {
 }
 ```
 
-Next we define two methods performing essential the same task. The only different will be that one is using a sequential stream while the other one a parallel.
+Next, we define two binary methods performing essentially the same task. The only difference will be that one will be using a sequential stream while the other one a parallel.
 
 ```java
 private static int filterAndSumInSequence(List<Integer> integers, int threshold) {
@@ -397,8 +397,8 @@ private static int filterAndSumInParallel(List<Integer> integers, int threshold)
 }
 ```
 
-As input to our methods we will generate and provide a collection of 1000 integers.
-We compare the execution times of both methods across 10 consecutive iterations, in order to reinforce our results.
+As input to our methods, we will provide a dynamically generated collection of 1000 integers.
+We compare the execution times of both methods across 10 consecutive iterations, to reinforce our results.
 
 ```java
 List<Integer> integers = IntStream.range(0, 1000)
@@ -468,21 +468,21 @@ This showcases the fact that for smaller datasets, where rather uncomplicated op
 
 ### Explanation
 
-While the Stream API is optimized for common patterns, there can be cases where pipelines can be quite inefficient, especially due to a lack of thoughtful design. Thus the statement that "stream pipelines automatically optimize performance” is not fully valid.
+While the Stream API is optimized for common patterns, there can be cases where pipelines can be quite inefficient, especially due to a lack of thoughtful design. Thus the statement "stream pipelines automatically optimize performance” is not fully valid.
 
 Let's look at a few key factors.
 
 #### 1. Lazy Evaluation vs Automatic Optimization
 
-As mentioned before, one key feature of streams is **lazy evaluation**. Intermediate operations like `filter`, `map`, and `sorted` are only executed when a terminal operation (e.g., `collect`, `reduce`, `forEach`) is invoked. This helps defer computation and potentially decrease the amount of work done in the pipeline. 
+As mentioned before, one key feature of streams is lazy evaluation. Intermediate operations like `filter`, `map`, `sorted` etc, are only executed when a terminal operation (e.g., `collect`, `reduce`, `forEach`) is invoked. This helps defer computation and potentially decrease the amount of work done in the pipeline. 
 
-However, lazy evaluation on its own doesn’t mean the stream pipeline is automatically optimized for every scenario. The Stream API does not inherently optimize the order or combination of operations. It just evaluates them in the order they have been declared. This means that poorly structured pipelines can lead to potential inefficiencies.
+However, lazy evaluation on its own does not mean that the stream pipeline is automatically optimized for every scenario. The Stream API does not inherently optimize the order or combination of operations. It just evaluates them in the order they have been declared. This means that poorly structured pipelines can lead to performance inefficiencies.
 
 #### 2. Operation Order
 
 The sequence of operations in a stream pipeline can greatly affect performance, especially when working with large datasets requiring complicated transformations.
 
-For example, operations like `filter` reduce the number of elements passed down the stream. By setting the `filter` operation early in the pipeline, we can achieve a decrease in the workload for subsequent operations.
+For example, operations like `filter` reduce the number of elements passed down the stream. By setting the `filter` operation early in a pipeline, we can achieve a decrease in the workload for subsequent operations.
 
 ```java
 Set<String> words = Set.of("ab", "abcd", "efgh", "cd", "klmn");
@@ -494,7 +494,7 @@ List<String> result = words.stream()
     .collect(Collectors.toList());
 ```
 
-Additionally, if we are interested only in a limited number of results, placing `limit()` as early as possible can prevent unnecessary computation on remaining elements.
+Additionally, if we are interested only in a limited number of results, placing the `limit` operation as early as possible can prevent unnecessary computation on remaining elements.
 
 ```java
 Set<String> words = Set.of("ab", "abcd", "efgh", "cd", "klmn");
@@ -511,9 +511,9 @@ List<String> result = words.stream()
 
 Certain operations, like `sorted` and `distinct`, require more computational effort and they can easily cause substantial overhead if not used thoughtfully.
 
-- **`sorted`**: The operation requires the comparison of all elements, which can be costly for large datasets. Using `sorted` should be limited to cases where order is truly essential, especially in parallel streams where it brings additional overhead to merge sorted chunks across threads.
+- **`sorted`**: This operation requires the comparison of all elements, which can be costly for large datasets. Using `sorted` should be limited to cases where order is truly essential, especially in parallel streams where it brings additional overhead to merge sorted chunks across threads.
 
-- **`distinct`**: Τhis operation requires the check of every element against the rest to ensure successful deduplication, potentially increasing memory usage. If unique elements are needed, but order doesn’t matter, combining `distinct` with `.unordered` on a parallel stream may help improve performance.
+- **`distinct`**: Τhis operation requires the check of every element against the rest to ensure successful deduplication, potentially increasing memory usage. If unique elements are needed, but order does not play a role, combining `distinct` with the `unordered` operation on a parallel stream may help improve performance.
 
 #### 4. Parallel Stream Trade-offs
 
@@ -524,6 +524,6 @@ Parallel streams can be helpful for CPU-bound tasks over large datasets, but the
 
 ## Conclusion
 
-In conclusion, we hope going through these lines has helped you as a reader to clear out some common misconceptions surrounding the Java Stream API and also highlight some of its key properties like laziness, single-use nature, short-circuiting, loop fusion, parallelization, etc.
+In conclusion, we hope going through these lines has helped you as a reader to clear out some common misconceptions surrounding the Java Stream API and also refresh your memory on some of its fundamental properties like laziness, single-use nature, short-circuiting, loop fusion, parallelization, etc.
 
-By understanding these underlying behaviors, one can effectively leverage streams for more efficient, maintainable, and clean code, while avoiding common pitfalls that might not always be so visible.
+By understanding these underlying behaviors, one can effectively leverage streams for more efficient, maintainable, and clean code, while avoiding common pitfalls that might not always be easily visible.
