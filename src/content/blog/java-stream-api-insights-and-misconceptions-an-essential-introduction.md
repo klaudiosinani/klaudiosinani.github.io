@@ -15,6 +15,8 @@ description:
   An essential introduction
 ---
 
+*An essential introduction.*
+
 ## Purpose
 
 The main purpose of this publication is to focus on and clarify a few common misconceptions about the Stream API while highlighting some key properties of Java streams.
@@ -24,6 +26,20 @@ Usually, these misconceptions present themselves during the design, implementati
 In order to manage to dispel any misconceptions surrounding the Stream API, someone needs to understand and internalize the actual behavior of streams in Java.
 
 For that reason, via clear and practical examples, we will attempt to illustrate these misconceptions and provide insight into key properties of streams, aiming to help you as the reader avoid common pitfalls and write more efficient, maintainable code when working with Java streams.
+
+## Index
+
+- [Purpose](#purpose)
+- [Introduction](#introduction)
+- [Properties](#properties)
+  - [Streams are lazy](#streams-are-lazy)
+  - [Streams are single-use](#streams-are-single-use)
+  - [Streams can be short-circuited](#streams-can-be-short-circuited)
+  - [Streams can be infinite](#streams-can-be-infinite)
+  - [Streams can fuse loops](#streams-can-fuse-loops)
+  - [Streams can be parallelized](#streams-can-be-parallelized)
+  - [Streams can be costly](#streams-can-be-costly)
+- [Conclusions](#conclusion)
 
 ## Introduction
 
@@ -35,13 +51,13 @@ In practical terms, the Stream API provides a framework for processing data stru
 
 ## Properties
 
-### Streams are lazy
+## Streams are lazy
 
-#### Common misconception
+### Common misconception
 
 > Execution of operations on streams is immediate.
 
-#### Explanation
+### Explanation
 
 One of the defining feature of streams is *lazy evaluation*. Intermediate operations, such as `map`, `filter`, & `sorted` do not process data until a terminal operation, e.g. `collect`, `forEach`, is invoked. This enables to only process as much data as required and when it is absolutely required, optimizing performance by avoiding unnecessary computations.
 
@@ -148,7 +164,7 @@ Goodbye, Charlie
 Exception in thread "main" java.lang.IllegalStateException: stream has already been operated upon or closed
 ```
 
-## Steams can be short-circuited
+## Streams can be short-circuited
 
 ### Common misconception
 
@@ -196,7 +212,7 @@ hasEvenNumber? true
 
 ## Streams can be infinite
 
-### Common isconception
+### Common misconception
 
 > Streams represent finite memory-safe data sequences.
 
@@ -334,7 +350,7 @@ Now, based on the structure of the code in our example and the log output we can
 
 > Converting a sequential stream to parallel always leads to better performance
 
-## Explanation
+### Explanation
 
 The parallelization property of Java streams allows for concurrent processing of data, leveraging multiple threads to enhance performance when operating on large datasets.
 
@@ -491,7 +507,7 @@ List<String> result = words.stream()
     .collect(Collectors.toList());
 ```
 
-### 3. Managing Costly Operations
+#### 3. Managing Costly Operations
 
 Certain operations, like `sorted` and `distinct`, require more computational effort and they can easily cause substantial overhead if not used thoughtfully.
 
@@ -499,7 +515,7 @@ Certain operations, like `sorted` and `distinct`, require more computational eff
 
 - **`distinct`**: Τhis operation requires the check of every element against the rest to ensure successful deduplication, potentially increasing memory usage. If unique elements are needed, but order doesn’t matter, combining `distinct` with `.unordered` on a parallel stream may help improve performance.
 
-### 4. Parallel Stream Trade-offs
+#### 4. Parallel Stream Trade-offs
 
 Parallel streams can be helpful for CPU-bound tasks over large datasets, but they also bring complexity. As we also saw earlier, not all operations can be parallelized efficiently, and parallel streams can introduce overhead in splitting tasks, coordinating threads, and merging results. Based on that, we can make the following observations:
 
