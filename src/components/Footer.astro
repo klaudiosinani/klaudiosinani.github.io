@@ -20,7 +20,8 @@ const { noMarginTop = false } = Astro.props;
     </div>
   </div>
   <div class="footer-image-wrapper">
-    <img src="/footer.png" alt="Dia, Liri">
+    <img src="/footer-light.png" alt="Dia, Liri" class="footer-image footer-light" />
+    <img src="/footer-dark.png" alt="Dia, Liri" class="footer-image footer-dark" />
   </div>
 </footer>
 
@@ -33,6 +34,15 @@ const { noMarginTop = false } = Astro.props;
   }
   .footer-image-wrapper {
     @apply flex flex-col pt-0 pb-4;
+  }
+  .footer-image {
+    display: none;
+  }
+  html[data-theme='light'] .footer-light {
+    display: block; 
+  }
+  html[data-theme='dark'] .footer-dark {
+    display: block;
   }
   .link-button {
     @apply my-1 p-2 hover:rotate-6;
