@@ -22,47 +22,10 @@ const socialCount = SOCIALS.filter(social => social.active).length;
 <Layout>
   <Header />
   <main id="main-content">
-    <section id="hero">
-      <h1>Dia, Liri</h1>
-      <p>
-        Definite and vague reflections for humans and machines.
-      </p>
-      {
-        USE_SOCIALS_IN_HEADER && socialCount > 0 && (
-          <div class="social-wrapper">
-            <div class="social-links">Social Links:</div>
-            <Socials />
-          </div>
-        ) 
-      }
-    </section>
-
-    <Hr />
-
-    <!-- {
-      featuredPosts.length > 0 && (
-        <>
-          <section id="featured">
-            <h2>Featured</h2>
-            <ul>
-              {featuredPosts.map(({ data, slug }) => (
-                <Card
-                  href={`/posts/${slug}/`}
-                  frontmatter={data}
-                  secHeading={false}
-                />
-              ))}
-            </ul>
-          </section>
-          {recentPosts.length > 0 && <Hr />}
-        </>
-      )
-    } -->
-
     {
       recentPosts.length > 0 && (
         <section id="recent-posts">
-          <h2>Recent Publications</h2>
+          <h2>Publications</h2>
           <ul>
             {recentPosts.map(
               ({ data, slug }, index) =>

@@ -1,14 +1,14 @@
 import type { Site, SocialObjects } from "./types";
 
 export const SITE: Site = {
-  website: "https://klaudiosinani.com/", // replace this with your deployed domain
+  website: "https://klaudiosinani.com/",
   author: "Klaudio Sinani",
   profile: "https://klaudiosinani.com/",
-  desc: "Dia, Liri · Knowledge, Freedom",
+  desc: "Definite and vague reflections for humans and machines.",
   title: "Klaudio Sinani",
   ogImage: "header.jpeg",
   lightAndDarkMode: true,
-  postPerIndex: 3,
+  postPerIndex: 4,
   postPerPage: 5,
   scheduledPostMargin: 15 * 60 * 1000, // 15 minutes,
   googleSiteVerification: "O0W6AXDlyi2YDtR5ZriJsxii7-UHdy363XJd95Vdi0M"
