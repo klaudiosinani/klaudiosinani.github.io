@@ -5,8 +5,10 @@ import remarkToc from "remark-toc";
 import remarkCollapse from "remark-collapse";
 import sitemap from "@astrojs/sitemap";
 import { SITE } from "./src/config";
+import { retrieveRepositoryPageSitemaps } from "./src/utils/retrieveRepositoryPageSitemaps";
 
-// https://astro.build/config
+const customSitemaps: string[] = await retrieveRepositoryPageSitemaps();
+
 export default defineConfig({
   site: SITE.website,
   integrations: [
@@ -14,7 +16,9 @@ export default defineConfig({
       applyBaseStyles: false,
     }),
     react(),
-    sitemap(),
+    sitemap({
+      customSitemaps,
+    }),
   ],
   markdown: {
     remarkPlugins: [
