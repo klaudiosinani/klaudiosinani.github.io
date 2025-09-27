@@ -33,9 +33,10 @@ const { noMarginTop = false } = Astro.props;
     @apply flex flex-col items-center justify-between py-6 sm:flex-row-reverse sm:py-4;
   }
   .footer-image-wrapper {
-    @apply flex flex-col pt-0 pb-4;
+    @apply flex flex-col items-center pt-0 pb-4;
   }
   .footer-image {
+    width: 80%;
     display: none;
   }
   html[data-theme='light'] .footer-light {
