@@ -25,4 +25,17 @@ const blog = defineCollection({
     }),
 });
 
-export const collections = { blog };
+const software = defineCollection({
+  type: "content_layer",
+  loader: glob({ pattern: "**/*.md", base: "./src/content/software" }),
+  schema: z.object({
+    name: z.string(),
+    logline: z.string(),
+    metadata: z.string(),
+    description: z.string(),
+    url: z.string().url(),
+    order: z.number().default(99),
+  }),
+});
+
+export const collections = { blog, software };

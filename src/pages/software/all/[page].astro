@@ -1,0 +1,60 @@
+---
+import Footer from "@components/Footer.astro";
+import Header from "@components/Header.astro";
+import Pagination from "@components/Pagination.astro";
+import SoftwareCard from "@components/SoftwareCard";
+import { SITE } from "@config";
+import Layout from "@layouts/Layout.astro";
+import Main from "@layouts/Main.astro";
+import type { PaginatedResult } from "service/pagination/PaginatedResult";
+import { paginationService } from "service/pagination/PaginationService";
+import type { Software } from "service/Software";
+import { softwareRetrievalService } from "service/SoftwareRetrievalService";
+
+export async function getStaticPaths() {
+  const softwareRepositories: Software[] =
+    await softwareRetrievalService.retrieve();
+  const pages = paginationService.getPageNumbers(softwareRepositories.length);
+  return pages
+    .filter(p => p > 1)
+    .map(p => ({
+      params: { page: String(p) },
+      props: { softwareRepositories },
+    }));
+}
+
+const { page } = Astro.params;
+const { softwareRepositories } = Astro.props;
+
+const paginatedResult: PaginatedResult<Software> = paginationService.paginate({
+  items: softwareRepositories,
+  page: page || 1,
+  basePath: "/software/all",
+});
+---
+
+<Layout
+  title={`All Software Page ${paginatedResult.currentPage} - ${SITE.title}`}
+>
+  <Header activeNav="software" />
+  <Main pageTitle="All Software">
+    <ul>
+      {
+        paginatedResult.items.map(item => (
+          <SoftwareCard
+            name={item.name}
+            description={item.description}
+            homepageUrl={item.homepageUrl}
+            stars={item.stars}
+            forks={item.forks}
+            latestUpdate={item.latestUpdate}
+          />
+        ))
+      }
+    </ul>
+  </Main>
+
+  <Pagination {...paginatedResult} />
+
+  <Footer noMarginTop={paginatedResult.totalPages > 1} />
+</Layout>

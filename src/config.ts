@@ -10,13 +10,16 @@ export const SITE: Site = {
   lightAndDarkMode: true,
   postPerIndex: 4,
   postPerPage: 5,
-  scheduledPostMargin: 15 * 60 * 1000, // 15 minutes,
+  scheduledPostMargin: 15 * 60 * 1000,
   googleSiteVerification: "O0W6AXDlyi2YDtR5ZriJsxii7-UHdy363XJd95Vdi0M"
 };
 
+export const GITHUB_USERNAME: string = "klaudiosinani";
+export const DEFAULT_ITEMS_PER_PAGE: number = 5;
+
 export const LOCALE = {
-  lang: "en", // html lang code. Set this empty and default will be "en"
-  langTag: ["en-EN"], // BCP 47 Language Tags. Set this empty [] to use the environment default
+  lang: "en", 
+  langTag: ["en-EN"],
 } as const;
 
 export const LOGO_IMAGE = {
