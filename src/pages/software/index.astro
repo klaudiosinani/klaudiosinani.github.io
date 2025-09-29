@@ -1,0 +1,42 @@
+---
+import { SITE } from "@config";
+import Header from "@components/Header.astro";
+import Footer from "@components/Footer.astro";
+import Layout from "@layouts/Layout.astro";
+import Main from "@layouts/Main.astro";
+import FeaturedSoftwareCard from "@components/FeaturedSoftwareCard";
+import { featuredSoftwareService } from "service/FeaturedSoftwareService";
+
+const featuredSoftware =
+  await featuredSoftwareService.retrieveFeaturedSoftware();
+---
+
+<Layout title={`Software - ${SITE.title}`}>
+  <Header activeNav="software" />
+  <Main
+    pageTitle="Software"
+    pageDesc="Pieces of open source software I have created"
+  >
+    <ul>
+      {
+        featuredSoftware.map(software => (
+          <FeaturedSoftwareCard
+            name={software.name}
+            logline={software.logline}
+            metadata={software.metadata}
+            description={software.description}
+            url={software.url}
+          />
+        ))
+      }
+    </ul>
+
+    <div class="mt-8 text-center">
+      <a href="/software/all" class="text-skin-accent hover:underline">
+        View all software →
+      </a>
+    </div>
+    <br />
+  </Main>
+  <Footer />
+</Layout>
