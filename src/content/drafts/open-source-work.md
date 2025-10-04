@@ -1,6 +1,6 @@
 ---
 author: Klaudio Sinani
-pubDatetime: 2024-09-05T19:57:02Z 
+pubDatetime: 2024-09-05T19:57:02Z
 modDatetime:
 ogImage: header.jpeg
 title: Open-Source Work
@@ -10,8 +10,7 @@ draft: false
 tags:
   - update
   - open-source
-description:
-  Set of Open-source projects I am currently working on
+description: Set of Open-source projects I am currently working on
 ---
 
 Below you can find an up-to-date set of Open-Source projects that I am currently working on.

@@ -11,14 +11,14 @@ export const SITE: Site = {
   postPerIndex: 4,
   postPerPage: 5,
   scheduledPostMargin: 15 * 60 * 1000,
-  googleSiteVerification: "O0W6AXDlyi2YDtR5ZriJsxii7-UHdy363XJd95Vdi0M"
+  googleSiteVerification: "O0W6AXDlyi2YDtR5ZriJsxii7-UHdy363XJd95Vdi0M",
 };
 
 export const GITHUB_USERNAME: string = "klaudiosinani";
 export const DEFAULT_ITEMS_PER_PAGE: number = 5;
 
 export const LOCALE = {
-  lang: "en", 
+  lang: "en",
   langTag: ["en-EN"],
 } as const;
 

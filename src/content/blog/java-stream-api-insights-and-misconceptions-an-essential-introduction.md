@@ -3,7 +3,7 @@ author: Klaudio Sinani
 pubDatetime: 2024-10-29T21:10:00Z
 modDatetime:
 ogImage: header.jpeg
-title: 'Java Stream API: Insights and Misconceptions' 
+title: "Java Stream API: Insights and Misconceptions"
 slug: java-stream-api-insights-and-misconceptions
 featured: false
 draft: false
@@ -11,11 +11,10 @@ tags:
   - java
   - stream-api
   - white-paper
-description:
-  An essential introduction
+description: An essential introduction
 ---
 
-*An essential introduction.*
+_An essential introduction._
 
 ## Purpose
 
@@ -47,7 +46,7 @@ The Java Stream API was introduced back in Java 8, as a feature that would enabl
 
 Their introduction, along with the introduction of other features, like lambda expressions and the `java.util.function` package in general, marked a significant point in the evolution of Java, adding important new capabilities inspired by the functional paradigm. This enabled the production of cleaner, more expressive, concise, and easier-to-parallelize code.
 
-In practical terms, the Stream API provides a framework for processing data structures, like lists and sets,  through a series of streamlined operations, that include filtering, mapping, reducing, etc. By using these declarative operations we can express data transformations more intuitively and work with collections of objects in a more functional, efficient, and effective approach.
+In practical terms, the Stream API provides a framework for processing data structures, like lists and sets, through a series of streamlined operations, that include filtering, mapping, reducing, etc. By using these declarative operations we can express data transformations more intuitively and work with collections of objects in a more functional, efficient, and effective approach.
 
 ## Properties
 
@@ -87,13 +86,13 @@ In the example, we can observe the following:
 
 1. A stream is created out of a list of numbers via the expression: `numbers.stream()`
 2. The following intermediate operations are declared:
-    - `peek`: is used to log each number
-    - `filter`: is used to filter in even numbers
-    - `map`: is used to multiply each even number by 2
+   - `peek`: is used to log each number
+   - `filter`: is used to filter in even numbers
+   - `map`: is used to multiply each even number by 2
 3. None of the operations are executed immediately, that's why the message: `"Stream defined, awaiting execution."` is logged first
 4. The terminal operation `forEach` is invoked and the stream processes each element on demand
-    - For each element, the stream navigates through `peek`, `filter`, `map`, and finally `forEach`
-    - The logs display each step as it happens, validating the claim that each element is processed only when needed by the terminal operation
+   - For each element, the stream navigates through `peek`, `filter`, `map`, and finally `forEach`
+   - The logs display each step as it happens, validating the claim that each element is processed only when needed by the terminal operation
 
 Our observations can be validated by the log output of our code below.
 
@@ -226,7 +225,7 @@ Infinite streams are typically created using the `Stream.generate` or `Stream.it
 
 However, infinite streams must be combined with short-circuiting operations to avoid infinite processing. Without such operations, processing an infinite stream would run indefinitely, leading to resource exhaustion.
 
-Let's dive into an *infinite* example.
+Let's dive into an _infinite_ example.
 
 ```java
 logger.log("Generating an infinite stream of natural numbers");
@@ -474,7 +473,7 @@ Let's look at a few key factors.
 
 #### 1. Lazy Evaluation vs Automatic Optimization
 
-As mentioned before, one key feature of streams is lazy evaluation. Intermediate operations like `filter`, `map`, `sorted` etc, are only executed when a terminal operation (e.g., `collect`, `reduce`, `forEach`) is invoked. This helps defer computation and potentially decrease the amount of work done in the pipeline. 
+As mentioned before, one key feature of streams is lazy evaluation. Intermediate operations like `filter`, `map`, `sorted` etc, are only executed when a terminal operation (e.g., `collect`, `reduce`, `forEach`) is invoked. This helps defer computation and potentially decrease the amount of work done in the pipeline.
 
 However, lazy evaluation on its own does not mean that the stream pipeline is automatically optimized for every scenario. The Stream API does not inherently optimize the order or combination of operations. It just evaluates them in the order they have been declared. This means that poorly structured pipelines can lead to performance inefficiencies.
 
@@ -502,7 +501,7 @@ Set<String> words = Set.of("ab", "abcd", "efgh", "cd", "klmn");
 // Limit early to stop after the first 2 elements
 List<String> result = words.stream()
     .filter(word -> word.length() > 3)
-    .limit(2) 
+    .limit(2)
     .map(String::toUpperCase)
     .collect(Collectors.toList());
 ```
