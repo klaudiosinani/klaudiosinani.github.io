@@ -20,8 +20,16 @@ const { noMarginTop = false } = Astro.props;
     </div>
   </div>
   <div class="footer-image-wrapper">
-    <img src="/footer-light.png" alt="Dia, Liri" class="footer-image footer-light" />
-    <img src="/footer-dark.png" alt="Dia, Liri" class="footer-image footer-dark" />
+    <img
+      src="/footer-light.png"
+      alt="Dia, Liri"
+      class="footer-image footer-light"
+    />
+    <img
+      src="/footer-dark.png"
+      alt="Dia, Liri"
+      class="footer-image footer-dark"
+    />
   </div>
 </footer>
 
@@ -39,10 +47,10 @@ const { noMarginTop = false } = Astro.props;
     width: 80%;
     display: none;
   }
-  html[data-theme='light'] .footer-light {
-    display: block; 
+  html[data-theme="light"] .footer-light {
+    display: block;
   }
-  html[data-theme='dark'] .footer-dark {
+  html[data-theme="dark"] .footer-dark {
     display: block;
   }
   .link-button {

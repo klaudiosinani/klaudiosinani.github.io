@@ -6,10 +6,10 @@ import SoftwareCard from "@components/SoftwareCard";
 import { SITE } from "@config";
 import Layout from "@layouts/Layout.astro";
 import Main from "@layouts/Main.astro";
-import type { PaginatedResult } from "service/pagination/PaginatedResult";
-import { paginationService } from "service/pagination/PaginationService";
-import type { Software } from "service/Software";
-import { softwareRetrievalService } from "service/SoftwareRetrievalService";
+import type { PaginatedResult } from "services/pagination/PaginatedResult";
+import { paginationService } from "services/pagination/PaginationService";
+import type { Software } from "services/Software";
+import { softwareRetrievalService } from "services/SoftwareRetrievalService";
 
 const softwareRepositories = await softwareRetrievalService.retrieve();
 

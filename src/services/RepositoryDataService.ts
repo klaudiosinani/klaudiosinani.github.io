@@ -5,8 +5,8 @@ import type { RepositoryData } from "providers/RepositoryData";
 import type { RepositoryDataProvider } from "providers/RepositoryProvider";
 
 export class RepositoryDataService {
-  private provider: RepositoryDataProvider;
-  private username: string;
+  private readonly provider: RepositoryDataProvider;
+  private readonly username: string;
 
   constructor(username?: string, provider?: RepositoryDataProvider) {
     this.username = username || GITHUB_USERNAME;

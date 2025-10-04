@@ -5,7 +5,7 @@ import Footer from "@components/Footer.astro";
 import Layout from "@layouts/Layout.astro";
 import Main from "@layouts/Main.astro";
 import FeaturedSoftwareCard from "@components/FeaturedSoftwareCard";
-import { featuredSoftwareService } from "service/FeaturedSoftwareService";
+import { featuredSoftwareService } from "services/FeaturedSoftwareService";
 
 const featuredSoftware =
   await featuredSoftwareService.retrieveFeaturedSoftware();
