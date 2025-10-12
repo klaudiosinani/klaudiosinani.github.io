@@ -38,4 +38,14 @@ const software = defineCollection({
   }),
 });
 
-export const collections = { blog, software };
+const about = defineCollection({
+  type: "content_layer",
+  loader: glob({ pattern: "**/*.md", base: "./src/content/about" }),
+  schema: z.object({
+    title: z.string(),
+    draft: z.boolean().default(false),
+    order: z.number().default(99),
+  }),
+});
+
+export const collections = { blog, software, about };

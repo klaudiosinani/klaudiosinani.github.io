@@ -1,0 +1,38 @@
+---
+import { SITE } from "@config";
+import Header from "@components/Header.astro";
+import Footer from "@components/Footer.astro";
+import Layout from "@layouts/Layout.astro";
+import Main from "@layouts/Main.astro";
+import { aboutSectionsService } from "services/about/AboutSectionsService";
+
+const sections = await aboutSectionsService.retrieveAboutSections();
+
+const renderedSections = await Promise.all(
+  sections.map(async section => {
+    const { Content } = await section.render();
+    return {
+      title: section.data.title,
+      Content,
+    };
+  })
+);
+---
+
+<Layout title={`About - ${SITE.title}`}>
+  <Header activeNav="about" />
+  <Main pageTitle="About">
+    <section id="about" class="prose mx-auto w-full max-w-app px-0">
+      {
+        renderedSections.map(({ title, Content }) => (
+          <>
+            {title && <h3>{title}</h3>}
+            <Content />
+          </>
+        ))
+      }
+    </section>
+    <br />
+  </Main>
+  <Footer />
+</Layout>
