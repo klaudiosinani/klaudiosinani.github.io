@@ -6,6 +6,7 @@ import Layout from "@layouts/Layout.astro";
 import Main from "@layouts/Main.astro";
 import FeaturedSoftwareCard from "@components/FeaturedSoftwareCard";
 import { featuredSoftwareService } from "services/FeaturedSoftwareService";
+import LinkButton from "@components/LinkButton.astro";
 
 const featuredSoftware =
   await featuredSoftwareService.retrieveFeaturedSoftware();
@@ -13,10 +14,7 @@ const featuredSoftware =
 
 <Layout title={`Software - ${SITE.title}`}>
   <Header activeNav="software" />
-  <Main
-    pageTitle="Software"
-    pageDesc="Pieces of open source software I have created"
-  >
+  <Main pageTitle="Software">
     <ul>
       {
         featuredSoftware.map(software => (
@@ -31,11 +29,17 @@ const featuredSoftware =
       }
     </ul>
 
-    <div class="mt-8 text-center">
-      <a href="/software/all" class="text-skin-accent hover:underline">
-        View all software →
-      </a>
+    <div class="all-posts-btn-wrapper mt-8 text-center">
+      <LinkButton href="/software/all">
+        All Software
+        <svg xmlns="http://www.w3.org/2000/svg"
+          ><path
+            d="m11.293 17.293 1.414 1.414L19.414 12l-6.707-6.707-1.414 1.414L15.586 11H6v2h9.586z"
+          ></path>
+        </svg>
+      </LinkButton>
     </div>
+
     <br />
   </Main>
   <Footer />

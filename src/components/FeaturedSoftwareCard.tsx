@@ -12,7 +12,6 @@ export interface FeaturedSoftwareCardProps {
 export default function FeaturedSoftwareCard({
   name,
   logline,
-  description,
   url,
   metadata,
   secHeading = true,
@@ -31,13 +30,9 @@ export default function FeaturedSoftwareCard({
         className="inline-block text-lg font-medium text-skin-accent decoration-solid underline-offset-4 focus-visible:no-underline focus-visible:underline-offset-0"
       >
         {secHeading ? (
-          <h2 {...headerProps}>
-            {name} - {logline}
-          </h2>
+          <h2 {...headerProps}>{name}</h2>
         ) : (
-          <h3 {...headerProps}>
-            {name} - {logline}
-          </h3>
+          <h3 {...headerProps}>{name}</h3>
         )}
       </a>
       {metadata && (
@@ -46,7 +41,7 @@ export default function FeaturedSoftwareCard({
         </div>
       )}
       <p>
-        <i>{description}</i>
+        <i>{logline}</i>
       </p>
     </li>
   );
