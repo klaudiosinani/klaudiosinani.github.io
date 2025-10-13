@@ -4,7 +4,7 @@ export const SITE: Site = {
   website: "https://klaudiosinani.com/",
   author: "Klaudio Sinani",
   profile: "https://klaudiosinani.com/",
-  desc: "Definite and vague reflections for humans and machines.",
+  desc: "Software, Publications, Papers, Books",
   title: "Klaudio Sinani",
   ogImage: "header.jpeg",
   lightAndDarkMode: true,
