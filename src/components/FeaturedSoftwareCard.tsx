@@ -1,12 +1,12 @@
 import { slugifyStr } from "@utils/slugify";
 
 export interface FeaturedSoftwareCardProps {
-  name: string;
-  logline: string;
-  metadata?: string | null;
-  description: string;
-  url: string;
-  secHeading?: boolean;
+  readonly name: string;
+  readonly logline: string;
+  readonly metadata?: string | null;
+  readonly description: string;
+  readonly url: string;
+  readonly secHeading?: boolean;
 }
 
 export default function FeaturedSoftwareCard({

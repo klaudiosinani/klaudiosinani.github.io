@@ -1,10 +1,10 @@
 export interface SoftwareCardProps {
-  name: string;
-  description: string;
-  homepageUrl: string;
-  stars: number;
-  forks: number;
-  latestUpdate: string;
+  readonly name: string;
+  readonly description: string;
+  readonly homepageUrl: string;
+  readonly stars: number;
+  readonly forks: number;
+  readonly latestUpdate: string;
 }
 
 export default function SoftwareCard({
