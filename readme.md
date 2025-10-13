@@ -3,7 +3,7 @@
 </h1>
 
 <h4 align="center">
-  Definite and vague reflections for humans and machines.
+  Software, Publications, Papers, Books
 </h4>
 
 <div align="center">
