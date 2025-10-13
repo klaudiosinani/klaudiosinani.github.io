@@ -2,7 +2,7 @@ import type { RepositoryData } from "providers/RepositoryData";
 import type { RepositoryDataProvider } from "providers/RepositoryProvider";
 
 export class MockRepositoryDataProvider implements RepositoryDataProvider {
-  async fetchRepositories(username: string): Promise<RepositoryData[]> {
+  async fetchRepositories(): Promise<RepositoryData[]> {
     return [
       {
         name: "signale",
