@@ -1,0 +1,32 @@
+---
+import { SITE } from "@config";
+import Header from "@components/Header.astro";
+import Footer from "@components/Footer.astro";
+import Layout from "@layouts/Layout.astro";
+import Main from "@layouts/Main.astro";
+import { featuredPressService } from "services/press/FeaturedPressService";
+import FeaturedPressCard from "@components/FeaturedPressCard";
+
+const featuredPress = await featuredPressService.retrieveFeaturedPress();
+---
+
+<Layout title={`In the Press - ${SITE.title}`}>
+  <Header />
+  <Main pageTitle="In the Press" pageDesc="Featured articles and media coverage for my Open-Source Software work">
+    <ul>
+      {
+        featuredPress.map(press => (
+          <FeaturedPressCard
+            publicationTitle={press.publicationTitle}
+            publisherName={press.publisherName}
+            publicationUrl={press.publicationUrl}
+            softwareTitle={press.softwareTitle}
+            softwareRepositoryUrl={press.softwareRepositoryUrl}
+          />
+        ))
+      }
+    </ul>
+    <br />
+  </Main>
+  <Footer />
+</Layout>
