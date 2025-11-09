@@ -112,23 +112,23 @@ Singlie exposes a fluent API with 25 methods organized across capability interfa
 
 ### Core Operations
 
-- **`append(...values: T[]): List<U>`** — Append one or more nodes to the end
-- **`prepend(...values: T[]): List<U>`** — Prepend one or more nodes to the beginning
-- **`insert(options: {value: T | T[], index: number}): List<U>`** — Insert nodes at specific index
-- **`remove(index: number): List<U>`** — Remove node at specific index
-- **`clear(): List<U>`** — Remove all nodes from the list
+- **`append(...values: T[]): List<T>`** — Append one or more nodes to the end
+- **`prepend(...values: T[]): List<T>`** — Prepend one or more nodes to the beginning
+- **`insert(options: {value: T | T[], index: number}): List<T>`** — Insert nodes at specific index
+- **`remove(index: number): List<T>`** — Remove node at specific index
+- **`clear(): List<T>`** — Remove all nodes from the list
 - **`get(index: number): T`** — Get value at specific index
-- **`set(options: {value: T, index: number}): List<U>`** — Set value at specific index
+- **`set(options: {value: T, index: number}): List<T>`** — Set value at specific index
 - **`node(index: number): Node<T>`** — Get node at specific index
 - **`isEmpty(): boolean`** — Check if a list is empty
 
 ### Iteration & Transformation
 
-- **`forEach(consumer: Consumer<T>): List<U>`** — Execute function for each value
+- **`forEach(consumer: Consumer<T>): List<T>`** — Execute consumer for each value returning the instance
 - **`map<U>(mapper: Mapper<T, U>): List<U>`** — Transform values to a new list
-- **`filter(predicate: Predicate<T>): List<U>`** — Filter values based on predicate
-- **`reduce<U>(reducer: Reducer<U, T>, initialValue: U): U`** — Reduce to single value
-- **`reverse(): this`** — Reverse the order of nodes
+- **`filter(predicate: Predicate<T>): List<T>`** — Filter values based on predicate to a new list
+- **`reduce<U>(reducer: Reducer<T, U>, initialValue: U): U`** — Reduce to single value
+- **`reverse(): List<T>`** — Reverse the order of nodes to a new list
 
 ### Search Operations
 
@@ -143,8 +143,8 @@ Singlie exposes a fluent API with 25 methods organized across capability interfa
 
 ### Conversion
 
-- **`toCircular(): Circular<T>`** — Convert linear list to circular *(Linear only)*
-- **`toLinear(): Linear<T>`** — Convert circular list to linear *(Circular only)*
+- **`toCircular(): Circular<T>`** — Convert linear list to new circular list *(Linear only)*
+- **`toLinear(): Linear<T>`** — Convert circular list to new linear list *(Circular only)*
 
 ### Type Aliases
 
@@ -153,7 +153,7 @@ The library uses standardized function type aliases for a better developer exper
 - **`Consumer<T>`** — `(value: T) => void` for forEach operations
 - **`Predicate<T>`** — `(value: T) => boolean` for filter operations
 - **`Mapper<T, U>`** — `(value: T) => U` for map transformations
-- **`Reducer<U, T>`** — `(accumulator: U, value: T) => U` for reduce operations
+- **`Reducer<T, U>`** — `(accumulator: U, value: T) => U` for reduce operations
 
 ## Installation
 
