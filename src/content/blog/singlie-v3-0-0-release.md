@@ -4,7 +4,7 @@ pubDatetime: 2025-11-09T18:36:27Z
 modDatetime:
 ogImage: header.jpeg
 title: "Singlie: v3.0.0 Release"
-slug: singlie-v3.0.0-release
+slug: singlie-v3-0-0-release
 featured: false
 draft: false
 tags:
