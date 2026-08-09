@@ -1,0 +1,29 @@
+---
+import { SITE } from "@config/site";
+import Header from "@components/Header.astro";
+import Footer from "@components/Footer.astro";
+import Layout from "@layouts/Layout.astro";
+import Main from "@layouts/Main.astro";
+import { contentRetrievalService } from "@services/content/ContentRetrievalService";
+
+const renderedSections =
+  await contentRetrievalService.renderedSections("thanks");
+---
+
+<Layout title={`Thanks - ${SITE.title}`}>
+  <Header />
+  <Main pageTitle="Thanks">
+    <section id="thanks" class="prose mx-auto w-full max-w-app px-0">
+      {
+        renderedSections.map(({ title, Content }) => (
+          <>
+            {title && <h3>{title}</h3>}
+            <Content />
+          </>
+        ))
+      }
+    </section>
+    <br />
+  </Main>
+  <Footer />
+</Layout>
