@@ -1,0 +1,12 @@
+---
+import { SocialIconRegistry } from "./SocialIconRegistry";
+import type { SocialIconName } from "./SocialIconName";
+
+export interface Props {
+  name: SocialIconName;
+}
+
+const { name } = Astro.props;
+---
+
+<Fragment set:html={SocialIconRegistry.resolve(name)} />

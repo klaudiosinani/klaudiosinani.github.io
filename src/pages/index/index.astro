@@ -4,13 +4,13 @@ import Header from "@components/Header.astro";
 import Footer from "@components/Footer.astro";
 import Layout from "@layouts/Layout.astro";
 import Main from "@layouts/Main.astro";
-import Tag from "@components/Tag.astro";
-import getUniqueTags from "@utils/getUniqueTags";
-import { SITE } from "@config";
+import Tag from "@features/publication/components/Tag.astro";
+import { PublicationQueryService } from "@features/publication/PublicationQueryService";
+import { SITE } from "@config/site";
 
 const posts = await getCollection("blog");
 
-let tags = getUniqueTags(posts);
+let tags = PublicationQueryService.collectTags(posts);
 ---
 
 <Layout title={`Index - ${SITE.title}`}>

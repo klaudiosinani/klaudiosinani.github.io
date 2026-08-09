@@ -1,4 +1,4 @@
-import { SITE } from "@config";
+import { SITE } from "@config/site";
 import { glob } from "astro/loaders";
 import { defineCollection, z } from "astro:content";
 
@@ -38,6 +38,21 @@ const software = defineCollection({
   }),
 });
 
+const press = defineCollection({
+  type: "content_layer",
+  loader: glob({ pattern: "**/*.md", base: "./src/content/press" }),
+  schema: z.object({
+    publicationTitle: z.string(),
+    issueNumber: z.string(),
+    publisherName: z.string(),
+    publicationUrl: z.string().url(),
+    softwareTitle: z.string(),
+    softwareRepositoryUrl: z.string().url(),
+    hidden: z.boolean().default(false),
+    order: z.number().default(99),
+  }),
+});
+
 const about = defineCollection({
   type: "content_layer",
   loader: glob({ pattern: "**/*.md", base: "./src/content/about" }),
@@ -48,4 +63,14 @@ const about = defineCollection({
   }),
 });
 
-export const collections = { blog, software, about };
+const thanks = defineCollection({
+  type: "content_layer",
+  loader: glob({ pattern: "**/*.md", base: "./src/content/thanks" }),
+  schema: z.object({
+    title: z.string(),
+    draft: z.boolean().default(false),
+    order: z.number().default(99),
+  }),
+});
+
+export const collections = { blog, software, press, about, thanks };

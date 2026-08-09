@@ -2,19 +2,23 @@
   "extends": "astro/tsconfigs/strict",
   "compilerOptions": {
     "module": "ESNext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "target": "ESNext",
     "baseUrl": "src",
     "jsx": "react-jsx",
     "paths": {
-      "@assets/*": ["assets/*"],
-      "@config": ["config.ts"],
-      "@components/*": ["components/*"],
+      "@assets/*": ["shared/assets/*"],
+      "@components/*": ["shared/components/*"],
       "@content/*": ["content/*"],
-      "@layouts/*": ["layouts/*"],
+      "@features/*": ["features/*"],
+      "@layouts/*": ["shared/layouts/*"],
       "@pages/*": ["pages/*"],
-      "@styles/*": ["styles/*"],
-      "@utils/*": ["utils/*"]
+      "@scripts/*": ["shared/scripts/*"],
+      "@services/*": ["shared/services/*"],
+      "@config/*": ["config/*"],
+      "@styles/*": ["shared/styles/*"],
+      "@utils/*": ["shared/utils/*"]
     }
-  }
+  },
+  "exclude": ["dist", "node_modules", ".astro", "coverage"]
 }

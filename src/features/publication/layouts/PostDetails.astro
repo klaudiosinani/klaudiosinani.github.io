@@ -1,0 +1,120 @@
+---
+import ChevronLeftIcon from "@components/icons/ChevronLeftIcon";
+import { RoutePathResolver } from "@utils/routing/RoutePathResolver";
+import Layout from "@layouts/Layout.astro";
+import Header from "@components/Header.astro";
+import Footer from "@components/Footer.astro";
+import Tag from "@features/publication/components/Tag.astro";
+import Datetime from "@features/publication/components/Datetime";
+import type { CollectionEntry } from "astro:content";
+import { SlugFormatter } from "@utils/text/SlugFormatter";
+import { SITE } from "@config/site";
+
+export interface Props {
+  post: CollectionEntry<"blog">;
+}
+
+const { post } = Astro.props;
+
+const {
+  title,
+  author,
+  description,
+  ogImage,
+  canonicalURL,
+  pubDatetime,
+  modDatetime,
+  tags,
+} = post.data;
+
+const { Content } = await post.render();
+
+const ogImageUrl = typeof ogImage === "string" ? ogImage : ogImage?.src;
+const ogUrl = new URL(
+  ogImageUrl ??
+    RoutePathResolver.resolvePublicationImage(SlugFormatter.format(title)),
+  Astro.url.origin
+).href;
+
+const layoutProps = {
+  title: `${title} - ${SITE.title}`,
+  author,
+  description,
+  pubDatetime,
+  modDatetime,
+  canonicalURL,
+  ogImage: ogUrl,
+  scrollSmooth: true,
+};
+---
+
+<Layout {...layoutProps}>
+  <Header />
+
+  <div class="mx-auto flex w-full max-w-app justify-start px-2">
+    <button id="go-back" class="focus-outline mb-2 mt-8 flex hover:opacity-75">
+      <ChevronLeftIcon /><span>Go back</span>
+    </button>
+  </div>
+  <main id="main-content">
+    <h1 transition:name={SlugFormatter.format(title)} class="post-title">
+      {title}
+    </h1>
+    <Datetime
+      pubDatetime={pubDatetime}
+      modDatetime={modDatetime}
+      size="lg"
+      className="my-2"
+    />
+    <article id="article" class="prose mx-auto mt-8 max-w-app">
+      <Content />
+    </article>
+
+    <ul class="my-8">
+      Keywords: {tags.map(tag => <Tag tag={SlugFormatter.format(tag)} />)}
+    </ul>
+
+    <div
+      class="flex flex-col-reverse items-center justify-between gap-6 sm:flex-row-reverse sm:items-end sm:gap-4"
+    >
+      <button
+        id="back-to-top"
+        class="focus-outline whitespace-nowrap py-1 hover:opacity-75"
+      >
+        <ChevronLeftIcon className="rotate-90" />
+        <span>Back to Top</span>
+      </button>
+    </div>
+  </main>
+  <Footer />
+</Layout>
+
+<style>
+  main {
+    @apply mx-auto w-full max-w-app px-4 pb-12;
+  }
+  .post-title {
+    @apply text-3xl font-semibold text-skin-accent;
+  }
+</style>
+
+<script>
+  import { BackToTopButton } from "@scripts/BackToTopButton";
+  import { CodeCopyButtons } from "@scripts/CodeCopyButtons";
+  import { HeadingAnchors } from "@scripts/HeadingAnchors";
+  import { HistoryBackButton } from "@scripts/HistoryBackButton";
+  import { ReadingProgressBar } from "@scripts/ReadingProgressBar";
+
+  const mount = (): void => {
+    ReadingProgressBar.mount();
+    HeadingAnchors.mount();
+    CodeCopyButtons.mount();
+    BackToTopButton.mount();
+    HistoryBackButton.mount();
+  };
+
+  mount();
+
+  // Runs on view transitions navigation
+  document.addEventListener("astro:after-swap", mount);
+</script>

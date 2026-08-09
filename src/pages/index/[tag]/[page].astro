@@ -1,10 +1,9 @@
 ---
+import { RoutePathResolver } from "@utils/routing/RoutePathResolver";
 import { type CollectionEntry, getCollection } from "astro:content";
-import TagPosts from "@layouts/TagPosts.astro";
-import getUniqueTags from "@utils/getUniqueTags";
-import getPostsByTag from "@utils/getPostsByTag";
-import getPageNumbers from "@utils/getPageNumbers";
-import getPagination from "@utils/getPagination";
+import TagPosts from "@features/publication/layouts/TagPosts.astro";
+import { PublicationQueryService } from "@features/publication/PublicationQueryService";
+import { paginationService } from "@features/pagination/PaginationService";
 
 export interface Props {
   post: CollectionEntry<"blog">;
@@ -14,14 +13,15 @@ export interface Props {
 
 export async function getStaticPaths() {
   const posts = await getCollection("blog");
-
-  const tags = getUniqueTags(posts);
+  const tags = PublicationQueryService.collectTags(posts);
 
   return tags.flatMap(({ tag, tagName }) => {
-    const tagPosts = getPostsByTag(posts, tag);
-    const totalPages = getPageNumbers(tagPosts.length);
+    const tagPosts = PublicationQueryService.findByTag(posts, tag);
+    const pageNumbers = paginationService.subsequentPageNumbers(
+      tagPosts.length
+    );
 
-    return totalPages.map(page => ({
+    return pageNumbers.map(page => ({
       params: { tag, page },
       props: { tag, tagName },
     }));
@@ -33,11 +33,12 @@ const { tag, tagName } = Astro.props;
 
 const posts = await getCollection("blog", ({ data }) => !data.draft);
 
-const postsByTag = getPostsByTag(posts, tag);
+const postsByTag = PublicationQueryService.findByTag(posts, tag);
 
-const pagination = getPagination({
-  posts: postsByTag,
+const pagination = paginationService.paginate({
+  items: postsByTag,
   page,
+  basePath: RoutePathResolver.resolveTag(tag),
 });
 ---
 

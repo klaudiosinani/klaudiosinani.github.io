@@ -1,22 +1,13 @@
 ---
-import { SITE } from "@config";
+import { SITE } from "@config/site";
 import Header from "@components/Header.astro";
 import Footer from "@components/Footer.astro";
 import Layout from "@layouts/Layout.astro";
 import Main from "@layouts/Main.astro";
-import { aboutSectionsService } from "services/about/AboutSectionsService";
+import { contentRetrievalService } from "@services/content/ContentRetrievalService";
 
-const sections = await aboutSectionsService.retrieveAboutSections();
-
-const renderedSections = await Promise.all(
-  sections.map(async section => {
-    const { Content } = await section.render();
-    return {
-      title: section.data.title,
-      Content,
-    };
-  })
-);
+const renderedSections =
+  await contentRetrievalService.renderedSections("about");
 ---
 
 <Layout title={`About - ${SITE.title}`}>

@@ -1,10 +1,10 @@
 ---
+import { ROUTES } from "@config/routes";
 import { type CollectionEntry, getCollection } from "astro:content";
-import Posts from "@layouts/Posts.astro";
-import PostDetails from "@layouts/PostDetails.astro";
-import getSortedPosts from "@utils/getSortedPosts";
-import getPageNumbers from "@utils/getPageNumbers";
-import getPagination from "@utils/getPagination";
+import Posts from "@features/publication/layouts/Posts.astro";
+import PostDetails from "@features/publication/layouts/PostDetails.astro";
+import { PublicationQueryService } from "@features/publication/PublicationQueryService";
+import { paginationService } from "@features/pagination/PaginationService";
 
 export interface Props {
   post: CollectionEntry<"blog">;
@@ -18,9 +18,11 @@ export async function getStaticPaths() {
     props: { post },
   }));
 
-  const pagePaths = getPageNumbers(posts.length).map(pageNum => ({
-    params: { slug: String(pageNum) },
-  }));
+  const pagePaths = paginationService
+    .subsequentPageNumbers(posts.length)
+    .map(pageNumber => ({
+      params: { slug: String(pageNumber) },
+    }));
 
   return [...postResult, ...pagePaths];
 }
@@ -30,11 +32,12 @@ const { post } = Astro.props;
 
 const posts = await getCollection("blog");
 
-const sortedPosts = getSortedPosts(posts);
+const sortedPosts = PublicationQueryService.sortByDate(posts);
 
-const pagination = getPagination({
-  posts: sortedPosts,
+const pagination = paginationService.paginate({
+  items: sortedPosts,
   page: slug,
+  basePath: ROUTES.publications,
 });
 ---
 

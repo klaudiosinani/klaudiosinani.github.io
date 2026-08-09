@@ -1,0 +1,54 @@
+---
+import { SITE } from "@config/site";
+import { ROUTES } from "@config/routes";
+import { BreadcrumbTrailResolver } from "@utils/routing/BreadcrumbTrailResolver";
+
+const breadcrumbs = BreadcrumbTrailResolver.resolve(Astro.url.pathname);
+---
+
+<nav class="breadcrumb" aria-label="breadcrumb">
+  <ul>
+    <li>
+      <a href={ROUTES.home}>{SITE.title}</a>
+      <span aria-hidden="true">&raquo;</span>
+    </li>
+    {
+      breadcrumbs.map((breadcrumb, index) =>
+        index + 1 === breadcrumbs.length ? (
+          <li>
+            <span
+              class={`${BreadcrumbTrailResolver.isTagName(breadcrumbs, index) ? "lowercase" : "capitalize"}`}
+              aria-current="page"
+            >
+              {/* make the last part lowercase in Home > Tags > some-tag */}
+              {decodeURIComponent(breadcrumb)}
+            </span>
+          </li>
+        ) : (
+          <li>
+            <a href={`/${breadcrumb}/`}>{breadcrumb}</a>
+            <span aria-hidden="true">&raquo;</span>
+          </li>
+        )
+      )
+    }
+  </ul>
+</nav>
+
+<style>
+  .breadcrumb {
+    @apply mx-auto mb-1 mt-8 w-full max-w-app px-4;
+  }
+  .breadcrumb ul li {
+    @apply inline;
+  }
+  .breadcrumb ul li a {
+    @apply capitalize opacity-70;
+  }
+  .breadcrumb ul li span {
+    @apply opacity-70;
+  }
+  .breadcrumb ul li:not(:last-child) a {
+    @apply hover:opacity-100;
+  }
+</style>

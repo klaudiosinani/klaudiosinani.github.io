@@ -1,16 +1,17 @@
 ---
+import { ROUTES } from "@config/routes";
 import { getCollection } from "astro:content";
-import Posts from "@layouts/Posts.astro";
-import getSortedPosts from "@utils/getSortedPosts";
-import getPagination from "@utils/getPagination";
+import Posts from "@features/publication/layouts/Posts.astro";
+import { PublicationQueryService } from "@features/publication/PublicationQueryService";
+import { paginationService } from "@features/pagination/PaginationService";
 
 const posts = await getCollection("blog");
 
-const sortedPosts = getSortedPosts(posts);
+const sortedPosts = PublicationQueryService.sortByDate(posts);
 
-const pagination = getPagination({
-  posts: sortedPosts,
-  page: 1,
+const pagination = paginationService.paginate({
+  items: sortedPosts,
+  basePath: ROUTES.publications,
   isIndex: true,
 });
 ---

@@ -1,22 +1,22 @@
 ---
+import { ROUTES } from "@config/routes";
 import Footer from "@components/Footer.astro";
 import Header from "@components/Header.astro";
-import Pagination from "@components/Pagination.astro";
-import SoftwareCard from "@components/SoftwareCard";
-import { SITE } from "@config";
+import Pagination from "@features/pagination/components/Pagination.astro";
+import SoftwareCard from "@features/software/components/SoftwareCard";
+import { SITE } from "@config/site";
 import Layout from "@layouts/Layout.astro";
 import Main from "@layouts/Main.astro";
-import type { PaginatedResult } from "services/pagination/PaginatedResult";
-import { paginationService } from "services/pagination/PaginationService";
-import type { Software } from "services/Software";
-import { softwareRetrievalService } from "services/SoftwareRetrievalService";
+import type { PaginatedResult } from "@features/pagination/PaginatedResult";
+import { paginationService } from "@features/pagination/PaginationService";
+import type { Software } from "@features/software/Software";
+import { softwareRetrievalService } from "@features/software/SoftwareRetrievalService";
 
 const softwareRepositories = await softwareRetrievalService.retrieve();
 
 const paginatedResult: PaginatedResult<Software> = paginationService.paginate({
   items: softwareRepositories,
-  page: 1,
-  basePath: "/software/all",
+  basePath: ROUTES.softwareArchive,
   isIndex: true,
 });
 ---

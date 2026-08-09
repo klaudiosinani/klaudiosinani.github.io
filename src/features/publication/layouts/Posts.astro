@@ -1,0 +1,41 @@
+---
+import { RoutePathResolver } from "@utils/routing/RoutePathResolver";
+import type { CollectionEntry } from "astro:content";
+import Layout from "@layouts/Layout.astro";
+import Main from "@layouts/Main.astro";
+import Header from "@components/Header.astro";
+import Footer from "@components/Footer.astro";
+import Pagination from "@features/pagination/components/Pagination.astro";
+import Card from "@features/publication/components/Card";
+import { SITE } from "@config/site";
+
+export interface Props {
+  currentPage: number;
+  totalPages: number;
+  items: CollectionEntry<"blog">[];
+  prevUrl: string;
+  nextUrl: string;
+}
+
+const { currentPage, totalPages, items, prevUrl, nextUrl } = Astro.props;
+---
+
+<Layout title={`Publications - ${SITE.title}`}>
+  <Header activeNav="posts" />
+  <Main pageTitle="Publications">
+    <ul>
+      {
+        items.map(({ data, slug }) => (
+          <Card
+            href={RoutePathResolver.resolvePublication(slug)}
+            frontmatter={data}
+          />
+        ))
+      }
+    </ul>
+  </Main>
+
+  <Pagination {currentPage} {totalPages} {prevUrl} {nextUrl} />
+
+  <Footer noMarginTop={totalPages > 1} />
+</Layout>

@@ -1,0 +1,155 @@
+---
+import { SITE } from "@config/site";
+import { NAV_ITEMS, ROUTES } from "@config/routes";
+import type { NavKey } from "./NavKey";
+import MenuIcon from "./icons/MenuIcon";
+import MoonIcon from "./icons/MoonIcon";
+import SearchIcon from "./icons/SearchIcon";
+import SunIcon from "./icons/SunIcon";
+import Hr from "./Hr.astro";
+import LinkButton from "./LinkButton.astro";
+
+export interface Props {
+  activeNav?: NavKey;
+}
+
+const { activeNav } = Astro.props;
+---
+
+<header>
+  <a id="skip-to-content" href="#main-content">Skip to content</a>
+  <div class="nav-container">
+    <div class="top-nav-wrap">
+      <a href="/" class="logo whitespace-nowrap">{SITE.title}</a>
+      <nav id="nav-menu">
+        <button
+          class="hamburger-menu focus-outline"
+          aria-label="Open Menu"
+          aria-expanded="false"
+          aria-controls="menu-items"
+        >
+          <MenuIcon />
+        </button>
+        <ul id="menu-items" class="display-none sm:flex">
+          {
+            NAV_ITEMS.map(({ key, label, href }) => (
+              <li>
+                <a href={href} class={activeNav === key ? "active" : ""}>
+                  {label}
+                </a>
+              </li>
+            ))
+          }
+          <li>
+            <LinkButton
+              href={`${ROUTES.search}/`}
+              className={`focus-outline p-3 sm:p-1 ${
+                activeNav === "search" ? "active" : ""
+              } flex`}
+              ariaLabel="search"
+              title="Search"
+            >
+              <SearchIcon className="scale-125 sm:scale-100" />
+              <span class="sr-only">Search</span>
+            </LinkButton>
+          </li>
+          <li>
+            <button
+              id="theme-btn"
+              class="focus-outline"
+              title="Toggles light & dark"
+              aria-label="auto"
+              aria-live="polite"
+            >
+              <MoonIcon />
+              <SunIcon />
+            </button>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+  <Hr />
+</header>
+
+<style>
+  #skip-to-content {
+    @apply absolute -top-full left-16 z-50 bg-skin-accent px-3 py-2 text-skin-inverted transition-all focus:top-4;
+  }
+  .nav-container {
+    @apply mx-auto flex max-w-app flex-col items-center justify-between sm:flex-row;
+  }
+  .top-nav-wrap {
+    @apply relative flex w-full items-start justify-between p-4 sm:items-center sm:py-8;
+  }
+  .logo {
+    @apply absolute py-1 text-xl font-semibold sm:static sm:text-2xl;
+  }
+  .hamburger-menu {
+    @apply self-end p-2 sm:hidden;
+  }
+  .hamburger-menu :global(svg) {
+    @apply h-6 w-6 scale-125 fill-skin-base;
+  }
+
+  nav {
+    @apply flex w-full flex-col items-center sm:ml-2 sm:flex-row sm:justify-end sm:space-x-4 sm:py-0;
+  }
+  nav ul {
+    @apply mt-4 grid w-44 grid-cols-2 grid-rows-4 gap-x-2 gap-y-2 sm:ml-0 sm:mt-0 sm:w-auto sm:gap-x-5 sm:gap-y-0;
+  }
+  nav ul li {
+    @apply col-span-2 flex items-center justify-center;
+  }
+  nav ul li a {
+    @apply w-full px-4 py-3 text-center font-medium hover:text-skin-accent sm:my-0 sm:px-2 sm:py-1;
+  }
+  nav ul li:nth-last-child(2) a {
+    @apply w-auto;
+  }
+  nav ul li:nth-last-child(1),
+  nav ul li:nth-last-child(2) {
+    @apply col-span-1;
+  }
+  nav a.active {
+    @apply underline decoration-solid decoration-2 underline-offset-4;
+  }
+  nav :global(a.active svg) {
+    @apply fill-skin-accent;
+  }
+
+  nav button {
+    @apply p-1;
+  }
+  nav button :global(svg) {
+    @apply h-6 w-6 fill-skin-base hover:fill-skin-accent;
+  }
+  #theme-btn {
+    @apply p-3 sm:p-1;
+  }
+  #theme-btn :global(svg) {
+    @apply scale-125 hover:rotate-12 sm:scale-100;
+  }
+
+  .hamburger-menu :global(.menu-icon line) {
+    @apply transition-opacity duration-75 ease-in-out;
+  }
+  .hamburger-menu :global(.menu-icon .close) {
+    opacity: 0;
+  }
+  .hamburger-menu :global(.menu-icon.is-active .line) {
+    @apply opacity-0;
+  }
+  .hamburger-menu :global(.menu-icon.is-active .close) {
+    @apply opacity-100;
+  }
+</style>
+
+<script>
+  import { NavigationMenu } from "@scripts/NavigationMenu";
+
+  NavigationMenu.mount();
+
+  // Runs on view transitions navigation
+  document.addEventListener("astro:after-swap", () => NavigationMenu.mount());
+</script>

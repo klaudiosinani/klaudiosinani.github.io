@@ -1,0 +1,29 @@
+---
+import { RoutePathResolver } from "@utils/routing/RoutePathResolver";
+export interface Props {
+  tag: string;
+  size?: "sm" | "lg";
+}
+
+const { tag, size = "sm" } = Astro.props;
+---
+
+<li
+  class={`inline-block ${
+    size === "sm" ? "my-1 underline-offset-4" : "my-3 mx-1 underline-offset-8"
+  }`}
+>
+  <a
+    href={`${RoutePathResolver.resolveTag(tag)}/`}
+    transition:name={tag}
+    class={`${size === "sm" ? "text-sm" : "text-lg"} pr-2 group`}
+  >
+    <span>{tag}</span>
+  </a>
+</li>
+
+<style>
+  a {
+    @apply relative hover:text-skin-accent focus-visible:p-1;
+  }
+</style>
