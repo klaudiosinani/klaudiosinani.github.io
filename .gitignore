@@ -33,3 +33,6 @@ pnpm-debug.log*
 # IDE
 .vscode/
 .idea/
+
+# test coverage
+coverage/

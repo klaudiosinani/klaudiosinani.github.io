@@ -4,10 +4,15 @@
 # Except these files & folders
 !/src
 !/public
+!/tests
 !/.github
 !tsconfig.json
 !astro.config.ts
+!vitest.config.ts
 !package.json
 !.prettierrc
 !eslint.config.mjs
-!README.md
+!readme.md
+
+# Markdown content
+src/content/**/*.md
