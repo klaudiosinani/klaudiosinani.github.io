@@ -34,7 +34,11 @@ const { activeNav } = Astro.props;
           {
             NAV_ITEMS.map(({ key, label, href }) => (
               <li>
-                <a href={href} class={activeNav === key ? "active" : ""}>
+                <a
+                  href={href}
+                  class={activeNav === key ? "active" : ""}
+                  aria-current={activeNav === key ? "page" : undefined}
+                >
                   {label}
                 </a>
               </li>

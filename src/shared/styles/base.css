@@ -5,6 +5,7 @@
 @layer base {
   :root,
   html[data-theme="light"] {
+    color-scheme: light;
     --color-fill: 251, 254, 251;
     --color-text-base: 40, 39, 40;
     --color-accent: 0, 16, 17;
@@ -13,6 +14,7 @@
     --color-border: 236, 233, 233;
   }
   html[data-theme="dark"] {
+    color-scheme: dark;
     --color-fill: 0, 16, 17;
     --color-text-base: 230, 230, 230;
     --color-accent: 251, 254, 251;
@@ -60,6 +62,23 @@
   }
   .prose summary {
     @apply focus-outline;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+      animation: none !important;
+    }
   }
 
   /* ===== scrollbar ===== */
