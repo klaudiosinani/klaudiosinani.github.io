@@ -47,9 +47,7 @@ export default defineConfig({
         "src/shared/utils/**/*.ts",
         "src/config/**/*.ts",
       ],
-      exclude: [
-        "src/shared/services/og/**",
-      ],
+      exclude: ["src/shared/services/og/**"],
     },
   },
 });

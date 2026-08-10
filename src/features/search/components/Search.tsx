@@ -31,7 +31,7 @@ export default function SearchBar({ searchList }: Props) {
     const searchStr = SearchQueryUrlResolver.query(window.location.search);
     if (searchStr) setInputVal(searchStr);
 
-    // Deferred; during a view transition the input is not yet focusable
+    // Deferred; mid-navigation the input is not yet focusable
     const caret = setTimeout(() => {
       const input = inputRef.current;
       if (!input) return;

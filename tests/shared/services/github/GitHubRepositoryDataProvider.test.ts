@@ -182,7 +182,6 @@ describe("GitHubRepositoryDataProvider.provide", () => {
       new Response("rate limited", { status: 403, statusText: "Forbidden" })
     );
 
-
     await expect(underTest.provide("user")).rejects.toThrow(
       "GitHub API error: 403 - Forbidden"
     );
