@@ -49,14 +49,26 @@ jobs:
     permissions:
       contents: read
     steps:
+      # No `ref:` on purpose. A privileged workflow_run job must not check out
+      # a commit named by the triggering event, so this takes the default
+      # branch - nothing a fork can influence.
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ needs.verify_ci.outputs.sha }}
           persist-credentials: false
 
+      - name: Warn if master moved past the commit CI validated
+        env:
+          VALIDATED_SHA: ${{ needs.verify_ci.outputs.sha }}
+        run: |
+          HEAD_SHA="$(git rev-parse HEAD)"
+
+          if [[ -n "$VALIDATED_SHA" && "$HEAD_SHA" != "$VALIDATED_SHA" ]]; then
+            echo "::warning::Deploying $HEAD_SHA; CI validated $VALIDATED_SHA"
+          fi
+
       - name: Install, build, and upload the site
-        uses: withastro/action@56781b97402ce0487b7e61ce2cb960c0e2cc5289
+        uses: withastro/action@56781b97402ce0487b7e61ce2cb960c0e2cc5289 # v3
 
   deploy:
     name: Deploy to GitHub Pages
