@@ -37,7 +37,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Type check
         run: npm run check
@@ -80,7 +80,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Build
         run: npm run build
@@ -110,13 +110,13 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Check package-lock integrity
         run: |
           npm -v
           checksum=$(sha512sum package-lock.json)
-          npm install --package-lock-only --no-audit
+          npm install --package-lock-only --no-audit --ignore-scripts
           if ! echo ${checksum} | sha512sum --quiet -c -; then
             echo "package-lock.json was modified unexpectedly"
             echo "Please rebuild it using npm@$(npm -v) and commit the changes"

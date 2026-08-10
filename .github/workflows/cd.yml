@@ -23,9 +23,24 @@ jobs:
       (github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.head_repository.full_name == github.repository &&
       github.event.workflow_run.head_branch == 'master')
+    outputs:
+      sha: ${{ steps.resolve.outputs.sha }}
     steps:
-      - name: Report the deployable commit
-        run: echo "Deploying ${{ github.event.workflow_run.head_sha || github.ref }}"
+      - name: Resolve and validate the deployable commit
+        id: resolve
+        env:
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          FALLBACK_SHA: ${{ github.sha }}
+        run: |
+          SHA="${HEAD_SHA:-$FALLBACK_SHA}"
+
+          if [[ ! "$SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "Refusing to deploy an unexpected commit reference"
+            exit 1
+          fi
+
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "Deploying $SHA"
 
   build:
     name: Build Site
@@ -37,7 +52,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
+          ref: ${{ needs.verify_ci.outputs.sha }}
           persist-credentials: false
 
       - name: Install, build, and upload the site
