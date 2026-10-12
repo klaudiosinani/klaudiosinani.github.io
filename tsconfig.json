@@ -14,7 +14,5 @@
     },
     "ignoreDeprecations": "6.0"
   },
-  "exclude": ["dist", "node_modules", ".astro", "coverage",
-    "source/pages"
-  ]
+  "exclude": ["dist", "node_modules", ".astro", "coverage", "source/pages"]
 }

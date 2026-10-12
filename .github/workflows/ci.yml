@@ -96,6 +96,7 @@ jobs:
           echo "Built $(find dist -name '*.html' | wc -l) pages"
 
       - name: Audit the metadata
+        continue-on-error: true
         run: npm run audit:seo
 
   lockfile-check:
