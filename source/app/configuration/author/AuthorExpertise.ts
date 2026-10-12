@@ -1,0 +1,17 @@
+export const AUTHOR_EXPERTISE: readonly string[] = [
+    "Software Engineering",
+    "Open Source Software",
+    "Developer Tools",
+    "Command Line Interfaces",
+    "Software Design",
+    "Architecture",
+    "Software Architecture",
+    "Computer Science",
+    "Data Structures",
+    "JavaScript",
+    "TypeScript",
+    "Node.js",
+    "Java",
+    "Python",
+    "Desktop Applications",
+];
