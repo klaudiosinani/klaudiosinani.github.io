@@ -1,8 +1,6 @@
-# Ignore everything
 /*
 
-# Except these files & folders
-!/src
+!/source
 !/public
 !/tests
 !/.github
@@ -14,5 +12,4 @@
 !eslint.config.mjs
 !readme.md
 
-# Markdown content
-src/content/**/*.md
+source/ui/content/**/*.md

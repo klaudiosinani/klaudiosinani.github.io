@@ -4,21 +4,17 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "target": "ESNext",
-    "baseUrl": "src",
+    "baseUrl": "source",
     "jsx": "react-jsx",
     "paths": {
-      "@assets/*": ["shared/assets/*"],
-      "@components/*": ["shared/components/*"],
-      "@content/*": ["content/*"],
-      "@features/*": ["features/*"],
-      "@layouts/*": ["shared/layouts/*"],
-      "@pages/*": ["pages/*"],
-      "@scripts/*": ["shared/scripts/*"],
-      "@services/*": ["shared/services/*"],
-      "@config/*": ["config/*"],
-      "@styles/*": ["shared/styles/*"],
-      "@utils/*": ["shared/utils/*"]
-    }
+      "@core/*": ["core/*"],
+      "@app/*": ["app/*"],
+      "@bindings": ["app/injection/ApplicationKeys.ts"],
+      "@ui/*": ["ui/*"]
+    },
+    "ignoreDeprecations": "6.0"
   },
-  "exclude": ["dist", "node_modules", ".astro", "coverage"]
+  "exclude": ["dist", "node_modules", ".astro", "coverage",
+    "source/pages"
+  ]
 }

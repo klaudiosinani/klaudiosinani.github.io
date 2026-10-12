@@ -1,8 +1,8 @@
 {
   "arrowParens": "avoid",
   "semi": true,
-  "tabWidth": 2,
-  "printWidth": 80,
+  "tabWidth": 4,
+  "printWidth": 120,
   "singleQuote": false,
   "jsxSingleQuote": false,
   "trailingComma": "es5",
@@ -15,6 +15,13 @@
       "options": {
         "parser": "astro"
       }
+    },
+    {
+      "files": [".prettierrc", "*.json", "*.yml", "*.yaml"],
+      "options": {
+        "tabWidth": 2
+      }
     }
-  ]
+  ],
+  "tailwindStylesheet": "./source/ui/style/theme.css"
 }

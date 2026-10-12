@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        node-version: [20.x, 22.x]
+        node-version: [22.x, 24.x]
         os: [ubuntu-latest]
     steps:
       - name: Checkout code
@@ -84,6 +84,8 @@ jobs:
 
       - name: Build
         run: npm run build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Verify the build output
         run: |
@@ -92,6 +94,9 @@ jobs:
           test -f dist/sitemap-index.xml || { echo "dist/sitemap-index.xml is missing"; exit 1; }
 
           echo "Built $(find dist -name '*.html' | wc -l) pages"
+
+      - name: Audit the metadata
+        run: npm run audit:seo
 
   lockfile-check:
     name: Validate package-lock.json
@@ -170,10 +175,10 @@ jobs:
           args: >
             -Dsonar.projectKey=klaudiosinani_klaudiosinani.github.io
             -Dsonar.organization=klaudiosinani
-            -Dsonar.sources=src
+            -Dsonar.sources=source
             -Dsonar.tests=tests
             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
-            -Dsonar.coverage.exclusions=tests/**,src/shared/services/og/**,*.config.ts
+            -Dsonar.coverage.exclusions=tests/**,source/shared/services/og/**,*.config.ts
             -Dsonar.scm.revision=${{ github.event.pull_request.head.sha }}
 
       - name: SonarQube Quality Gate
