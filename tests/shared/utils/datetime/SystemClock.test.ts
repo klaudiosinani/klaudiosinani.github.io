@@ -1,20 +1,28 @@
 import { describe, expect, it, vi } from "vitest";
-import { SystemClock } from "@utils/datetime/SystemClock";
+import { SystemClock } from "@app/util/datetime/SystemClock";
 
-const underTest = SystemClock;
+const underTest: typeof SystemClock = SystemClock;
 
 describe("SystemClock.currentYear", () => {
-  it("givenAFrozenClock_whenReadingTheCurrentYear_thenItFollowsTheClock", () => {
-    // given
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date("2031-03-04T05:06:07Z"));
+    it("givenAFrozenClock_whenReadingTheCurrentYear_thenItFollowsTheClock", () => {
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date("2031-03-04T05:06:07Z"));
 
-    // when
-    const year = underTest.currentYear();
+        const year: number = underTest.currentYear();
 
-    // then
-    expect(year).toBe(2031);
+        expect(year).toBe(2031);
 
-    vi.useRealTimers();
-  });
+        vi.useRealTimers();
+    });
+});
+
+describe("SystemClock.now", () => {
+    it("givenAFrozenClock_whenReadingTheMoment_thenItFollowsTheClock", () => {
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date("2031-03-04T05:06:07Z"));
+
+        expect(underTest.now().toISOString()).toBe("2031-03-04T05:06:07.000Z");
+
+        vi.useRealTimers();
+    });
 });

@@ -1,96 +1,81 @@
 import { describe, expect, it } from "vitest";
-import { BreadcrumbTrailResolver } from "@utils/routing/BreadcrumbTrailResolver";
+import { BreadcrumbTrailResolver } from "@app/util/routing/BreadcrumbTrailResolver";
 
-const underTest = BreadcrumbTrailResolver;
+const underTest: typeof BreadcrumbTrailResolver = BreadcrumbTrailResolver;
 
 describe("BreadcrumbTrailResolver.resolve", () => {
-  it("givenANestedPathname_whenBuildingTheTrail_thenOneCrumbPerSegmentIsProduced", () => {
-    // given
-    const pathname = "/index/gnome";
+    it("givenANestedPathname_whenBuildingTheTrail_thenOneCrumbPerSegmentIsProduced", () => {
+        const pathname: string = "/index/gnome";
 
-    // when
-    const segments = underTest.resolve(pathname);
+        const segments: string[] = underTest.resolve(pathname);
 
-    // then
-    expect(segments).toEqual(["index", "gnome"]);
-  });
+        expect(segments).toEqual(["index", "gnome"]);
+    });
 
-  it("givenATrailingSlash_whenBuildingTheTrail_thenNoEmptyCrumbIsAppended", () => {
-    // given
-    const pathname = "/publications/";
+    it("givenATrailingSlash_whenBuildingTheTrail_thenNoEmptyCrumbIsAppended", () => {
+        const pathname: string = "/publications/";
 
-    // when
-    const segments = underTest.resolve(pathname);
+        const segments: string[] = underTest.resolve(pathname);
 
-    // then
-    expect(segments).toEqual(["publications"]);
-  });
+        expect(segments).toEqual(["publications"]);
+    });
 
-  it("givenRepeatedTrailingSlashes_whenBuildingTheTrail_thenTheyCollapse", () => {
-    // given
-    const pathname = "/publications///";
+    it("givenRepeatedTrailingSlashes_whenBuildingTheTrail_thenTheyCollapse", () => {
+        const pathname: string = "/publications///";
 
-    // when
-    const segments = underTest.resolve(pathname);
+        const segments: string[] = underTest.resolve(pathname);
 
-    // then
-    expect(segments).toEqual(["publications"]);
-  });
+        expect(segments).toEqual(["publications"]);
+    });
 
-  it("givenTheSiteRoot_whenBuildingTheTrail_thenNoCrumbsAreProduced", () => {
-    // given
-    const pathname = "/";
+    it("givenTheSiteRoot_whenBuildingTheTrail_thenNoCrumbsAreProduced", () => {
+        const pathname: string = "/";
 
-    // when
-    const segments = underTest.resolve(pathname);
+        const segments: string[] = underTest.resolve(pathname);
 
-    // then
-    expect(segments).toEqual([]);
-  });
+        expect(segments).toEqual([]);
+    });
 
-  it("givenAPaginatedPathname_whenBuildingTheTrail_thenThePageNumberIsItsOwnCrumb", () => {
-    // given
-    const pathname = "/publications/2/";
+    it("givenAPaginatedPathname_whenBuildingTheTrail_thenThePageNumberIsItsOwnCrumb", () => {
+        const pathname: string = "/publications/2/";
 
-    // when
-    const segments = underTest.resolve(pathname);
+        const segments: string[] = underTest.resolve(pathname);
 
-    // then
-    expect(segments).toEqual(["publications", "2"]);
-  });
+        expect(segments).toEqual(["publications", "2"]);
+    });
 });
 
 describe("BreadcrumbTrailResolver.isTagName", () => {
-  it("givenASegmentUnderTheTagsRoute_whenCheckingIfItIsATagName_thenItIsTrue", () => {
-    // given
-    const segments = ["index", "gnome"];
+    it("givenASegmentUnderTheTagsRoute_whenCheckingIfItIsATagName_thenItIsTrue", () => {
+        const segments: string[] = ["index", "gnome"];
 
-    // when
-    const isTagName = underTest.isTagName(segments, 1);
+        const isTagName: boolean = underTest.isTagName(segments, 1);
 
-    // then
-    expect(isTagName).toBe(true);
-  });
+        expect(isTagName).toBe(true);
+    });
 
-  it("givenTheTagsRouteSegmentItself_whenCheckingIfItIsATagName_thenItIsFalse", () => {
-    // given
-    const segments = ["index", "gnome"];
+    it("givenTheTagsRouteSegmentItself_whenCheckingIfItIsATagName_thenItIsFalse", () => {
+        const segments: string[] = ["index", "gnome"];
 
-    // when
-    const isTagName = underTest.isTagName(segments, 0);
+        const isTagName: boolean = underTest.isTagName(segments, 0);
 
-    // then
-    expect(isTagName).toBe(false);
-  });
+        expect(isTagName).toBe(false);
+    });
 
-  it("givenASegmentOfAnotherRoute_whenCheckingIfItIsATagName_thenItIsFalse", () => {
-    // given
-    const segments = ["publications", "2"];
+    it("givenASegmentOfAnotherRoute_whenCheckingIfItIsATagName_thenItIsFalse", () => {
+        const segments: string[] = ["publications", "2"];
 
-    // when
-    const isTagName = underTest.isTagName(segments, 1);
+        const isTagName: boolean = underTest.isTagName(segments, 1);
 
-    // then
-    expect(isTagName).toBe(false);
-  });
+        expect(isTagName).toBe(false);
+    });
+});
+
+describe("BreadcrumbTrailResolver.address", () => {
+    it("givenAStepOfTheTrail_whenAddressing_thenItIsTheWholePathDownToIt", () => {
+        const segments: string[] = ["software", "all", "2"];
+
+        expect(underTest.address(segments, 0)).toBe("/software/");
+        expect(underTest.address(segments, 1)).toBe("/software/all/");
+    });
 });

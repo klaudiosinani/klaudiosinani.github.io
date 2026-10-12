@@ -1,81 +1,72 @@
 import { describe, expect, it, vi } from "vitest";
-import { SoftwareRetrievalService } from "@features/software/SoftwareRetrievalService";
-import { RepositoryDataRetrievalService } from "@services/github/RepositoryDataRetrievalService";
-import type { RepositoryData } from "@services/github/RepositoryData";
+import { SoftwareRetrievalService } from "@app/feature/software/service/SoftwareRetrievalService";
+import { RepositoryDataRetrievalService } from "@app/infrastructure/github/service/RepositoryDataRetrievalService";
+import type { RepositoryData } from "@app/infrastructure/github/domain/RepositoryData";
+import type { Software } from "@app/feature/software/Software";
 
-const underTestFor = (
-  repositories: RepositoryData[]
-): SoftwareRetrievalService =>
-  new SoftwareRetrievalService(
-    new RepositoryDataRetrievalService("user", {
-      provide: vi.fn().mockResolvedValue(repositories),
-    })
-  );
+const underTestFor = (repositories: RepositoryData[]): SoftwareRetrievalService =>
+    new SoftwareRetrievalService(
+        new RepositoryDataRetrievalService("user", {
+            provide: vi.fn().mockResolvedValue(repositories),
+        })
+    );
 
 const repository: RepositoryData = {
-  name: "taskbook",
-  description: "Tasks, boards and notes",
-  url: "https://github.com/user/taskbook",
-  stars: 9000,
-  forks: 300,
-  language: "JavaScript",
-  latestUpdate: "2026-01-01T00:00:00Z",
+    name: "taskbook",
+    description: "Tasks, boards and notes",
+    url: "https://github.com/user/taskbook",
+    stars: 9000,
+    forks: 300,
+    language: "JavaScript",
+    license: "MIT",
+    topics: [],
+    createdAt: "2018-01-19T00:00:00Z",
+    latestUpdate: "2026-01-01T00:00:00Z",
+    latestPush: "2026-01-01T00:00:00Z",
 };
 
 describe("SoftwareRetrievalService.retrieve", () => {
-  it("givenARepository_whenRetrievingSoftware_thenItIsMappedOntoTheDomainModel", async () => {
-    // given
-    const underTest = underTestFor([repository]);
+    it("givenARepository_whenRetrievingSoftware_thenItIsMappedOntoTheDomainModel", async () => {
+        const underTest: SoftwareRetrievalService = underTestFor([repository]);
 
-    // when
-    const [software] = await underTest.retrieve();
+        const [software] = await underTest.retrieve();
 
-    // then
-    expect(software).toEqual({
-      name: "taskbook",
-      description: "Tasks, boards and notes",
-      repositoryUrl: "https://github.com/user/taskbook",
-      homepageUrl: "https://klaudiosinani.com/taskbook",
-      stars: 9000,
-      forks: 300,
-      language: "JavaScript",
-      latestUpdate: "2026-01-01T00:00:00Z",
+        expect(software).toEqual({
+            name: "taskbook",
+            description: "Tasks, boards and notes",
+            repositoryUrl: "https://github.com/user/taskbook",
+            homepageUrl: "https://klaudiosinani.com/taskbook",
+            stars: 9000,
+            forks: 300,
+            language: "JavaScript",
+            latestUpdate: "2026-01-01T00:00:00Z",
+        });
     });
-  });
 
-  it("givenARepositoryName_whenRetrievingSoftware_thenItsHomepageIsUnderThisSite", async () => {
-    // given
-    const underTest = underTestFor([{ ...repository, name: "signale" }]);
+    it("givenARepositoryName_whenRetrievingSoftware_thenItsHomepageIsUnderThisSite", async () => {
+        const underTest: SoftwareRetrievalService = underTestFor([{ ...repository, name: "signale" }]);
 
-    // when
-    const [software] = await underTest.retrieve();
+        const [software] = await underTest.retrieve();
 
-    // then
-    expect(software.homepageUrl).toBe("https://klaudiosinani.com/signale");
-  });
+        expect(software.homepageUrl).toBe("https://klaudiosinani.com/signale");
+    });
 
-  it("givenARepositoryWithoutADescription_whenRetrievingSoftware_thenTheBlankIsPreserved", async () => {
-    // given
-    const underTest = underTestFor([{ ...repository, description: "" }]);
+    it("givenARepositoryWithoutADescription_whenRetrievingSoftware_thenTheBlankIsPreserved", async () => {
+        const underTest: SoftwareRetrievalService = underTestFor([{ ...repository, description: "" }]);
 
-    // when
-    const [software] = await underTest.retrieve();
+        const [software] = await underTest.retrieve();
 
-    // then
-    expect(software.description).toBe("");
-  });
+        expect(software.description).toBe("");
+    });
 
-  it("givenOrderedRepositories_whenRetrievingSoftware_thenTheOrderIsPreserved", async () => {
-    // given
-    const underTest = underTestFor([
-      { ...repository, name: "first" },
-      { ...repository, name: "second" },
-    ]);
+    it("givenOrderedRepositories_whenRetrievingSoftware_thenTheOrderIsPreserved", async () => {
+        const underTest: SoftwareRetrievalService = underTestFor([
+            { ...repository, name: "first" },
+            { ...repository, name: "second" },
+        ]);
 
-    // when
-    const software = await underTest.retrieve();
+        const software: Software[] = await underTest.retrieve();
 
-    // then
-    expect(software.map(({ name }) => name)).toEqual(["first", "second"]);
-  });
+        expect(software.map(({ name }: Software) => name)).toEqual(["first", "second"]);
+    });
 });

@@ -1,164 +1,140 @@
+import type { CollectionEntry } from "astro:content";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getCollection } from "astro:content";
-import { ContentRetrievalService } from "@services/content/ContentRetrievalService";
+import type { MockedFunction } from "vitest";
+import { getCollection, render } from "astro:content";
+import { ContentRetrievalService } from "@app/infrastructure/content/service/ContentRetrievalService";
+import type { RenderedSection } from "@app/infrastructure/content/domain/RenderedSection";
 
 vi.mock("astro:content", () => ({
-  getCollection: vi.fn(),
+    getCollection: vi.fn(),
+    render: vi.fn(),
 }));
 
-const getCollectionMock = vi.mocked(getCollection);
+const getCollectionMock: MockedFunction<typeof getCollection> = vi.mocked(getCollection);
+
+const renderMock: MockedFunction<typeof render> = vi.mocked(render);
 
 interface OrderedEntryFixture {
-  id: string;
-  data: {
-    title: string;
-    order: number;
-    draft?: boolean;
-  };
+    id: string;
+    data: {
+        title: string;
+        order: number;
+        draft?: boolean;
+    };
 }
 
-const entry = (
-  id: string,
-  order: number,
-  draft?: boolean
-): OrderedEntryFixture => ({
-  id,
-  data:
-    draft === undefined ? { title: id, order } : { title: id, order, draft },
+const entry = (id: string, order: number, draft?: boolean): OrderedEntryFixture => ({
+    id,
+    data: draft === undefined ? { title: id, order } : { title: id, order, draft },
 });
 
-const underTest = new ContentRetrievalService();
+const underTest: ContentRetrievalService = new ContentRetrievalService();
 
 beforeEach(() => {
-  getCollectionMock.mockReset();
+    getCollectionMock.mockReset();
 });
 
 describe("ContentRetrievalService.entries", () => {
-  it("givenAnEmptyCollection_whenRetrievingEntries_thenItIsRequestedOnce", async () => {
-    // given
-    getCollectionMock.mockResolvedValue([]);
+    it("givenAnEmptyCollection_whenRetrievingEntries_thenItIsRequestedOnce", async () => {
+        getCollectionMock.mockResolvedValue([]);
 
-    // when
-    await underTest.entries("about");
+        await underTest.entries("about");
 
-    // then
-    expect(getCollectionMock).toHaveBeenCalledExactlyOnceWith("about");
-  });
+        expect(getCollectionMock).toHaveBeenCalledExactlyOnceWith("about");
+    });
 
-  it("givenUnorderedEntries_whenRetrievingEntries_thenTheyAreSortedByOrder", async () => {
-    // given
-    getCollectionMock.mockResolvedValue([
-      entry("third", 3),
-      entry("first", 1),
-      entry("second", 2),
-    ] as never);
+    it("givenUnorderedEntries_whenRetrievingEntries_thenTheyAreSortedByOrder", async () => {
+        getCollectionMock.mockResolvedValue([entry("third", 3), entry("first", 1), entry("second", 2)] as never);
 
-    // when
-    const entries = await underTest.entries("about");
+        const entries: CollectionEntry<"about">[] = await underTest.entries("about");
 
-    // then
-    expect(entries.map(({ id }) => id)).toEqual(["first", "second", "third"]);
-  });
+        expect(entries.map(({ id }: CollectionEntry<"about">) => id)).toEqual(["first", "second", "third"]);
+    });
 
-  it("givenADraftAmongPublishedEntries_whenRetrievingEntries_thenTheDraftIsRemoved", async () => {
-    // given
-    getCollectionMock.mockResolvedValue([
-      entry("published", 1, false),
-      entry("draft", 2, true),
-    ] as never);
+    it("givenADraftAmongPublishedEntries_whenRetrievingEntries_thenTheDraftIsRemoved", async () => {
+        getCollectionMock.mockResolvedValue([entry("published", 1, false), entry("draft", 2, true)] as never);
 
-    // when
-    const entries = await underTest.entries("about");
+        const entries: CollectionEntry<"about">[] = await underTest.entries("about");
 
-    // then
-    expect(entries.map(({ id }) => id)).toEqual(["published"]);
-  });
+        expect(entries.map(({ id }: CollectionEntry<"about">) => id)).toEqual(["published"]);
+    });
 
-  it("givenASchemaWithoutADraftField_whenRetrievingEntries_thenTheEntryIsKept", async () => {
-    // given
-    getCollectionMock.mockResolvedValue([entry("no-draft-field", 1)] as never);
+    it("givenASchemaWithoutADraftField_whenRetrievingEntries_thenTheEntryIsKept", async () => {
+        getCollectionMock.mockResolvedValue([entry("no-draft-field", 1)] as never);
 
-    // when
-    const entries = await underTest.entries("about");
+        const entries: CollectionEntry<"about">[] = await underTest.entries("about");
 
-    // then
-    expect(entries.map(({ id }) => id)).toEqual(["no-draft-field"]);
-  });
+        expect(entries.map(({ id }: CollectionEntry<"about">) => id)).toEqual(["no-draft-field"]);
+    });
 
-  it("givenAPublishedEntry_whenRetrievingEntries_thenTheEntryItselfIsReturned", async () => {
-    // given
-    const published = entry("published", 1);
-    getCollectionMock.mockResolvedValue([published] as never);
+    it("givenAPublishedEntry_whenRetrievingEntries_thenTheEntryItselfIsReturned", async () => {
+        const published: OrderedEntryFixture = entry("published", 1);
+        getCollectionMock.mockResolvedValue([published] as never);
 
-    // when
-    const entries = await underTest.entries("about");
+        const entries: CollectionEntry<"about">[] = await underTest.entries("about");
 
-    // then
-    expect(entries[0]).toBe(published);
-  });
+        expect(entries[0]).toBe(published);
+    });
 });
 
 describe("ContentRetrievalService.data", () => {
-  it("givenUnorderedAndDraftEntries_whenRetrievingData_thenOnlyPublishedFrontmatterIsReturnedInOrder", async () => {
-    // given
-    getCollectionMock.mockResolvedValue([
-      entry("second", 2),
-      entry("draft", 3, true),
-      entry("first", 1),
-    ] as never);
+    it("givenUnorderedAndDraftEntries_whenRetrievingData_thenOnlyPublishedFrontmatterIsReturnedInOrder", async () => {
+        getCollectionMock.mockResolvedValue([entry("second", 2), entry("draft", 3, true), entry("first", 1)] as never);
 
-    // when
-    const data = await underTest.data("about");
+        const data: {
+            title: string;
+            draft: boolean;
+            order: number;
+            href?: string | undefined;
+        }[] = await underTest.data("about");
 
-    // then
-    expect(data).toEqual([
-      { title: "first", order: 1 },
-      { title: "second", order: 2 },
-    ]);
-  });
+        expect(data).toEqual([
+            { title: "first", order: 1 },
+            { title: "second", order: 2 },
+        ]);
+    });
 });
 
 describe("ContentRetrievalService.renderedSections", () => {
-  const renderable = (id: string, order: number, draft?: boolean) => ({
-    ...entry(id, order, draft),
-    render: vi.fn().mockResolvedValue({ Content: `<${id}/>` }),
-  });
+    const renderable = (id: string, order: number, draft?: boolean): OrderedEntryFixture => entry(id, order, draft);
 
-  it("givenARenderableEntry_whenRetrievingRenderedSections_thenItsTitleAndBodyArePaired", async () => {
-    // given
-    getCollectionMock.mockResolvedValue([renderable("intro", 1)] as never);
+    beforeEach(() => {
+        renderMock.mockReset();
+        renderMock.mockImplementation(({ id }: { id: string }) => Promise.resolve({ Content: `<${id}/>` }) as never);
+    });
 
-    // when & then
-    await expect(underTest.renderedSections("about")).resolves.toEqual([
-      { title: "intro", Content: "<intro/>" },
-    ]);
-  });
+    it("givenARenderableEntry_whenRetrievingRenderedSections_thenItsTitleAndBodyArePaired", async () => {
+        getCollectionMock.mockResolvedValue([renderable("intro", 1)] as never);
 
-  it("givenUnorderedRenderableEntries_whenRetrievingRenderedSections_thenTheOrderIsPreserved", async () => {
-    // given
-    getCollectionMock.mockResolvedValue([
-      renderable("second", 2),
-      renderable("first", 1),
-    ] as never);
+        await expect(underTest.renderedSections("about")).resolves.toEqual([{ title: "intro", Content: "<intro/>" }]);
+    });
 
-    // when
-    const sections = await underTest.renderedSections("about");
+    it("givenUnorderedRenderableEntries_whenRetrievingRenderedSections_thenTheOrderIsPreserved", async () => {
+        getCollectionMock.mockResolvedValue([renderable("second", 2), renderable("first", 1)] as never);
 
-    // then
-    expect(sections.map(({ title }) => title)).toEqual(["first", "second"]);
-  });
+        const sections: RenderedSection[] = await underTest.renderedSections("about");
 
-  it("givenADraftAmongRenderableEntries_whenRetrievingRenderedSections_thenTheDraftIsSkipped", async () => {
-    // given
-    getCollectionMock.mockResolvedValue([
-      renderable("draft", 1, true),
-      renderable("published", 2),
-    ] as never);
+        expect(sections.map(({ title }: RenderedSection) => title)).toEqual(["first", "second"]);
+    });
 
-    // when
-    const sections = await underTest.renderedSections("about");
+    it("givenADraftAmongRenderableEntries_whenRetrievingRenderedSections_thenTheDraftIsSkipped", async () => {
+        getCollectionMock.mockResolvedValue([renderable("draft", 1, true), renderable("published", 2)] as never);
 
-    // then
-    expect(sections.map(({ title }) => title)).toEqual(["published"]);
-  });
+        const sections: RenderedSection[] = await underTest.renderedSections("about");
+
+        expect(sections.map(({ title }: RenderedSection) => title)).toEqual(["published"]);
+    });
+
+    it("givenASectionThatStatesAnAddress_whenRetrievingRenderedSections_thenTheAddressIsCarried", async () => {
+        getCollectionMock.mockResolvedValue([
+            {
+                ...renderable("software", 1),
+                data: { title: "software", order: 1, href: "/software/" },
+            },
+        ] as never);
+
+        await expect(underTest.renderedSections("about")).resolves.toEqual([
+            { title: "software", Content: "<software/>", href: "/software/" },
+        ]);
+    });
 });

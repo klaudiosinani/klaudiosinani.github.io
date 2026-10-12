@@ -1,39 +1,31 @@
 import { describe, expect, it } from "vitest";
-import { GitHubRepositoryDataProvider } from "@services/github/GitHubRepositoryDataProvider";
-import { MockRepositoryDataProvider } from "@services/github/MockRepositoryDataProvider";
-import { RepositoryDataProviderFactory } from "@services/github/RepositoryDataProviderFactory";
+import { GitHubRepositoryDataProvider } from "@app/infrastructure/github/service/GitHubRepositoryDataProvider";
+import { MockRepositoryDataProvider } from "@app/infrastructure/github/service/MockRepositoryDataProvider";
+import { RepositoryDataProviderFactory } from "@app/infrastructure/github/factory/RepositoryDataProviderFactory";
+import type { RepositoryDataProvider } from "@app/infrastructure/github/service/RepositoryDataProvider";
 
-const underTest = RepositoryDataProviderFactory;
+const underTest: typeof RepositoryDataProviderFactory = RepositoryDataProviderFactory;
 
 describe("RepositoryDataProviderFactory.create", () => {
-  it("givenAProductionBuild_whenCreatingAProvider_thenTheLiveProviderIsServed", () => {
-    // given
-    const isProduction = true;
+    it("givenAProductionBuild_whenCreatingAProvider_thenTheLiveProviderIsServed", () => {
+        const isProduction: boolean = true;
 
-    // when
-    const provider = underTest.create(isProduction);
+        const provider: RepositoryDataProvider = underTest.create(isProduction);
 
-    // then
-    expect(provider).toBeInstanceOf(GitHubRepositoryDataProvider);
-  });
+        expect(provider).toBeInstanceOf(GitHubRepositoryDataProvider);
+    });
 
-  it("givenADevelopmentBuild_whenCreatingAProvider_thenTheMockProviderIsServed", () => {
-    // given
-    const isProduction = false;
+    it("givenADevelopmentBuild_whenCreatingAProvider_thenTheMockProviderIsServed", () => {
+        const isProduction: boolean = false;
 
-    // when
-    const provider = underTest.create(isProduction);
+        const provider: RepositoryDataProvider = underTest.create(isProduction);
 
-    // then
-    expect(provider).toBeInstanceOf(MockRepositoryDataProvider);
-  });
+        expect(provider).toBeInstanceOf(MockRepositoryDataProvider);
+    });
 
-  it("givenNoExplicitEnvironment_whenCreatingAProvider_thenTheMockProviderIsServed", () => {
-    // import.meta.env.PROD is false under vitest
-    // when
-    const provider = underTest.create();
+    it("givenNoExplicitEnvironment_whenCreatingAProvider_thenTheMockProviderIsServed", () => {
+        const provider: RepositoryDataProvider = underTest.create();
 
-    // then
-    expect(provider).toBeInstanceOf(MockRepositoryDataProvider);
-  });
+        expect(provider).toBeInstanceOf(MockRepositoryDataProvider);
+    });
 });
