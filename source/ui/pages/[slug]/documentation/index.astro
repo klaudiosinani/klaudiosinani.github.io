@@ -1,0 +1,171 @@
+---
+import { REPOSITORY_CONFIGURATION as REPOSITORY_CONFIGURATION_KEY } from "@bindings";
+import { TrailStep } from "@app/util/routing/TrailStep";
+import DocumentLanguageBar from "@ui/feature/repository/component/DocumentLanguageBar.astro";
+import type { BreadcrumbStep } from "@app/util/seo/breadcrumb/BreadcrumbStep";
+import Footer from "@ui/component/Footer.astro";
+import Header from "@ui/component/Header.astro";
+import Layout from "@ui/layout/Layout.astro";
+import Main from "@ui/layout/Main.astro";
+import { BREADCRUMB_HOME } from "@app/configuration/navigation/BreadcrumbHome";
+import { LOCALE } from "@app/configuration/site/SiteLocale";
+import RepositoryHeader from "@ui/feature/repository/component/RepositoryHeader.astro";
+import RepositoryManualSection from "@ui/feature/repository/component/RepositoryManualSection.astro";
+import RepositoryPageNav from "@ui/feature/repository/component/RepositoryPageNav.astro";
+import { SITE } from "@app/configuration/site/Site";
+import type { DocumentAlternate } from "@app/feature/repository/document/DocumentAlternate";
+import type { GithubRepositoryData } from "@app/infrastructure/api/github/repository/data/GithubRepositoryData";
+import type { FeaturedSoftware } from "@app/feature/software/featured/FeaturedSoftware";
+import type { RepositoryProfile } from "@app/feature/repository/profile/RepositoryProfile";
+import type { RepositorySubPageMetadata } from "@app/feature/repository/page/RepositorySubPageMetadata";
+import type { StructuredData } from "@app/util/seo/StructuredData";
+
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { BreadcrumbStepsFactory } from "@app/util/seo/breadcrumb/BreadcrumbStepsFactory.ts";
+import { RepositoryTrailFactory } from "@app/feature/repository/page/RepositoryTrailFactory.ts";
+import { DocumentAlternatesFactory } from "@app/feature/repository/document/DocumentAlternatesFactory.ts";
+import { FeaturedSoftwareRetrievalService } from "@app/feature/software/featured/FeaturedSoftwareRetrievalService.ts";
+import { RepositoryConfiguration } from "@app/feature/repository/profile/RepositoryConfiguration.ts";
+import { GITHUB_REPOSITORY_DATA_RETRIEVAL_SERVICE as GITHUB_REPOSITORY_DATA_RETRIEVAL_SERVICE_KEY } from "@bindings";
+import { RepositoryPageNavigationFactory } from "@app/feature/repository/page/RepositoryPageNavigationFactory.ts";
+import { RepositoryProfileResolver } from "@app/feature/repository/profile/RepositoryProfileResolver.ts";
+import { REPOSITORY_PROFILE_RETRIEVAL_SERVICE as REPOSITORY_PROFILE_RETRIEVAL_SERVICE_KEY } from "@bindings";
+import { RepositorySubPageMetadataFactory } from "@app/feature/repository/page/RepositorySubPageMetadataFactory.ts";
+import { RoutePathResolver } from "@app/util/routing/RoutePathResolver.ts";
+import { SchemaIdentifiers } from "@app/util/seo/SchemaIdentifiers.ts";
+import { TechArticleSchemaBuilder } from "@app/util/seo/article/TechArticleSchemaBuilder.ts";
+
+const BREADCRUMB_STEPS_FACTORY: BreadcrumbStepsFactory = CONTEXT.resolve(BreadcrumbStepsFactory);
+const REPOSITORY_TRAIL_FACTORY: RepositoryTrailFactory = CONTEXT.resolve(RepositoryTrailFactory);
+const DOCUMENT_ALTERNATES_FACTORY: DocumentAlternatesFactory = CONTEXT.resolve(DocumentAlternatesFactory);
+const REPOSITORY_PAGE_NAVIGATION_FACTORY: RepositoryPageNavigationFactory = CONTEXT.resolve(
+    RepositoryPageNavigationFactory
+);
+const REPOSITORY_SUB_PAGE_METADATA_FACTORY: RepositorySubPageMetadataFactory = CONTEXT.resolve(
+    RepositorySubPageMetadataFactory
+);
+const ROUTE_PATH_RESOLVER: RoutePathResolver = CONTEXT.resolve(RoutePathResolver);
+const SCHEMA_IDENTIFIERS: SchemaIdentifiers = CONTEXT.resolve(SchemaIdentifiers);
+const TECH_ARTICLE_SCHEMA_BUILDER: TechArticleSchemaBuilder = CONTEXT.resolve(TechArticleSchemaBuilder);
+export async function getStaticPaths() {
+    const FEATURED_SOFTWARE_RETRIEVAL_SERVICE: FeaturedSoftwareRetrievalService = CONTEXT.resolve(
+        FeaturedSoftwareRetrievalService
+    );
+    const REPOSITORY_CONFIGURATION: RepositoryConfiguration = CONTEXT.resolve(REPOSITORY_CONFIGURATION_KEY);
+    const GITHUB_REPOSITORY_DATA_RETRIEVAL_SERVICE = CONTEXT.resolve(GITHUB_REPOSITORY_DATA_RETRIEVAL_SERVICE_KEY);
+    const REPOSITORY_PROFILE_RESOLVER: RepositoryProfileResolver = CONTEXT.resolve(RepositoryProfileResolver);
+    const REPOSITORY_PROFILE_RETRIEVAL_SERVICE = CONTEXT.resolve(REPOSITORY_PROFILE_RETRIEVAL_SERVICE_KEY);
+    const repositories: GithubRepositoryData[] = await GITHUB_REPOSITORY_DATA_RETRIEVAL_SERVICE.retrieve();
+    const curated: FeaturedSoftware[] = await FEATURED_SOFTWARE_RETRIEVAL_SERVICE.retrieve();
+
+    const profiled: GithubRepositoryData[] = repositories.filter((githubRepositoryData: GithubRepositoryData) =>
+        REPOSITORY_CONFIGURATION.profiles(githubRepositoryData.getName())
+    );
+
+    const pages: ({
+        params: { slug: string };
+        props: { profile: RepositoryProfile };
+    } | null)[] = await Promise.all(
+        profiled.map(async (githubRepositoryData: GithubRepositoryData) => {
+            const gathered: RepositoryProfile | null = await REPOSITORY_PROFILE_RETRIEVAL_SERVICE.retrieve(
+                githubRepositoryData.getName()
+            );
+
+            if (!gathered?.manual) {
+                return null;
+            }
+
+            return {
+                params: { slug: githubRepositoryData.getName() },
+                props: {
+                    profile: REPOSITORY_PROFILE_RESOLVER.resolve(gathered, curated),
+                },
+            };
+        })
+    );
+
+    return pages.filter(
+        (
+            page: {
+                params: { slug: string };
+                props: { profile: RepositoryProfile };
+            } | null
+        ) => page !== null
+    );
+}
+
+const { profile } = Astro.props;
+
+const canonical: string = new URL(ROUTE_PATH_RESOLVER.resolveRepositoryManual(profile.slug), SITE.getWebsite()).href;
+
+const metadata: RepositorySubPageMetadata = REPOSITORY_SUB_PAGE_METADATA_FACTORY.manual(
+    profile,
+    SITE.getTitle(),
+    SITE.getAuthor()
+);
+
+const schema: StructuredData[] = [
+    TECH_ARTICLE_SCHEMA_BUILDER.build({
+        headline: `${profile.name} documentation`,
+        description: metadata.getDescription(),
+        url: canonical,
+        author: SITE.getAuthor(),
+        authorUrl: SITE.getWebsite(),
+        authorId: SCHEMA_IDENTIFIERS.person(SITE.getWebsite()),
+        dateModified: profile.latestCommit?.getCommittedAt(),
+        inLanguage: LOCALE.getLanguage(),
+        image: new URL(ROUTE_PATH_RESOLVER.resolveRepositoryImage(profile.slug), SITE.getWebsite()).href,
+        about: {
+            name: profile.name,
+            url: new URL(ROUTE_PATH_RESOLVER.resolveRepository(profile.slug), SITE.getWebsite()).href,
+        },
+    }),
+];
+
+const alternates: DocumentAlternate[] = DOCUMENT_ALTERNATES_FACTORY.create(profile.slug, profile.documents, null);
+
+const trail: TrailStep[] = REPOSITORY_TRAIL_FACTORY.create(
+    profile.name,
+    profile.slug,
+    new TrailStep("Documentation", canonical)
+);
+
+const breadcrumbs: BreadcrumbStep[] = BREADCRUMB_STEPS_FACTORY.create(trail, BREADCRUMB_HOME, SITE.getWebsite());
+---
+
+<Layout
+    title={metadata.getTitle()}
+    description={metadata.getDescription()}
+    ogImage={ROUTE_PATH_RESOLVER.resolveRepositoryImage(profile.slug)}
+    alternates={alternates.map((documentAlternate: DocumentAlternate) => ({
+        tag: documentAlternate.getTag(),
+        href: documentAlternate.getHref(),
+    }))}
+    modDatetime={profile.latestCommit ? new Date(profile.latestCommit.getCommittedAt()) : null}
+    schema={schema}
+    breadcrumbs={breadcrumbs}
+>
+    <Header activeNav="software" />
+    <Main pageTitle={`${profile.name} - Documentation`} pageDesc={profile.logline} {trail}>
+        <RepositoryHeader profile={profile} />
+
+        <RepositoryPageNav pages={REPOSITORY_PAGE_NAVIGATION_FACTORY.create(profile, "documentation")} />
+
+        <DocumentLanguageBar {alternates} />
+
+        <RepositoryManualSection manual={profile.manual!} source={`${profile.url}#readme`} />
+    </Main>
+    <Footer />
+</Layout>
+
+<script>
+    import { CODE_COPY_BUTTONS } from "@ui/script/CodeCopyButtons";
+    import { SECTION_NAVIGATION } from "@ui/script/SectionNavigation";
+
+    const mount = (): void => {
+        CODE_COPY_BUTTONS.mount();
+        SECTION_NAVIGATION.mount();
+    };
+
+    mount();
+</script>

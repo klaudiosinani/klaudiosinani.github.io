@@ -1,0 +1,77 @@
+---
+import { REPOSITORY_CONFIGURATION as REPOSITORY_CONFIGURATION_KEY } from "@bindings";
+import ReleaseDetails from "@ui/feature/repository/component/ReleaseDetails.astro";
+import type { GithubRepositoryData } from "@app/infrastructure/api/github/repository/data/GithubRepositoryData";
+import type { FeaturedSoftware } from "@app/feature/software/featured/FeaturedSoftware";
+import type { RepositoryProfile } from "@app/feature/repository/profile/RepositoryProfile";
+import type { RepositoryRelease } from "@app/feature/repository/release/RepositoryRelease";
+
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { FeaturedSoftwareRetrievalService } from "@app/feature/software/featured/FeaturedSoftwareRetrievalService.ts";
+import { PublishedReleaseResolver } from "@app/feature/repository/release/PublishedReleaseResolver.ts";
+import { ReleaseSlugFormatter } from "@app/feature/repository/release/ReleaseSlugFormatter.ts";
+import { RepositoryConfiguration } from "@app/feature/repository/profile/RepositoryConfiguration.ts";
+import { GITHUB_REPOSITORY_DATA_RETRIEVAL_SERVICE as GITHUB_REPOSITORY_DATA_RETRIEVAL_SERVICE_KEY } from "@bindings";
+import { RepositoryProfileResolver } from "@app/feature/repository/profile/RepositoryProfileResolver.ts";
+import { REPOSITORY_PROFILE_RETRIEVAL_SERVICE as REPOSITORY_PROFILE_RETRIEVAL_SERVICE_KEY } from "@bindings";
+
+export async function getStaticPaths() {
+    const FEATURED_SOFTWARE_RETRIEVAL_SERVICE: FeaturedSoftwareRetrievalService = CONTEXT.resolve(
+        FeaturedSoftwareRetrievalService
+    );
+    const PUBLISHED_RELEASE_RESOLVER: PublishedReleaseResolver = CONTEXT.resolve(PublishedReleaseResolver);
+    const RELEASE_SLUG_FORMATTER: ReleaseSlugFormatter = CONTEXT.resolve(ReleaseSlugFormatter);
+    const REPOSITORY_CONFIGURATION: RepositoryConfiguration = CONTEXT.resolve(REPOSITORY_CONFIGURATION_KEY);
+    const GITHUB_REPOSITORY_DATA_RETRIEVAL_SERVICE = CONTEXT.resolve(GITHUB_REPOSITORY_DATA_RETRIEVAL_SERVICE_KEY);
+    const REPOSITORY_PROFILE_RESOLVER: RepositoryProfileResolver = CONTEXT.resolve(RepositoryProfileResolver);
+    const REPOSITORY_PROFILE_RETRIEVAL_SERVICE = CONTEXT.resolve(REPOSITORY_PROFILE_RETRIEVAL_SERVICE_KEY);
+    const repositories: GithubRepositoryData[] = await GITHUB_REPOSITORY_DATA_RETRIEVAL_SERVICE.retrieve();
+    const curated: FeaturedSoftware[] = await FEATURED_SOFTWARE_RETRIEVAL_SERVICE.retrieve();
+
+    const profiled: GithubRepositoryData[] = repositories.filter((githubRepositoryData: GithubRepositoryData) =>
+        REPOSITORY_CONFIGURATION.profiles(githubRepositoryData.getName())
+    );
+
+    const pages: {
+        params: { slug: string; tag: string };
+        props: {
+            profile: RepositoryProfile;
+            release: RepositoryRelease;
+            previous: RepositoryRelease;
+            next: RepositoryRelease;
+        };
+    }[][] = await Promise.all(
+        profiled.map(async (githubRepositoryData: GithubRepositoryData) => {
+            const gathered: RepositoryProfile | null = await REPOSITORY_PROFILE_RETRIEVAL_SERVICE.retrieve(
+                githubRepositoryData.getName()
+            );
+
+            if (!gathered) {
+                return [];
+            }
+
+            const profile: RepositoryProfile = REPOSITORY_PROFILE_RESOLVER.resolve(gathered, curated);
+            const published: RepositoryRelease[] = PUBLISHED_RELEASE_RESOLVER.resolve(profile.releases);
+
+            return published.map((release: RepositoryRelease, index: number) => ({
+                params: {
+                    slug: githubRepositoryData.getName(),
+                    tag: RELEASE_SLUG_FORMATTER.format(release.getTag()),
+                },
+                props: {
+                    profile,
+                    release,
+                    previous: published[index + 1] ?? null,
+                    next: published[index - 1] ?? null,
+                },
+            }));
+        })
+    );
+
+    return pages.flat();
+}
+
+const { profile, release, previous, next } = Astro.props;
+---
+
+<ReleaseDetails {profile} {release} {previous} {next} />

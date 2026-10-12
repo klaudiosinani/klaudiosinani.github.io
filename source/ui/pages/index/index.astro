@@ -1,0 +1,89 @@
+---
+import { TrailStep } from "@app/util/routing/TrailStep";
+import { CollectionItem } from "@app/util/seo/page/CollectionItem";
+import type { CollectionEntry } from "astro:content";
+import { getCollection } from "astro:content";
+import Header from "@ui/component/Header.astro";
+import Footer from "@ui/component/Footer.astro";
+import Layout from "@ui/layout/Layout.astro";
+import Main from "@ui/layout/Main.astro";
+import Tag from "@ui/feature/publication/component/Tag.astro";
+import type { Tag as PublicationTag } from "@app/feature/publication/tag/Tag";
+import { PAGE_DESCRIPTIONS } from "@app/configuration/page/PageDescriptions";
+import { ROUTES } from "@app/configuration/route/Routes";
+import { PAGE_TITLES } from "@app/configuration/page/PageTitles";
+import { LOCALE } from "@app/configuration/site/SiteLocale";
+import { SITE } from "@app/configuration/site/Site";
+import type { StructuredData } from "@app/util/seo/StructuredData";
+
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { RoutePathResolver } from "@app/util/routing/RoutePathResolver.ts";
+import { PublicationQueryService } from "@app/feature/publication/PublicationQueryService.ts";
+import { CollectionPageSchemaBuilder } from "@app/util/seo/page/CollectionPageSchemaBuilder.ts";
+import { PageTitleFormatter } from "@app/util/text/PageTitleFormatter.ts";
+import { SchemaIdentifiers } from "@app/util/seo/SchemaIdentifiers.ts";
+
+const ROUTE_PATH_RESOLVER: RoutePathResolver = CONTEXT.resolve(RoutePathResolver);
+const PUBLICATION_QUERY_SERVICE: PublicationQueryService = CONTEXT.resolve(PublicationQueryService);
+const COLLECTION_PAGE_SCHEMA_BUILDER: CollectionPageSchemaBuilder = CONTEXT.resolve(CollectionPageSchemaBuilder);
+const PAGE_TITLE_FORMATTER: PageTitleFormatter = CONTEXT.resolve(PageTitleFormatter);
+const SCHEMA_IDENTIFIERS: SchemaIdentifiers = CONTEXT.resolve(SchemaIdentifiers);
+
+const posts: CollectionEntry<"blog">[] = await getCollection("blog");
+
+const tags: PublicationTag[] = PUBLICATION_QUERY_SERVICE.collectTags(posts);
+
+const schema: StructuredData[] = [
+    COLLECTION_PAGE_SCHEMA_BUILDER.build({
+        name: "Index",
+        url: new URL(`${ROUTES.tags}/`, SITE.getWebsite()).href,
+        description: PAGE_DESCRIPTIONS.tags,
+        author: {
+            name: SITE.getAuthor(),
+            url: SITE.getWebsite(),
+            id: SCHEMA_IDENTIFIERS.person(SITE.getWebsite()),
+        },
+        image: new URL(ROUTE_PATH_RESOLVER.resolvePageImage("index"), SITE.getWebsite()).href,
+        inLanguage: LOCALE.getLanguage(),
+        siteId: SCHEMA_IDENTIFIERS.website(SITE.getWebsite()),
+        items: tags.map(
+            (publicationTag: PublicationTag) =>
+                new CollectionItem(
+                    publicationTag.getTagName(),
+                    new URL(ROUTE_PATH_RESOLVER.resolveTag(publicationTag.getTag()), SITE.getWebsite()).href
+                )
+        ),
+    }),
+];
+---
+
+<Layout
+    title={PAGE_TITLE_FORMATTER.format(PAGE_TITLES.tags, SITE.getTitle())}
+    description={PAGE_DESCRIPTIONS.tags}
+    ogImage={ROUTE_PATH_RESOLVER.resolvePageImage("index")}
+    schema={schema}
+>
+    <Header activeNav="tags" />
+    <Main
+        pageTitle="Keywords"
+        pageDesc="Each article, in groups by subject."
+        trail={[new TrailStep("Keywords", `${ROUTES.tags}/`)]}
+    >
+        <ul class="keyword-list">
+            {
+                tags.map((publicationTag: PublicationTag) => (
+                    <Tag tag={publicationTag.getTag()} count={publicationTag.getCount()} />
+                ))
+            }
+        </ul>
+    </Main>
+    <Footer />
+</Layout>
+
+<style>
+    @reference "../../style/theme.css";
+
+    .keyword-list {
+        @apply flex flex-wrap gap-inline;
+    }
+</style>

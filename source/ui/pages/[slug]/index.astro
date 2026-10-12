@@ -1,0 +1,274 @@
+---
+import { REPOSITORY_CONFIGURATION as REPOSITORY_CONFIGURATION_KEY } from "@bindings";
+import RepositoryCast from "@ui/feature/repository/component/RepositoryCast.astro";
+import { TrailStep } from "@app/util/routing/TrailStep";
+import Footer from "@ui/component/Footer.astro";
+import Header from "@ui/component/Header.astro";
+import Layout from "@ui/layout/Layout.astro";
+import Main from "@ui/layout/Main.astro";
+import RepositoryChart from "@ui/feature/repository/component/RepositoryChart.astro";
+import RepositoryCommitStrip from "@ui/feature/repository/component/RepositoryCommitStrip.astro";
+import RepositoryCitationPanel from "@ui/feature/repository/component/RepositoryCitationPanel.astro";
+import RepositoryLanguages from "@ui/feature/repository/component/RepositoryLanguages.astro";
+import RepositoryHeader from "@ui/feature/repository/component/RepositoryHeader.astro";
+import ProjectGlyphTile from "@ui/feature/software/component/ProjectGlyphTile";
+import RepositoryDownloadsBreakdown from "@ui/feature/repository/component/RepositoryDownloadsBreakdown.astro";
+import RepositoryMetrics from "@ui/feature/repository/component/RepositoryMetrics.astro";
+import RepositoryPageNav from "@ui/feature/repository/component/RepositoryPageNav.astro";
+import SectionHeading from "@ui/component/SectionHeading.astro";
+import FeaturedSoftwareCard from "@ui/feature/software/component/FeaturedSoftwareCard";
+import { BREADCRUMB_HOME } from "@app/configuration/navigation/BreadcrumbHome";
+import { ROUTES } from "@app/configuration/route/Routes";
+import { SITE } from "@app/configuration/site/Site";
+import type { GithubRepositoryData } from "@app/infrastructure/api/github/repository/data/GithubRepositoryData";
+import type { RepositoryProfile } from "@app/feature/repository/profile/RepositoryProfile";
+import type { FeaturedSoftware } from "@app/feature/software/featured/FeaturedSoftware";
+import type { FeaturedSoftwareEntry } from "@app/feature/software/featured/FeaturedSoftwareEntry";
+import type { RepositoryPageMetadata } from "@app/feature/repository/page/RepositoryPageMetadata";
+import type { StructuredData } from "@app/util/seo/StructuredData";
+import type { RepositoryLanguage } from "@app/feature/repository/profile/RepositoryLanguage";
+
+import type { BreadcrumbStep } from "@app/util/seo/breadcrumb/BreadcrumbStep";
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { BreadcrumbStepsFactory } from "@app/util/seo/breadcrumb/BreadcrumbStepsFactory.ts";
+import { ViewTransitionName } from "@app/util/routing/ViewTransitionName.ts";
+import { FeaturedSoftwareRetrievalService } from "@app/feature/software/featured/FeaturedSoftwareRetrievalService.ts";
+import { FeaturedSoftwareResolver } from "@app/feature/software/featured/FeaturedSoftwareResolver.ts";
+import { RelatedRepositoryResolver } from "@app/feature/repository/profile/RelatedRepositoryResolver.ts";
+import { RepositorySignalsSource } from "@app/feature/repository/signal/RepositorySignalsSource.ts";
+import { RepositoryConfiguration } from "@app/feature/repository/profile/RepositoryConfiguration.ts";
+import { GITHUB_REPOSITORY_DATA_RETRIEVAL_SERVICE as GITHUB_REPOSITORY_DATA_RETRIEVAL_SERVICE_KEY } from "@bindings";
+import { RepositoryDownloadChart } from "@app/feature/repository/download/RepositoryDownloadChart.ts";
+import { RepositoryLicenseResolver } from "@app/feature/repository/profile/RepositoryLicenseResolver.ts";
+import { RepositoryPageMetadataFactory } from "@app/feature/repository/page/RepositoryPageMetadataFactory.ts";
+import { RepositoryPageNavigationFactory } from "@app/feature/repository/page/RepositoryPageNavigationFactory.ts";
+import { RepositoryProfileResolver } from "@app/feature/repository/profile/RepositoryProfileResolver.ts";
+import { REPOSITORY_PROFILE_RETRIEVAL_SERVICE as REPOSITORY_PROFILE_RETRIEVAL_SERVICE_KEY } from "@bindings";
+import { RoutePathResolver } from "@app/util/routing/RoutePathResolver.ts";
+import { SchemaIdentifiers } from "@app/util/seo/SchemaIdentifiers.ts";
+import { SoftwareSourceCodeSchemaBuilder } from "@app/util/seo/software/SoftwareSourceCodeSchemaBuilder.ts";
+
+const VIEW_TRANSITION_NAME: ViewTransitionName = CONTEXT.resolve(ViewTransitionName);
+const BREADCRUMB_STEPS_FACTORY: BreadcrumbStepsFactory = CONTEXT.resolve(BreadcrumbStepsFactory);
+const FEATURED_SOFTWARE_RETRIEVAL_SERVICE: FeaturedSoftwareRetrievalService = CONTEXT.resolve(
+    FeaturedSoftwareRetrievalService
+);
+const FEATURED_SOFTWARE_RESOLVER: FeaturedSoftwareResolver = CONTEXT.resolve(FeaturedSoftwareResolver);
+const RELATED_REPOSITORY_RESOLVER: RelatedRepositoryResolver = CONTEXT.resolve(RelatedRepositoryResolver);
+const REPOSITORY_SIGNALS_SOURCE: RepositorySignalsSource = CONTEXT.resolve(RepositorySignalsSource);
+const GITHUB_REPOSITORY_DATA_RETRIEVAL_SERVICE = CONTEXT.resolve(GITHUB_REPOSITORY_DATA_RETRIEVAL_SERVICE_KEY);
+const REPOSITORY_DOWNLOAD_CHART: RepositoryDownloadChart = CONTEXT.resolve(RepositoryDownloadChart);
+const REPOSITORY_LICENSE_RESOLVER: RepositoryLicenseResolver = CONTEXT.resolve(RepositoryLicenseResolver);
+const REPOSITORY_PAGE_METADATA_FACTORY: RepositoryPageMetadataFactory = CONTEXT.resolve(RepositoryPageMetadataFactory);
+const REPOSITORY_PAGE_NAVIGATION_FACTORY: RepositoryPageNavigationFactory = CONTEXT.resolve(
+    RepositoryPageNavigationFactory
+);
+const REPOSITORY_PROFILE_RESOLVER: RepositoryProfileResolver = CONTEXT.resolve(RepositoryProfileResolver);
+const REPOSITORY_PROFILE_RETRIEVAL_SERVICE = CONTEXT.resolve(REPOSITORY_PROFILE_RETRIEVAL_SERVICE_KEY);
+const ROUTE_PATH_RESOLVER: RoutePathResolver = CONTEXT.resolve(RoutePathResolver);
+const SCHEMA_IDENTIFIERS: SchemaIdentifiers = CONTEXT.resolve(SchemaIdentifiers);
+const SOFTWARE_SOURCE_CODE_SCHEMA_BUILDER: SoftwareSourceCodeSchemaBuilder = CONTEXT.resolve(
+    SoftwareSourceCodeSchemaBuilder
+);
+export async function getStaticPaths() {
+    const REPOSITORY_CONFIGURATION: RepositoryConfiguration = CONTEXT.resolve(REPOSITORY_CONFIGURATION_KEY);
+    const GITHUB_REPOSITORY_DATA_RETRIEVAL_SERVICE = CONTEXT.resolve(GITHUB_REPOSITORY_DATA_RETRIEVAL_SERVICE_KEY);
+    const repositories: GithubRepositoryData[] = await GITHUB_REPOSITORY_DATA_RETRIEVAL_SERVICE.retrieve();
+
+    return repositories
+        .filter((githubRepositoryData: GithubRepositoryData) =>
+            REPOSITORY_CONFIGURATION.profiles(githubRepositoryData.getName())
+        )
+        .map((githubRepositoryData: GithubRepositoryData) => ({ params: { slug: githubRepositoryData.getName() } }));
+}
+
+const { slug } = Astro.params;
+
+const gathered: RepositoryProfile | null = await REPOSITORY_PROFILE_RETRIEVAL_SERVICE.retrieve(slug as string);
+
+if (!gathered) {
+    return Astro.redirect("/404");
+}
+
+const curated: FeaturedSoftware[] = await FEATURED_SOFTWARE_RETRIEVAL_SERVICE.retrieve();
+
+const profile: RepositoryProfile = REPOSITORY_PROFILE_RESOLVER.resolve(gathered, curated);
+
+const charted: boolean = REPOSITORY_DOWNLOAD_CHART.drawable(profile);
+
+const RELATED: number = 2;
+
+const nearest: GithubRepositoryData[] = RELATED_REPOSITORY_RESOLVER.resolve(
+    profile,
+    await GITHUB_REPOSITORY_DATA_RETRIEVAL_SERVICE.retrieve(),
+    RELATED
+);
+
+const related: FeaturedSoftwareEntry[] = FEATURED_SOFTWARE_RESOLVER.fromRepositories(
+    nearest,
+    curated,
+    await REPOSITORY_SIGNALS_SOURCE.signals(
+        nearest.map((githubRepositoryData: GithubRepositoryData) => githubRepositoryData.getName())
+    )
+);
+
+const metadata: RepositoryPageMetadata = REPOSITORY_PAGE_METADATA_FACTORY.create(
+    profile,
+    SITE.getTitle(),
+    SITE.getAuthor()
+);
+
+const canonical: string = new URL(ROUTE_PATH_RESOLVER.resolveRepository(profile.slug), SITE.getWebsite()).href;
+
+const card: string = new URL(ROUTE_PATH_RESOLVER.resolveRepositoryImage(profile.slug), SITE.getWebsite()).href;
+
+const [registry] = profile.packages;
+
+const [latest] = profile.releases;
+
+const schema: StructuredData[] = [
+    SOFTWARE_SOURCE_CODE_SCHEMA_BUILDER.build({
+        name: profile.name,
+        description: profile.description,
+        url: canonical,
+        codeRepository: profile.url,
+        programmingLanguage: profile.languages.map(({ name }: RepositoryLanguage) => name),
+        author: SITE.getAuthor(),
+        authorUrl: SITE.getWebsite(),
+        authorId: SCHEMA_IDENTIFIERS.person(SITE.getWebsite()),
+        stars: profile.stars,
+        license: REPOSITORY_LICENSE_RESOLVER.resolve(profile.license) ?? undefined,
+        version: latest?.getTag() ?? null,
+        dateCreated: profile.createdAt,
+        dateModified: profile.latestCommit?.getCommittedAt(),
+        keywords: profile.topics,
+        image: card,
+        downloadUrl: registry?.getUrl() ?? null,
+    }),
+];
+
+const trail: TrailStep[] = [
+    new TrailStep("Software", `${ROUTES.software}/`),
+    new TrailStep(profile.name, ROUTE_PATH_RESOLVER.resolveRepository(profile.slug)),
+];
+
+const breadcrumbs: BreadcrumbStep[] = BREADCRUMB_STEPS_FACTORY.create(trail, BREADCRUMB_HOME, SITE.getWebsite());
+---
+
+<Layout
+    title={metadata.getTitle()}
+    description={metadata.getDescription()}
+    ogImage={ROUTE_PATH_RESOLVER.resolveRepositoryImage(profile.slug)}
+    modDatetime={profile.latestCommit ? new Date(profile.latestCommit.getCommittedAt()) : null}
+    schema={schema}
+    breadcrumbs={breadcrumbs}
+>
+    <Header activeNav="software" />
+    <Main
+        pageTitle={profile.name}
+        pageDesc={profile.logline}
+        titleTransition={VIEW_TRANSITION_NAME.of("software", profile.slug)}
+        {trail}
+    >
+        <ProjectGlyphTile project={profile.slug} slot="title-adornment" />
+        <RepositoryHeader profile={profile} />
+
+        <RepositoryPageNav pages={REPOSITORY_PAGE_NAVIGATION_FACTORY.create(profile, "activity")} />
+
+        <div class="figures panel panel-static">
+            {
+                charted && (
+                    <RepositoryChart
+                        downloads={profile.downloads.getTotal() ?? 0}
+                        trend={profile.trend}
+                        lastPublishedDay={profile.lastPublishedDay}
+                        sources={[...profile.downloads.getSources()]}
+                        caveats={[...profile.downloads.getCaveats()]}
+                    />
+                )
+            }
+            {
+                !charted && profile.downloads.isCounted() && (
+                    <RepositoryDownloadsBreakdown
+                        downloads={profile.downloads.getTotal() ?? 0}
+                        sources={[...profile.downloads.getSources()]}
+                    />
+                )
+            }
+            <div class="figures-groups">
+                <RepositoryMetrics profile={profile} />
+            </div>
+            {
+                profile.latestCommit && (
+                    <div class="figures-change">
+                        <p class="band-label">Last change</p>
+                        <RepositoryCommitStrip commit={profile.latestCommit} />
+                    </div>
+                )
+            }
+        </div>
+
+        <RepositoryLanguages profile={profile} />
+
+        <RepositoryCast slug={profile.slug} project={profile.name} />
+
+        {
+            related.length > 0 && (
+                <section class="repository-section" id="related">
+                    <SectionHeading title="Related projects" href={`${ROUTES.software}/`} more="All software" />
+                    <ul class="card-grid">
+                        {related.map((entry: FeaturedSoftwareEntry) => (
+                            <FeaturedSoftwareCard entry={entry} secHeading={false} lead={false} />
+                        ))}
+                    </ul>
+                </section>
+            )
+        }
+
+        {
+            profile.citation && (
+                <section class="repository-section" id="citation">
+                    <SectionHeading title="Citation" />
+                    <RepositoryCitationPanel citation={profile.citation} />
+                </section>
+            )
+        }
+    </Main>
+    <Footer />
+</Layout>
+
+<style>
+    @reference "../../style/theme.css";
+
+    .figures {
+        @apply mt-head p-text sm:p-part;
+    }
+    .figures-groups:not(:first-child) {
+        @apply mt-part border-t border-skin-line pt-text;
+    }
+    .figures-change {
+        @apply mt-part border-t border-skin-line pt-text;
+    }
+    .figures-change :global(.commit-strip) {
+        @apply mt-inline;
+    }
+    .repository-section {
+        @apply pt-head pb-inline;
+        scroll-margin-top: var(--section-offset);
+    }
+    .repository-section :global(.section-heading) {
+        @apply mb-part;
+    }
+</style>
+
+<script>
+    import { CODE_COPY_BUTTONS } from "@ui/script/CodeCopyButtons";
+    import { INFO_TOOLTIPS } from "@ui/script/InfoTooltips";
+
+    const mount = (): void => {
+        CODE_COPY_BUTTONS.mount();
+        INFO_TOOLTIPS.mount();
+    };
+
+    mount();
+</script>

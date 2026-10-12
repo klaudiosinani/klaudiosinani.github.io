@@ -1,0 +1,138 @@
+---
+import { CollectionItem } from "@app/util/seo/page/CollectionItem";
+import Footer from "@ui/component/Footer.astro";
+import Header from "@ui/component/Header.astro";
+import Pagination from "@ui/feature/pagination/component/Pagination.astro";
+import SoftwareCard from "@ui/feature/software/component/SoftwareCard";
+import Layout from "@ui/layout/Layout.astro";
+import Main from "@ui/layout/Main.astro";
+import type { PaginatedResult } from "@app/feature/pagination/PaginatedResult";
+import { PaginationService } from "@app/feature/pagination/PaginationService";
+import type { Software } from "@app/feature/software/Software";
+import { PAGE_DESCRIPTIONS } from "@app/configuration/page/PageDescriptions";
+import { ROUTES } from "@app/configuration/route/Routes";
+import { PAGE_TITLES } from "@app/configuration/page/PageTitles";
+import { LOCALE } from "@app/configuration/site/SiteLocale";
+import { SITE } from "@app/configuration/site/Site";
+import type { StructuredData } from "@app/util/seo/StructuredData";
+
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { RoutePathResolver } from "@app/util/routing/RoutePathResolver.ts";
+import { SoftwareConfiguration } from "@app/feature/software/SoftwareConfiguration.ts";
+import { SoftwareRetrievalService } from "@app/feature/software/SoftwareRetrievalService.ts";
+import { CollectionPageSchemaBuilder } from "@app/util/seo/page/CollectionPageSchemaBuilder.ts";
+import { PageTitleFormatter } from "@app/util/text/PageTitleFormatter.ts";
+import { SchemaIdentifiers } from "@app/util/seo/SchemaIdentifiers.ts";
+
+const ROUTE_PATH_RESOLVER: RoutePathResolver = CONTEXT.resolve(RoutePathResolver);
+const SOFTWARE_CONFIGURATION: SoftwareConfiguration = CONTEXT.resolve(SoftwareConfiguration);
+const COLLECTION_PAGE_SCHEMA_BUILDER: CollectionPageSchemaBuilder = CONTEXT.resolve(CollectionPageSchemaBuilder);
+const PAGE_TITLE_FORMATTER: PageTitleFormatter = CONTEXT.resolve(PageTitleFormatter);
+const SCHEMA_IDENTIFIERS: SchemaIdentifiers = CONTEXT.resolve(SchemaIdentifiers);
+
+export async function getStaticPaths() {
+    const SOFTWARE_CONFIGURATION: SoftwareConfiguration = CONTEXT.resolve(SoftwareConfiguration);
+    const SOFTWARE_RETRIEVAL_SERVICE: SoftwareRetrievalService = CONTEXT.resolve(SoftwareRetrievalService);
+    const softwareRepositories: Software[] = await SOFTWARE_RETRIEVAL_SERVICE.retrieve();
+    const pages: number[] = new PaginationService(
+        SOFTWARE_CONFIGURATION.getSoftwarePerArchivePage()
+    ).subsequentPageNumbers(softwareRepositories.length);
+    return pages.map((p: number) => ({
+        params: { page: String(p) },
+        props: { softwareRepositories },
+    }));
+}
+
+const { page } = Astro.params;
+const { softwareRepositories } = Astro.props;
+
+const total: number = softwareRepositories.length;
+
+const paginatedResult: PaginatedResult<Software> = new PaginationService(
+    SOFTWARE_CONFIGURATION.getSoftwarePerArchivePage()
+).paginate({
+    items: softwareRepositories,
+    page,
+    basePath: ROUTES.softwareArchive,
+});
+
+const schema: StructuredData[] = [
+    COLLECTION_PAGE_SCHEMA_BUILDER.build({
+        name: "All Software",
+        url: new URL(
+            `${ROUTES.softwareArchive}/${paginatedResult.getPaginationBand().getCurrentPage()}/`,
+            SITE.getWebsite()
+        ).href,
+        description: PAGE_DESCRIPTIONS.softwareArchive,
+        author: {
+            name: SITE.getAuthor(),
+            url: SITE.getWebsite(),
+            id: SCHEMA_IDENTIFIERS.person(SITE.getWebsite()),
+        },
+        image: new URL(ROUTE_PATH_RESOLVER.resolvePageImage("software-archive"), SITE.getWebsite()).href,
+        inLanguage: LOCALE.getLanguage(),
+        siteId: SCHEMA_IDENTIFIERS.website(SITE.getWebsite()),
+        items: paginatedResult
+            .getItems()
+            .map(
+                (software: Software) =>
+                    new CollectionItem(
+                        software.getName(),
+                        new URL(ROUTE_PATH_RESOLVER.resolveRepository(software.getName()), SITE.getWebsite()).href
+                    )
+            ),
+    }),
+];
+---
+
+<Layout
+    title={PAGE_TITLE_FORMATTER.format(
+        `${PAGE_TITLES.softwareArchive}, Page ${paginatedResult.getPaginationBand().getCurrentPage()}`,
+        SITE.getTitle()
+    )}
+    description={`${PAGE_DESCRIPTIONS.softwareArchive} Page ${paginatedResult.getPaginationBand().getCurrentPage()} of ${paginatedResult.getPaginationBand().getTotalPages()}.`}
+    ogImage={ROUTE_PATH_RESOLVER.resolvePageImage("software-archive")}
+    schema={schema}
+>
+    <Header activeNav="software" />
+    <Main
+        pageTitle="All Software"
+        pageDesc="Each public repository, with its language and the date of its last change."
+    >
+        <span class="archive-count" slot="title-adornment">
+            {
+                paginatedResult.getItems().length === total
+                    ? `${total} repositories`
+                    : `${total} repositories, page ${paginatedResult.getPaginationBand().getCurrentPage()} of ${paginatedResult.getPaginationBand().getTotalPages()}`
+            }
+        </span>
+        <ul class="card-grid">
+            {
+                paginatedResult
+                    .getItems()
+                    .map((software: Software) => (
+                        <SoftwareCard
+                            name={software.getName()}
+                            description={software.getDescription()}
+                            stars={software.getStars()}
+                            forks={software.getForks()}
+                            language={software.getLanguage()}
+                            latestUpdate={software.getLatestUpdate()}
+                        />
+                    ))
+            }
+        </ul>
+    </Main>
+
+    <Pagination band={paginatedResult.getPaginationBand()} />
+
+    <Footer noMarginTop={paginatedResult.getPaginationBand().getTotalPages() > 1} />
+</Layout>
+
+<style>
+    @reference "../../../style/theme.css";
+
+    .archive-count {
+        @apply ml-auto text-sm tabular-nums opacity-70;
+    }
+</style>

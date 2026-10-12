@@ -1,0 +1,184 @@
+---
+import { TrailStep } from "@app/util/routing/TrailStep";
+import { CollectionItem } from "@app/util/seo/page/CollectionItem";
+import type { MonthGroup } from "@app/util/period/MonthGroup";
+import { BreadcrumbStep } from "@app/util/seo/breadcrumb/BreadcrumbStep";
+import { BREADCRUMB_HOME } from "@app/configuration/navigation/BreadcrumbHome";
+import Footer from "@ui/component/Footer.astro";
+import Header from "@ui/component/Header.astro";
+import Layout from "@ui/layout/Layout.astro";
+import { LOCALE } from "@app/configuration/site/SiteLocale";
+import Main from "@ui/layout/Main.astro";
+import type { PublishedRelease } from "@app/feature/repository/release/PublishedRelease";
+import type { RepositoryProfile } from "@app/feature/repository/profile/RepositoryProfile";
+import { ROUTES } from "@app/configuration/route/Routes";
+import { SITE } from "@app/configuration/site/Site";
+import type { StructuredData } from "@app/util/seo/StructuredData";
+import TagIcon from "@ui/component/icon/TagIcon";
+
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { MonthGrouper } from "@app/util/period/MonthGrouper.ts";
+import { CollectionPageSchemaBuilder } from "@app/util/seo/page/CollectionPageSchemaBuilder.ts";
+import { DatetimeFormatter } from "@app/util/datetime/DatetimeFormatter.ts";
+import { NumberFormatter } from "@app/util/text/NumberFormatter.ts";
+import { ProfileCollectionService } from "@app/feature/repository/profile/ProfileCollectionService.ts";
+import { ReleaseHistoryFactory } from "@app/feature/repository/release/ReleaseHistoryFactory.ts";
+import { ReleaseAddressResolver } from "@app/feature/repository/release/ReleaseAddressResolver.ts";
+import { RoutePathResolver } from "@app/util/routing/RoutePathResolver.ts";
+import { SchemaIdentifiers } from "@app/util/seo/SchemaIdentifiers.ts";
+
+const MONTH_GROUPER: MonthGrouper = CONTEXT.resolve(MonthGrouper);
+const COLLECTION_PAGE_SCHEMA_BUILDER: CollectionPageSchemaBuilder = CONTEXT.resolve(CollectionPageSchemaBuilder);
+const DATETIME_FORMATTER: DatetimeFormatter = CONTEXT.resolve(DatetimeFormatter);
+const NUMBER_FORMATTER: NumberFormatter = CONTEXT.resolve(NumberFormatter);
+const PROFILE_COLLECTION_SERVICE: ProfileCollectionService = CONTEXT.resolve(ProfileCollectionService);
+const RELEASE_HISTORY_FACTORY: ReleaseHistoryFactory = CONTEXT.resolve(ReleaseHistoryFactory);
+const RELEASE_ADDRESS_RESOLVER: ReleaseAddressResolver = CONTEXT.resolve(ReleaseAddressResolver);
+const ROUTE_PATH_RESOLVER: RoutePathResolver = CONTEXT.resolve(RoutePathResolver);
+const SCHEMA_IDENTIFIERS: SchemaIdentifiers = CONTEXT.resolve(SchemaIdentifiers);
+
+const profiles: RepositoryProfile[] = await PROFILE_COLLECTION_SERVICE.retrieve();
+const history: PublishedRelease[] = RELEASE_HISTORY_FACTORY.create(profiles);
+
+type ReleaseMonth = MonthGroup<PublishedRelease>;
+
+const months: ReleaseMonth[] = MONTH_GROUPER.group(history, (publishedRelease: PublishedRelease) =>
+    publishedRelease.getRelease().getPublishedAt()
+);
+
+const canonical: string = new URL("/releases/", SITE.getWebsite()).href;
+
+const schema: StructuredData[] = [
+    COLLECTION_PAGE_SCHEMA_BUILDER.build({
+        author: {
+            name: SITE.getAuthor(),
+            url: SITE.getWebsite(),
+            id: SCHEMA_IDENTIFIERS.person(SITE.getWebsite()),
+        },
+        image: new URL(ROUTE_PATH_RESOLVER.resolvePageImage("software"), SITE.getWebsite()).href,
+        inLanguage: LOCALE.getLanguage(),
+        siteId: SCHEMA_IDENTIFIERS.website(SITE.getWebsite()),
+        name: "Releases",
+        url: canonical,
+        description: "Every release of every open source project of Klaudio Sinani, newest first.",
+        items: history
+            .slice(0, 20)
+            .map(
+                (published: PublishedRelease) =>
+                    new CollectionItem(
+                        `${published.getProject()} ${published.getRelease().getTag()}`,
+                        new URL(
+                            RELEASE_ADDRESS_RESOLVER.published(published.getSlug(), published.getRelease()) ??
+                                published.getRelease().getUrl(),
+                            SITE.getWebsite()
+                        ).href
+                    )
+            ),
+    }),
+];
+
+const breadcrumbs: BreadcrumbStep[] = [
+    new BreadcrumbStep(BREADCRUMB_HOME, SITE.getWebsite()),
+    new BreadcrumbStep("Releases", canonical),
+];
+---
+
+<Layout
+    title="Every Release of Every Project - Klaudio Sinani"
+    description="Every release of every open source project of Klaudio Sinani, newest first, with the notes and the downloads of each one."
+    ogImage={ROUTE_PATH_RESOLVER.resolvePageImage("software")}
+    canonicalURL={canonical}
+    schema={schema}
+    breadcrumbs={breadcrumbs}
+>
+    <Header activeNav="software" />
+    <Main
+        pageTitle="Releases"
+        pageDesc="Each release of each project, newest first."
+        trail={[new TrailStep("Software", `${ROUTES.software}/`), new TrailStep("Releases", "/releases/")]}
+    >
+        <a href="/releases.xml" class="releases-feed" slot="title-adornment"> The RSS feed </a>
+
+        {
+            months.map((month: ReleaseMonth) => (
+                <div class="releases-month">
+                    <p class="band-label band-label-sticky">{month.getName()}</p>
+                    <ol class="releases-list">
+                        {month.getItems().map((published: PublishedRelease) => (
+                            <li class="list-row releases-item">
+                                <TagIcon className="releases-icon" />
+                                <a
+                                    class="releases-project"
+                                    href={ROUTE_PATH_RESOLVER.resolveRepository(published.getSlug())}
+                                >
+                                    {published.getProject()}
+                                </a>
+                                <a
+                                    class="releases-tag"
+                                    href={
+                                        RELEASE_ADDRESS_RESOLVER.published(
+                                            published.getSlug(),
+                                            published.getRelease()
+                                        ) ?? published.getRelease().getUrl()
+                                    }
+                                    rel={
+                                        RELEASE_ADDRESS_RESOLVER.published(published.getSlug(), published.getRelease())
+                                            ? undefined
+                                            : "noopener noreferrer"
+                                    }
+                                    target={
+                                        RELEASE_ADDRESS_RESOLVER.published(published.getSlug(), published.getRelease())
+                                            ? undefined
+                                            : "_blank"
+                                    }
+                                >
+                                    {published.getRelease().getTag()}
+                                </a>
+                                <span class="releases-facts">
+                                    {published.getRelease().getDownloads() > 0 && (
+                                        <span>
+                                            {NUMBER_FORMATTER.display(published.getRelease().getDownloads())} downloads
+                                        </span>
+                                    )}
+                                    <time datetime={published.getRelease().getPublishedAt()}>
+                                        {DATETIME_FORMATTER.formatDate(published.getRelease().getPublishedAt())}
+                                    </time>
+                                </span>
+                            </li>
+                        ))}
+                    </ol>
+                </div>
+            ))
+        }
+    </Main>
+    <Footer />
+</Layout>
+
+<style>
+    @reference "../../style/theme.css";
+
+    .releases-feed {
+        @apply ml-auto text-sm no-underline opacity-70 hover:text-skin-accent hover:opacity-100;
+    }
+    .releases-month {
+        @apply mt-head first:mt-part;
+    }
+    .releases-list {
+        @apply mt-tight;
+    }
+    .releases-item {
+        @apply flex flex-wrap items-baseline gap-x-text;
+    }
+    .releases-item :global(.releases-icon) {
+        @apply h-3 w-3 shrink-0 translate-y-0.5 fill-skin-live;
+    }
+    .releases-project {
+        @apply font-medium no-underline hover:text-skin-accent;
+    }
+    .releases-tag {
+        @apply tabular-nums no-underline opacity-80 hover:text-skin-accent hover:opacity-100;
+    }
+    .releases-facts {
+        @apply ml-auto flex items-baseline gap-x-text tabular-nums opacity-70;
+    }
+</style>

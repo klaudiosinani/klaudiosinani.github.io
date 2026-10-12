@@ -1,0 +1,313 @@
+---
+import Control from "@ui/library/element/Control.astro";
+import MailIcon from "@ui/component/icon/MailIcon";
+import GitHubMarkIcon from "@ui/component/icon/brands/GitHubMarkIcon";
+import HeartIcon from "@ui/component/icon/HeartIcon";
+import FieldDataScript from "@ui/feature/field/component/FieldDataScript.astro";
+import FieldNote from "@ui/feature/field/component/FieldNote.astro";
+import Footer from "@ui/component/Footer.astro";
+import Header from "@ui/component/Header.astro";
+import ImpactSection from "@ui/feature/impact/component/ImpactSection.astro";
+import Layout from "@ui/layout/Layout.astro";
+import PublicationList from "@ui/feature/publication/component/PublicationList.astro";
+import ProjectCards from "@ui/feature/reach/component/ProjectCards.astro";
+import SectionHeading from "@ui/component/SectionHeading.astro";
+import SponsorList from "@ui/feature/partner/component/SponsorList.astro";
+import SponsorLine from "@ui/feature/partner/component/SponsorLine.astro";
+import OutletList from "@ui/feature/press/component/OutletList.astro";
+import type { Outlet } from "@app/feature/press/outlet/Outlet";
+import { OutletFactory } from "@app/feature/press/outlet/OutletFactory.ts";
+import { FeaturedPressRetrievalService } from "@app/feature/press/FeaturedPressRetrievalService.ts";
+import type { ActivityData } from "@app/feature/activity/data/ActivityData";
+import type { ActivityEntry } from "@app/feature/activity/timeline/ActivityEntry";
+import type { CollectionEntry } from "astro:content";
+import type { FieldData } from "@app/feature/field/FieldData";
+import type { ImpactData } from "@app/feature/impact/metric/ImpactData";
+import type { LandingSection } from "@app/configuration/landing/LandingSection";
+import type { PublicationEntry } from "@app/feature/publication/entry/PublicationEntry";
+import type { SocialLink } from "@app/configuration/social/SocialLink";
+import type { Sponsor } from "@app/configuration/sponsor/Sponsor";
+import type { StructuredData } from "@app/util/seo/StructuredData";
+import type { SurfaceReach } from "@app/feature/reach/surface/SurfaceReach";
+import { getCollection } from "astro:content";
+import { AUTHOR_DISCIPLINES } from "@app/configuration/author/AuthorDisciplines";
+import { AUTHOR_TITLES } from "@app/configuration/author/AuthorTitles";
+import { AUTHOR_EMPLOYER } from "@app/configuration/author/SiteAuthorEmployer";
+import { AUTHOR_EXPERTISE } from "@app/configuration/author/AuthorExpertise";
+import { AUTHOR_JOB_TITLE } from "@app/configuration/author/AuthorJobTitle";
+import { AUTHOR_NAME } from "@app/configuration/author/SiteAuthorName";
+import { CONTACT_ADDRESS } from "@app/configuration/contact/SiteContactAddress";
+import { GITHUB_USERNAME } from "@app/configuration/author/GitHubUsername";
+import { LANDING_SECTIONS } from "@app/configuration/landing/LandingSections";
+import { LOCALE } from "@app/configuration/site/SiteLocale";
+import { PAGE_DESCRIPTIONS } from "@app/configuration/page/PageDescriptions";
+import { ROUTES } from "@app/configuration/route/Routes";
+import { SITE } from "@app/configuration/site/Site";
+import { SOCIAL_LINKS } from "@app/configuration/social/SocialLinks";
+
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import {
+    ACTIVITY_DATASET_RETRIEVAL_SERVICE as ACTIVITY_DATASET_RETRIEVAL_SERVICE_KEY,
+    ACTIVITY_DATA_RETRIEVAL_SERVICE as ACTIVITY_DATA_RETRIEVAL_SERVICE_KEY,
+} from "@bindings";
+import { ActivityConfiguration } from "@app/feature/activity/ActivityConfiguration.ts";
+import { ActivityTimelineResolver } from "@app/feature/activity/timeline/ActivityTimelineResolver.ts";
+import type { ActivityDataRetrievalService } from "@app/feature/activity/ActivityDataRetrievalService";
+import type { ActivityDatasetRetrievalService } from "@app/feature/impact/ActivityDatasetRetrievalService";
+import { PublicationEntryFactory } from "@app/feature/publication/entry/PublicationEntryFactory.ts";
+import { PublicationQueryService } from "@app/feature/publication/PublicationQueryService.ts";
+import { SponsorRoll } from "@app/configuration/sponsor/SponsorRoll.ts";
+import { AuthorProfiles } from "@app/configuration/author/AuthorProfiles.ts";
+import { FieldDataRetrievalService } from "@app/feature/field/FieldDataRetrievalService.ts";
+import { SentenceListFormatter } from "@app/util/text/SentenceListFormatter.ts";
+import { OrdinalIndexFormatter } from "@app/util/text/OrdinalIndexFormatter.ts";
+import { PersonSchemaBuilder } from "@app/util/seo/site/PersonSchemaBuilder.ts";
+import { RepositoryReachRetrievalService } from "@app/feature/reach/surface/RepositoryReachRetrievalService.ts";
+import { SchemaIdentifiers } from "@app/util/seo/SchemaIdentifiers.ts";
+import { SoftwareSlugRetrievalService } from "@app/feature/software/sector/SoftwareSlugRetrievalService.ts";
+import { SurfaceReachRanker } from "@app/feature/reach/surface/SurfaceReachRanker.ts";
+import { WebSiteSchemaBuilder } from "@app/util/seo/site/WebSiteSchemaBuilder.ts";
+
+const ACTIVITY_CONFIGURATION: ActivityConfiguration = CONTEXT.resolve(ActivityConfiguration);
+const ACTIVITY_DATA_RETRIEVAL_SERVICE: ActivityDataRetrievalService = CONTEXT.resolve(
+    ACTIVITY_DATA_RETRIEVAL_SERVICE_KEY
+);
+const ACTIVITY_DATASET_RETRIEVAL_SERVICE: ActivityDatasetRetrievalService = CONTEXT.resolve(
+    ACTIVITY_DATASET_RETRIEVAL_SERVICE_KEY
+);
+const ACTIVITY_TIMELINE_RESOLVER: ActivityTimelineResolver = CONTEXT.resolve(ActivityTimelineResolver);
+const AUTHOR_PROFILES: AuthorProfiles = CONTEXT.resolve(AuthorProfiles);
+const FIELD_DATA_RETRIEVAL_SERVICE: FieldDataRetrievalService = CONTEXT.resolve(FieldDataRetrievalService);
+const SENTENCE_LIST_FORMATTER: SentenceListFormatter = CONTEXT.resolve(SentenceListFormatter);
+const ORDINAL_INDEX_FORMATTER: OrdinalIndexFormatter = CONTEXT.resolve(OrdinalIndexFormatter);
+const PERSON_SCHEMA_BUILDER: PersonSchemaBuilder = CONTEXT.resolve(PersonSchemaBuilder);
+const PUBLICATION_ENTRY_FACTORY: PublicationEntryFactory = CONTEXT.resolve(PublicationEntryFactory);
+const PUBLICATION_QUERY_SERVICE: PublicationQueryService = CONTEXT.resolve(PublicationQueryService);
+const REPOSITORY_REACH_RETRIEVAL_SERVICE: RepositoryReachRetrievalService = CONTEXT.resolve(
+    RepositoryReachRetrievalService
+);
+const SCHEMA_IDENTIFIERS: SchemaIdentifiers = CONTEXT.resolve(SchemaIdentifiers);
+const SOFTWARE_SLUG_RETRIEVAL_SERVICE: SoftwareSlugRetrievalService = CONTEXT.resolve(SoftwareSlugRetrievalService);
+const SPONSOR_ROLL: SponsorRoll = CONTEXT.resolve(SponsorRoll);
+const OUTLET_FACTORY: OutletFactory = CONTEXT.resolve(OutletFactory);
+const FEATURED_PRESS_RETRIEVAL_SERVICE: FeaturedPressRetrievalService = CONTEXT.resolve(FeaturedPressRetrievalService);
+const SURFACE_REACH_RANKER: SurfaceReachRanker = CONTEXT.resolve(SurfaceReachRanker);
+const WEB_SITE_SCHEMA_BUILDER: WebSiteSchemaBuilder = CONTEXT.resolve(WebSiteSchemaBuilder);
+
+const fieldData: FieldData = await FIELD_DATA_RETRIEVAL_SERVICE.retrieve();
+const openSourceReach: SurfaceReach[] = SURFACE_REACH_RANKER.rank(
+    await REPOSITORY_REACH_RETRIEVAL_SERVICE.retrieve(await SOFTWARE_SLUG_RETRIEVAL_SERVICE.retrieve("open-source"))
+);
+const publications: CollectionEntry<"blog">[] = await getCollection("blog");
+const publicationEntries: PublicationEntry[] = PUBLICATION_QUERY_SERVICE.sortByDate(publications).map(
+    (publication: CollectionEntry<"blog">) => PUBLICATION_ENTRY_FACTORY.create(publication)
+);
+const impact: ImpactData = await ACTIVITY_DATASET_RETRIEVAL_SERVICE.retrieve();
+const activity: ActivityData = await ACTIVITY_DATA_RETRIEVAL_SERVICE.retrieve();
+const timeline: ActivityEntry[] = ACTIVITY_TIMELINE_RESOLVER.resolve(
+    activity,
+    ACTIVITY_CONFIGURATION.getEntriesPerKindOnIndex()
+);
+const sponsors: Sponsor[] = [...SPONSOR_ROLL.current(), ...SPONSOR_ROLL.past()];
+const fields: string = SENTENCE_LIST_FORMATTER.format(AUTHOR_DISCIPLINES);
+const titles: string = SENTENCE_LIST_FORMATTER.format(AUTHOR_TITLES);
+
+const contact: Record<string, string> = {
+    "data-contact-user": CONTACT_ADDRESS.getUser(),
+    "data-contact-host": CONTACT_ADDRESS.getHost(),
+};
+
+const GITHUB_PROFILE: string =
+    SOCIAL_LINKS.find((socialLink: SocialLink) => socialLink.getName() === "GitHub")?.getHref() ?? SITE.getWebsite();
+const outlets: Outlet[] = OUTLET_FACTORY.create(await FEATURED_PRESS_RETRIEVAL_SERVICE.retrieve());
+
+const person: StructuredData = PERSON_SCHEMA_BUILDER.build({
+    id: SCHEMA_IDENTIFIERS.person(SITE.getWebsite()),
+    name: SITE.getAuthor(),
+    givenName: AUTHOR_NAME.getGiven(),
+    familyName: AUTHOR_NAME.getFamily(),
+    alternateName: GITHUB_USERNAME,
+    url: SITE.getWebsite(),
+    description: PAGE_DESCRIPTIONS.about,
+    jobTitle: AUTHOR_JOB_TITLE,
+    knowsAbout: AUTHOR_EXPERTISE,
+    image: new URL(SITE.getOgImage() ?? "og.png", SITE.getWebsite()).href,
+    worksFor: { name: AUTHOR_EMPLOYER.getName(), url: AUTHOR_EMPLOYER.getUrl() },
+    sameAs: AUTHOR_PROFILES.ALL,
+});
+
+const schema: StructuredData[] = [
+    person,
+    WEB_SITE_SCHEMA_BUILDER.build({
+        id: SCHEMA_IDENTIFIERS.website(SITE.getWebsite()),
+        name: SITE.getTitle(),
+        url: SITE.getWebsite(),
+        description: SITE.getDesc(),
+        inLanguage: LOCALE.getLanguage(),
+        publisherId: SCHEMA_IDENTIFIERS.person(SITE.getWebsite()),
+        searchUrl: new URL(`${ROUTES.search}/?q={query}`, SITE.getWebsite()).href,
+    }),
+];
+---
+
+<Layout title={SITE.getHomeTitle()} description={SITE.getDesc()} schema={schema}>
+    <Header />
+    <main id="main-content">
+        <section class="hero" aria-labelledby="hero-name" data-field-stage>
+            <div class="hero-copy">
+                <p class="hero-titles">{titles}</p>
+                <h1 class="hero-name" id="hero-name">{SITE.getAuthor()}<span class="hero-stop">.</span></h1>
+                <p class="hero-fields">{fields}</p>
+                <div class="hero-links">
+                    <Control href={`${ROUTES.about}/`} lead {...contact}>
+                        <MailIcon ariaHidden />
+                        Email
+                    </Control>
+                    <Control href={GITHUB_PROFILE}>
+                        <GitHubMarkIcon />
+                        GitHub
+                    </Control>
+                </div>
+                <div class="hero-recognition">
+                    <SponsorLine sponsors={sponsors} />
+                </div>
+            </div>
+            <figure class="hero-figure">
+                <canvas class="hero-field" data-field-canvas aria-hidden="true"></canvas>
+                <FieldNote />
+            </figure>
+        </section>
+        <FieldDataScript fieldData={fieldData} />
+
+        {
+            LANDING_SECTIONS.map((landingSection: LandingSection, position: number) =>
+                landingSection.getKey() === "activity" ? (
+                    <div class="sector">
+                        <ImpactSection
+                            impact={impact}
+                            latest={timeline}
+                            href={`${ROUTES.activity}/`}
+                            heading={landingSection.getTitle()}
+                            index={ORDINAL_INDEX_FORMATTER.format(position)}
+                            withPeriods={false}
+                            withWindowed={false}
+                        />
+                    </div>
+                ) : (
+                    <section
+                        class="sector"
+                        id={landingSection.getKey()}
+                        aria-labelledby={`${landingSection.getKey()}-title`}
+                    >
+                        <SectionHeading
+                            index={ORDINAL_INDEX_FORMATTER.format(position)}
+                            title={landingSection.getTitle()}
+                            href={landingSection.getHref() ?? undefined}
+                            more={landingSection.getMore() ?? undefined}
+                            id={`${landingSection.getKey()}-title`}
+                        />
+                        <div class="sector-body">
+                            {landingSection.getKey() === "open-source" && <ProjectCards surfaces={openSourceReach} />}
+                            {landingSection.getKey() === "publications" && (
+                                <PublicationList publicationEntries={publicationEntries} />
+                            )}
+                            {landingSection.getKey() === "organizations" && <SponsorList sponsors={sponsors} />}
+                            {landingSection.getKey() === "featured" && <OutletList outlets={outlets} />}
+                        </div>
+                        {landingSection.getKey() === "organizations" && (
+                            <div class="sector-actions">
+                                <p class="sector-note">
+                                    Your organization can support this work too, and reach the developers who use it.
+                                </p>
+                                <Control href={`${ROUTES.partners}/`} lead>
+                                    <HeartIcon className="heart-mark" ariaHidden />
+                                    Support my work
+                                </Control>
+                            </div>
+                        )}
+                    </section>
+                )
+            )
+        }
+
+        <section class="contact" aria-labelledby="contact-title">
+            <h2 class="contact-title" id="contact-title">Write to me<span class="hero-stop">.</span></h2>
+            <p class="contact-note">For work, for research, and for a partnership with the open source software.</p>
+            <div class="hero-links">
+                <Control href={`${ROUTES.about}/`} lead {...contact}>
+                    <MailIcon ariaHidden />
+                    Email
+                </Control>
+                <Control href={`${ROUTES.partners}/`}>Partnerships</Control>
+            </div>
+        </section>
+    </main>
+    <Footer />
+</Layout>
+
+<style>
+    @reference "../style/theme.css";
+
+    .hero {
+        @apply grid gap-head pt-section lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-start;
+    }
+    .hero-figure {
+        @apply m-0;
+    }
+    .hero-field {
+        @apply block h-48 w-full sm:h-[22rem];
+    }
+    .hero-copy {
+        @apply max-w-3xl;
+    }
+    .hero-titles {
+        @apply mb-text text-lg font-medium opacity-80;
+    }
+    .hero-name {
+        @apply text-5xl leading-none font-bold tracking-tight sm:text-7xl;
+    }
+    .hero-stop {
+        @apply text-skin-live;
+    }
+    .hero-fields {
+        @apply mt-part max-w-3xl font-serif text-xl leading-snug sm:text-2xl;
+    }
+    .hero-links {
+        @apply mt-head flex flex-wrap items-center gap-inline;
+    }
+    .hero-links :global(svg) {
+        @apply h-4 w-4 shrink-0 fill-current;
+    }
+    .hero-recognition {
+        @apply mt-group;
+    }
+    .sector {
+        @apply mt-section;
+    }
+    .sector-body {
+        @apply mt-head;
+    }
+    .sector-actions {
+        @apply mt-head flex flex-col items-start gap-text;
+    }
+    .sector-note {
+        @apply m-0 font-serif text-lg leading-snug opacity-80;
+    }
+    .contact {
+        @apply mt-section pb-section;
+    }
+    .contact-title {
+        @apply text-4xl font-bold tracking-tight sm:text-5xl;
+    }
+    .contact-note {
+        @apply mt-text font-serif text-lg leading-snug opacity-80;
+    }
+</style>
+
+<script>
+    import { CONTACT_LINK_ASSEMBLER } from "@ui/script/ContactLinkAssembler";
+    import { FIELD_STAGE } from "@ui/script/field/FieldStage";
+
+    CONTACT_LINK_ASSEMBLER.mount();
+    FIELD_STAGE.mount();
+</script>

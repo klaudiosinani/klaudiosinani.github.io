@@ -1,0 +1,141 @@
+---
+import type { ContributedRepository } from "@app/configuration/repository/ContributedRepository";
+import type { ContributionSummary } from "@app/feature/contribution/work/ContributionSummary";
+import { TrailStep } from "@app/util/routing/TrailStep";
+import { CollectionItem } from "@app/util/seo/page/CollectionItem";
+import { BreadcrumbStep } from "@app/util/seo/breadcrumb/BreadcrumbStep";
+import { BREADCRUMB_HOME } from "@app/configuration/navigation/BreadcrumbHome";
+import type { ContributedWork } from "@app/feature/contribution/work/ContributedWork";
+import type { Contribution } from "@app/feature/contribution/work/Contribution";
+import ContributionSection from "@ui/feature/contribution/component/ContributionSection.astro";
+import Footer from "@ui/component/Footer.astro";
+import Header from "@ui/component/Header.astro";
+import Layout from "@ui/layout/Layout.astro";
+import { LOCALE } from "@app/configuration/site/SiteLocale";
+import Main from "@ui/layout/Main.astro";
+import type { PaginatedResult } from "@app/feature/pagination/PaginatedResult";
+import Pagination from "@ui/feature/pagination/component/Pagination.astro";
+import { PaginationService } from "@app/feature/pagination/PaginationService";
+import { PAGE_DESCRIPTIONS } from "@app/configuration/page/PageDescriptions";
+import { ROUTES } from "@app/configuration/route/Routes";
+import { SITE } from "@app/configuration/site/Site";
+import type { StructuredData } from "@app/util/seo/StructuredData";
+
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { CollectionPageSchemaBuilder } from "@app/util/seo/page/CollectionPageSchemaBuilder.ts";
+import { CONTRIBUTED_WORK_SERVICE as CONTRIBUTED_WORK_SERVICE_KEY } from "@bindings";
+import { ContributionConfiguration } from "@app/feature/contribution/ContributionConfiguration.ts";
+import { PageTitleFormatter } from "@app/util/text/PageTitleFormatter.ts";
+import { RoutePathResolver } from "@app/util/routing/RoutePathResolver.ts";
+import { SchemaIdentifiers } from "@app/util/seo/SchemaIdentifiers.ts";
+
+const COLLECTION_PAGE_SCHEMA_BUILDER: CollectionPageSchemaBuilder = CONTEXT.resolve(CollectionPageSchemaBuilder);
+const CONTRIBUTION_CONFIGURATION: ContributionConfiguration = CONTEXT.resolve(ContributionConfiguration);
+const PAGE_TITLE_FORMATTER: PageTitleFormatter = CONTEXT.resolve(PageTitleFormatter);
+const ROUTE_PATH_RESOLVER: RoutePathResolver = CONTEXT.resolve(RoutePathResolver);
+const SCHEMA_IDENTIFIERS: SchemaIdentifiers = CONTEXT.resolve(SchemaIdentifiers);
+
+export async function getStaticPaths() {
+    const CONTRIBUTED_WORK_SERVICE = CONTEXT.resolve(CONTRIBUTED_WORK_SERVICE_KEY);
+    const CONTRIBUTION_CONFIGURATION: ContributionConfiguration = CONTEXT.resolve(ContributionConfiguration);
+    const held: ContributedWork[] = await CONTRIBUTED_WORK_SERVICE.retrieve();
+    const paging: PaginationService = new PaginationService(CONTRIBUTION_CONFIGURATION.getContributionsPerPage());
+
+    return held.flatMap((work: ContributedWork) =>
+        paging.subsequentPageNumbers(work.getContributions().length).map((number: number) => ({
+            params: { repository: work.getRepository().getName(), page: String(number) },
+            props: { work },
+        }))
+    );
+}
+
+const { page } = Astro.params;
+const { work } = Astro.props;
+const repository: ContributedRepository = work.getRepository();
+const contributions: readonly Contribution[] = work.getContributions();
+const summary: ContributionSummary | null = work.getSummary();
+
+const paginated: PaginatedResult<Contribution> = new PaginationService(
+    CONTRIBUTION_CONFIGURATION.getContributionsPerPage()
+).paginate({
+    items: [...contributions],
+    page,
+    basePath: ROUTE_PATH_RESOLVER.resolveContributionsBase(repository.getName()),
+});
+
+const canonical: string = new URL(
+    `${ROUTE_PATH_RESOLVER.resolveContributionsBase(repository.getName())}/${paginated.getPaginationBand().getCurrentPage()}/`,
+    SITE.getWebsite()
+).href;
+
+const title: string = `Commits in the ${repository.getTitle()} Codebase`;
+
+const schema: StructuredData[] = [
+    COLLECTION_PAGE_SCHEMA_BUILDER.build({
+        author: {
+            name: SITE.getAuthor(),
+            url: SITE.getWebsite(),
+            id: SCHEMA_IDENTIFIERS.person(SITE.getWebsite()),
+        },
+        image: new URL(ROUTE_PATH_RESOLVER.resolvePageImage("contributions"), SITE.getWebsite()).href,
+        inLanguage: LOCALE.getLanguage(),
+        siteId: SCHEMA_IDENTIFIERS.website(SITE.getWebsite()),
+        name: title,
+        url: canonical,
+        description: PAGE_DESCRIPTIONS.contributions,
+        items: paginated
+            .getItems()
+            .map((contribution: Contribution) => new CollectionItem(contribution.getSubject(), contribution.getUrl())),
+    }),
+];
+
+const breadcrumbs: BreadcrumbStep[] = [
+    new BreadcrumbStep(BREADCRUMB_HOME, SITE.getWebsite()),
+    new BreadcrumbStep("About", new URL(`${ROUTES.about}/`, SITE.getWebsite()).href),
+    new BreadcrumbStep(repository.getTitle(), canonical),
+];
+---
+
+<Layout
+    title={PAGE_TITLE_FORMATTER.format(
+        `${title}, Page ${paginated.getPaginationBand().getCurrentPage()}`,
+        SITE.getTitle()
+    )}
+    description={`${PAGE_DESCRIPTIONS.contributions} Page ${paginated.getPaginationBand().getCurrentPage()} of ${paginated.getPaginationBand().getTotalPages()}.`}
+    ogImage={ROUTE_PATH_RESOLVER.resolvePageImage("contributions")}
+    canonicalURL={canonical}
+    schema={schema}
+    breadcrumbs={breadcrumbs}
+>
+    <Header activeNav="about" />
+    <Main
+        pageTitle={`${repository.getTitle()} Commits`}
+        pageDesc="Code I wrote inside a product of a company I worked for. Each commit is public, and each one opens on GitHub."
+        trail={[
+            new TrailStep("About", `${ROUTES.about}/`),
+            new TrailStep(repository.getTitle(), ROUTE_PATH_RESOLVER.resolveContributions(repository.getName())),
+        ]}
+    >
+        <span class="contribution-count" slot="title-adornment">
+            {
+                paginated.getPaginationBand().getTotalPages() > 1
+                    ? `${contributions.length} commits, page ${paginated.getPaginationBand().getCurrentPage()} of ${paginated.getPaginationBand().getTotalPages()}`
+                    : `${contributions.length} commits`
+            }
+        </span>
+
+        <ContributionSection repository={repository} contributions={paginated.getItems()} summary={summary} />
+    </Main>
+
+    <Pagination band={paginated.getPaginationBand()} />
+
+    <Footer noMarginTop={paginated.getPaginationBand().getTotalPages() > 1} />
+</Layout>
+
+<style>
+    @reference "../../../style/theme.css";
+
+    .contribution-count {
+        @apply ml-auto text-sm tabular-nums opacity-70;
+    }
+</style>

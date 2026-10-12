@@ -1,0 +1,191 @@
+---
+import { REPOSITORY_CONFIGURATION as REPOSITORY_CONFIGURATION_KEY } from "@bindings";
+import { TrailStep } from "@app/util/routing/TrailStep";
+import type { BreadcrumbStep } from "@app/util/seo/breadcrumb/BreadcrumbStep";
+import DocumentLanguageBar from "@ui/feature/repository/component/DocumentLanguageBar.astro";
+import Footer from "@ui/component/Footer.astro";
+import Header from "@ui/component/Header.astro";
+import Layout from "@ui/layout/Layout.astro";
+import Main from "@ui/layout/Main.astro";
+import { BREADCRUMB_HOME } from "@app/configuration/navigation/BreadcrumbHome";
+import { GITHUB_USERNAME } from "@app/configuration/author/GitHubUsername";
+import { GithubRepositoryRef } from "@app/infrastructure/api/github/repository/request/GithubRepositoryRef";
+import RepositoryHeader from "@ui/feature/repository/component/RepositoryHeader.astro";
+import RepositoryManualSection from "@ui/feature/repository/component/RepositoryManualSection.astro";
+import RepositoryPageNav from "@ui/feature/repository/component/RepositoryPageNav.astro";
+import { SITE } from "@app/configuration/site/Site";
+
+import type { DocumentAlternate } from "@app/feature/repository/document/DocumentAlternate";
+import type { FeaturedSoftware } from "@app/feature/software/featured/FeaturedSoftware";
+import type { GithubRepositoryData } from "@app/infrastructure/api/github/repository/data/GithubRepositoryData";
+import type { RepositoryDocument } from "@app/feature/repository/document/RepositoryDocument";
+import type { RepositoryManual } from "@app/feature/repository/document/RepositoryManual";
+import type { RepositoryProfile } from "@app/feature/repository/profile/RepositoryProfile";
+
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { BreadcrumbStepsFactory } from "@app/util/seo/breadcrumb/BreadcrumbStepsFactory.ts";
+import { RepositoryTrailFactory } from "@app/feature/repository/page/RepositoryTrailFactory.ts";
+import { RepositoryDocumentDescriptionFactory } from "@app/feature/repository/document/RepositoryDocumentDescriptionFactory.ts";
+import { DocumentAlternatesFactory } from "@app/feature/repository/document/DocumentAlternatesFactory.ts";
+import { FeaturedSoftwareRetrievalService } from "@app/feature/software/featured/FeaturedSoftwareRetrievalService.ts";
+import { RepositoryConfiguration } from "@app/feature/repository/profile/RepositoryConfiguration.ts";
+import { GITHUB_REPOSITORY_DATA_RETRIEVAL_SERVICE as GITHUB_REPOSITORY_DATA_RETRIEVAL_SERVICE_KEY } from "@bindings";
+import { RepositoryDocumentRenderer } from "@app/feature/repository/document/RepositoryDocumentRenderer.ts";
+import { GithubRepositoryDocumentTextService } from "@app/feature/repository/document/GithubRepositoryDocumentTextService.ts";
+import { RepositoryPageNavigationFactory } from "@app/feature/repository/page/RepositoryPageNavigationFactory.ts";
+import { RepositoryProfileResolver } from "@app/feature/repository/profile/RepositoryProfileResolver.ts";
+import { REPOSITORY_PROFILE_RETRIEVAL_SERVICE as REPOSITORY_PROFILE_RETRIEVAL_SERVICE_KEY } from "@bindings";
+import { RoutePathResolver } from "@app/util/routing/RoutePathResolver.ts";
+
+const BREADCRUMB_STEPS_FACTORY: BreadcrumbStepsFactory = CONTEXT.resolve(BreadcrumbStepsFactory);
+const REPOSITORY_TRAIL_FACTORY: RepositoryTrailFactory = CONTEXT.resolve(RepositoryTrailFactory);
+const REPOSITORY_DOCUMENT_DESCRIPTION_FACTORY: RepositoryDocumentDescriptionFactory = CONTEXT.resolve(
+    RepositoryDocumentDescriptionFactory
+);
+const DOCUMENT_ALTERNATES_FACTORY: DocumentAlternatesFactory = CONTEXT.resolve(DocumentAlternatesFactory);
+const REPOSITORY_DOCUMENT_RENDERER: RepositoryDocumentRenderer = CONTEXT.resolve(RepositoryDocumentRenderer);
+const GITHUB_REPOSITORY_DOCUMENT_TEXT_SERVICE: GithubRepositoryDocumentTextService = CONTEXT.resolve(
+    GithubRepositoryDocumentTextService
+);
+const REPOSITORY_PAGE_NAVIGATION_FACTORY: RepositoryPageNavigationFactory = CONTEXT.resolve(
+    RepositoryPageNavigationFactory
+);
+const ROUTE_PATH_RESOLVER: RoutePathResolver = CONTEXT.resolve(RoutePathResolver);
+
+export async function getStaticPaths() {
+    const FEATURED_SOFTWARE_RETRIEVAL_SERVICE: FeaturedSoftwareRetrievalService = CONTEXT.resolve(
+        FeaturedSoftwareRetrievalService
+    );
+    const REPOSITORY_CONFIGURATION: RepositoryConfiguration = CONTEXT.resolve(REPOSITORY_CONFIGURATION_KEY);
+    const GITHUB_REPOSITORY_DATA_RETRIEVAL_SERVICE = CONTEXT.resolve(GITHUB_REPOSITORY_DATA_RETRIEVAL_SERVICE_KEY);
+    const REPOSITORY_PROFILE_RESOLVER: RepositoryProfileResolver = CONTEXT.resolve(RepositoryProfileResolver);
+    const REPOSITORY_PROFILE_RETRIEVAL_SERVICE = CONTEXT.resolve(REPOSITORY_PROFILE_RETRIEVAL_SERVICE_KEY);
+    const repositories: GithubRepositoryData[] = await GITHUB_REPOSITORY_DATA_RETRIEVAL_SERVICE.retrieve();
+    const curated: FeaturedSoftware[] = await FEATURED_SOFTWARE_RETRIEVAL_SERVICE.retrieve();
+
+    const profiled: GithubRepositoryData[] = repositories.filter((githubRepositoryData: GithubRepositoryData) =>
+        REPOSITORY_CONFIGURATION.profiles(githubRepositoryData.getName())
+    );
+
+    const pages: {
+        params: { slug: string; document: string };
+        props: { profile: RepositoryProfile; document: RepositoryDocument };
+    }[][] = await Promise.all(
+        profiled.map(async (githubRepositoryData: GithubRepositoryData) => {
+            const gathered: RepositoryProfile | null = await REPOSITORY_PROFILE_RETRIEVAL_SERVICE.retrieve(
+                githubRepositoryData.getName()
+            );
+
+            if (!gathered) {
+                return [];
+            }
+
+            const profile: RepositoryProfile = REPOSITORY_PROFILE_RESOLVER.resolve(gathered, curated);
+
+            return profile.documents.map((document: RepositoryDocument) => ({
+                params: { slug: githubRepositoryData.getName(), document: document.getSlug() },
+                props: { profile, document },
+            }));
+        })
+    );
+
+    return pages.flat();
+}
+
+const { profile, document } = Astro.props;
+
+const markdown: string | null = await GITHUB_REPOSITORY_DOCUMENT_TEXT_SERVICE.markdown(
+    new GithubRepositoryRef(GITHUB_USERNAME, profile.slug),
+    document.getPath()
+);
+
+const manual: RepositoryManual | null = markdown
+    ? await REPOSITORY_DOCUMENT_RENDERER.render(markdown, profile.url)
+    : null;
+
+const canonical: string = new URL(
+    ROUTE_PATH_RESOLVER.resolveRepositoryDocument(profile.slug, document.getSlug()),
+    SITE.getWebsite()
+).href;
+
+const alternates: DocumentAlternate[] = DOCUMENT_ALTERNATES_FACTORY.create(
+    profile.slug,
+    profile.documents,
+    document.isTranslation() ? document.getSlug() : null
+);
+
+const heading: string = `${profile.name} - ${document.getTitle()}`;
+
+const description: string = REPOSITORY_DOCUMENT_DESCRIPTION_FACTORY.create(document, profile.name, profile.logline);
+
+const note: string = document.isTranslation()
+    ? `This is the manual of ${profile.name}, translated into ${document.getLanguageName()} by a reader. The build reads it again each time.`
+    : `This is \`${document.getPath()}\` of the repository. The build reads it again each time.`;
+
+const trail: TrailStep[] = REPOSITORY_TRAIL_FACTORY.create(
+    profile.name,
+    profile.slug,
+    new TrailStep("Documentation", ROUTE_PATH_RESOLVER.resolveRepositoryManual(profile.slug)),
+    new TrailStep(document.getTitle(), canonical)
+);
+
+const breadcrumbs: BreadcrumbStep[] = BREADCRUMB_STEPS_FACTORY.create(trail, BREADCRUMB_HOME, SITE.getWebsite());
+---
+
+<Layout
+    title={`${heading} - ${SITE.getTitle()}`}
+    description={description}
+    ogImage={ROUTE_PATH_RESOLVER.resolveRepositoryImage(profile.slug)}
+    lang={document.getLanguage()}
+    alternates={alternates.map((documentAlternate: DocumentAlternate) => ({
+        tag: documentAlternate.getTag(),
+        href: documentAlternate.getHref(),
+    }))}
+    breadcrumbs={breadcrumbs}
+>
+    <Header activeNav="software" />
+    <Main pageTitle={heading} pageDesc={profile.logline} {trail}>
+        <RepositoryHeader profile={profile} />
+
+        <RepositoryPageNav pages={REPOSITORY_PAGE_NAVIGATION_FACTORY.create(profile, "documentation")} />
+
+        <DocumentLanguageBar {alternates} />
+
+        {
+            manual ? (
+                <RepositoryManualSection
+                    manual={manual}
+                    source={`${profile.url}/blob/HEAD/${document.getPath()}`}
+                    note={note}
+                    label={`Sections of ${document.getTitle()}`}
+                />
+            ) : (
+                <p class="missing">
+                    This document is in the repository, and the build could not read it. Read it on GitHub:{" "}
+                    <a href={profile.url}>{profile.url}</a>
+                </p>
+            )
+        }
+    </Main>
+    <Footer />
+</Layout>
+
+<style>
+    @reference "../../../style/theme.css";
+
+    .missing {
+        @apply rounded-lg glass-raised px-text py-text;
+    }
+</style>
+
+<script>
+    import { CODE_COPY_BUTTONS } from "@ui/script/CodeCopyButtons";
+    import { SECTION_NAVIGATION } from "@ui/script/SectionNavigation";
+
+    const mount = (): void => {
+        CODE_COPY_BUTTONS.mount();
+        SECTION_NAVIGATION.mount();
+    };
+
+    mount();
+</script>

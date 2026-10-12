@@ -1,0 +1,256 @@
+---
+import type { RenderedContent } from "@app/infrastructure/content/section/RenderedContent";
+import ExperienceTimeline from "@ui/feature/experience/component/ExperienceTimeline.astro";
+import { AUTHOR_PORTRAIT } from "@app/configuration/author/AuthorPortraits";
+import ExternalLink from "@ui/component/ExternalLink";
+import { SOCIAL_LINKS } from "@app/configuration/social/SocialLinks";
+import type { SocialLink } from "@app/configuration/social/SocialLink";
+import { SPONSOR_LINK } from "@app/configuration/sponsor/SiteSponsorLink";
+import ArrowRightIcon from "@ui/component/icon/ArrowRightIcon";
+import HeartIcon from "@ui/component/icon/HeartIcon";
+import Footer from "@ui/component/Footer.astro";
+import Header from "@ui/component/Header.astro";
+import Layout from "@ui/layout/Layout.astro";
+import Main from "@ui/layout/Main.astro";
+import { PAGE_DESCRIPTIONS } from "@app/configuration/page/PageDescriptions";
+import { ROUTES } from "@app/configuration/route/Routes";
+import { PAGE_TITLES } from "@app/configuration/page/PageTitles";
+import { AUTHOR_EMPLOYER } from "@app/configuration/author/SiteAuthorEmployer";
+import { AUTHOR_EXPERTISE } from "@app/configuration/author/AuthorExpertise";
+import { AUTHOR_JOB_TITLE } from "@app/configuration/author/AuthorJobTitle";
+import { AUTHOR_NAME } from "@app/configuration/author/SiteAuthorName";
+import { GITHUB_USERNAME } from "@app/configuration/author/GitHubUsername";
+import { LOCALE } from "@app/configuration/site/SiteLocale";
+import { SITE } from "@app/configuration/site/Site";
+import type { RenderedSection } from "@app/infrastructure/content/section/RenderedSection";
+import type { StructuredData } from "@app/util/seo/StructuredData";
+
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { AuthorPortraitResolver } from "@app/infrastructure/file/asset/AuthorPortraitResolver.ts";
+import { RoutePathResolver } from "@app/util/routing/RoutePathResolver.ts";
+import { RenderedSectionService } from "@app/infrastructure/content/section/RenderedSectionService.ts";
+import { PersonSchemaBuilder } from "@app/util/seo/site/PersonSchemaBuilder.ts";
+import { ProfilePageSchemaBuilder } from "@app/util/seo/page/ProfilePageSchemaBuilder.ts";
+import { PageTitleFormatter } from "@app/util/text/PageTitleFormatter.ts";
+import { SchemaIdentifiers } from "@app/util/seo/SchemaIdentifiers.ts";
+import { AuthorProfiles } from "@app/configuration/author/AuthorProfiles.ts";
+
+const AUTHOR_PORTRAIT_RESOLVER: AuthorPortraitResolver = CONTEXT.resolve(AuthorPortraitResolver);
+const ROUTE_PATH_RESOLVER: RoutePathResolver = CONTEXT.resolve(RoutePathResolver);
+const RENDERED_SECTION_SERVICE: RenderedSectionService = CONTEXT.resolve(RenderedSectionService);
+const PERSON_SCHEMA_BUILDER: PersonSchemaBuilder = CONTEXT.resolve(PersonSchemaBuilder);
+const PROFILE_PAGE_SCHEMA_BUILDER: ProfilePageSchemaBuilder = CONTEXT.resolve(ProfilePageSchemaBuilder);
+const PAGE_TITLE_FORMATTER: PageTitleFormatter = CONTEXT.resolve(PageTitleFormatter);
+const SCHEMA_IDENTIFIERS: SchemaIdentifiers = CONTEXT.resolve(SchemaIdentifiers);
+const AUTHOR_PROFILES: AuthorProfiles = CONTEXT.resolve(AuthorProfiles);
+
+const renderedSections: RenderedSection[] = await RENDERED_SECTION_SERVICE.getSections("about");
+
+const ABOUT_NAMES: Readonly<Record<string, string>> = {
+    GitHub: "github.com/klaudiosinani",
+    Mail: "klaudiosinani [at] protonmail [dot] ch",
+    RSS: "The feed",
+};
+
+const portrait: string | null = await AUTHOR_PORTRAIT_RESOLVER.resolve();
+
+const prose: RenderedSection[] = renderedSections.filter(
+    (renderedSection: RenderedSection) => !renderedSection.getHref()
+);
+const destinations: RenderedSection[] = renderedSections.filter((renderedSection: RenderedSection) =>
+    renderedSection.getHref()
+);
+
+const url: string = new URL(`${ROUTES.about}/`, SITE.getWebsite()).href;
+
+const schema: StructuredData[] = [
+    PROFILE_PAGE_SCHEMA_BUILDER.build({
+        url,
+        name: PAGE_TITLES.about,
+        siteId: SCHEMA_IDENTIFIERS.website(SITE.getWebsite()),
+        inLanguage: LOCALE.getLanguage(),
+        person: PERSON_SCHEMA_BUILDER.build({
+            id: SCHEMA_IDENTIFIERS.person(SITE.getWebsite()),
+            name: SITE.getAuthor(),
+            givenName: AUTHOR_NAME.getGiven(),
+            familyName: AUTHOR_NAME.getFamily(),
+            alternateName: GITHUB_USERNAME,
+            url: SITE.getWebsite(),
+            description: PAGE_DESCRIPTIONS.about,
+            jobTitle: AUTHOR_JOB_TITLE,
+            knowsAbout: AUTHOR_EXPERTISE,
+            image: new URL(SITE.getOgImage() ?? "og.png", SITE.getWebsite()).href,
+            worksFor: { name: AUTHOR_EMPLOYER.getName(), url: AUTHOR_EMPLOYER.getUrl() },
+            sameAs: AUTHOR_PROFILES.ALL,
+        }),
+    }),
+];
+---
+
+<Layout
+    title={PAGE_TITLE_FORMATTER.format(PAGE_TITLES.about, SITE.getTitle())}
+    description={PAGE_DESCRIPTIONS.about}
+    ogImage={ROUTE_PATH_RESOLVER.resolvePageImage("about")}
+    schema={schema}
+>
+    <Header activeNav="about" />
+    <Main pageTitle="About" pageDesc="The positions I have held, and the work I have published in the open.">
+        <div class="about-lead">
+            {
+                portrait && (
+                    <figure class="about-portrait">
+                        <img
+                            src={portrait}
+                            alt={`${SITE.getAuthor()}, photographed`}
+                            width={AUTHOR_PORTRAIT.getPixels()}
+                            height={AUTHOR_PORTRAIT.getPixels()}
+                            decoding="async"
+                            fetchpriority="high"
+                        />
+                    </figure>
+                )
+            }
+            <section id="about" class="about-prose prose">
+                {
+                    prose.map((renderedSection: RenderedSection) => {
+                        const Content: RenderedContent = renderedSection.getContent();
+                        const title: string = renderedSection.getTitle();
+
+                        return (
+                            <>
+                                {title && <h3>{title}</h3>}
+                                <Content />
+                            </>
+                        );
+                    })
+                }
+            </section>
+        </div>
+
+        <section class="band about-experience" aria-labelledby="experience">
+            <h2 class="band-label" id="experience">Where I have worked</h2>
+            <ExperienceTimeline />
+        </section>
+
+        <div class="band about-elsewhere">
+            <p class="band-label">Elsewhere</p>
+            <ul class="about-links">
+                {
+                    SOCIAL_LINKS.filter((socialLink: SocialLink) => socialLink.isActive()).map(
+                        (socialLink: SocialLink) => (
+                            <li>
+                                <ExternalLink
+                                    href={socialLink.getHref()}
+                                    className="about-link"
+                                    title={socialLink.getLinkTitle()}
+                                >
+                                    {ABOUT_NAMES[socialLink.getName()] ?? socialLink.getName()}
+                                </ExternalLink>
+                            </li>
+                        )
+                    )
+                }
+                <li>
+                    <ExternalLink
+                        href={SPONSOR_LINK.getHref()}
+                        className="about-link about-sponsor"
+                        title={SPONSOR_LINK.getTitle()}
+                    >
+                        <HeartIcon className="heart-mark" ariaHidden />
+                        {SPONSOR_LINK.getLabel()}
+                    </ExternalLink>
+                </li>
+            </ul>
+        </div>
+
+        {
+            destinations.length > 0 && (
+                <div class="band">
+                    <p class="band-label">Read on</p>
+                    <div class="about-cards">
+                        {destinations.map((renderedSection: RenderedSection) => {
+                            const Content: RenderedContent = renderedSection.getContent();
+
+                            return (
+                                <a href={renderedSection.getHref()} class="about-card entry-row focus-outline">
+                                    <span class="about-card-head">
+                                        <span class="about-card-title">{renderedSection.getTitle()}</span>
+                                        <ArrowRightIcon className="about-card-arrow" ariaHidden />
+                                    </span>
+                                    <span class="about-card-text prose">
+                                        <Content />
+                                    </span>
+                                </a>
+                            );
+                        })}
+                    </div>
+                </div>
+            )
+        }
+    </Main>
+    <Footer />
+</Layout>
+
+<style>
+    @reference "../../style/theme.css";
+
+    .about-lead {
+        @apply flex flex-col items-start gap-part sm:flex-row sm:gap-head;
+    }
+    .about-portrait {
+        @apply m-0 h-24 w-24 shrink-0 overflow-hidden rounded-xl border border-skin-line glass-raised sm:h-36 sm:w-36;
+    }
+    .about-portrait img {
+        @apply h-full w-full object-cover;
+    }
+
+    .about-links {
+        @apply mt-part flex flex-col gap-y-text text-sm sm:flex-row sm:flex-wrap sm:gap-x-part;
+    }
+    .about-links :global(.about-link) {
+        @apply inline-flex items-center gap-inline no-underline opacity-80 hover:text-skin-accent hover:opacity-100;
+    }
+    .about-links :global(.about-sponsor) {
+        @apply opacity-100;
+    }
+
+    .about-prose {
+        @apply mx-0 w-full max-w-2xl px-0 font-serif;
+    }
+    .about-prose :global(p) {
+        @apply my-0 text-base leading-relaxed sm:text-lg;
+    }
+    .about-prose :global(p + p) {
+        @apply mt-part;
+    }
+    .about-prose :global(p:first-of-type) {
+        @apply text-xl leading-snug sm:text-2xl;
+    }
+    .about-elsewhere :global(.social-icons) {
+        @apply mt-tight -ml-text justify-start sm:-ml-tight;
+    }
+    .about-cards {
+        @apply mt-text grid gap-x-part gap-y-tight sm:grid-cols-2 lg:grid-cols-3;
+    }
+    .about-card {
+        @apply block text-skin-base no-underline;
+    }
+    .about-card-head {
+        @apply flex items-center gap-inline;
+    }
+    .about-card-title {
+        @apply text-lg font-medium;
+    }
+    .about-card:hover .about-card-title {
+        @apply text-skin-accent underline decoration-solid underline-offset-4;
+    }
+    .about-card-arrow {
+        @apply h-4 w-4 shrink-0 fill-skin-base opacity-60 transition-transform duration-200;
+    }
+    .about-card:hover .about-card-arrow {
+        @apply translate-x-1 opacity-90;
+    }
+    .about-card-text :global(p) {
+        @apply my-tight! text-sm leading-relaxed opacity-80;
+    }
+</style>

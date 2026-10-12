@@ -1,0 +1,26 @@
+---
+import type { CollectionEntry } from "astro:content";
+import { getCollection } from "astro:content";
+import Posts from "@ui/feature/publication/layout/Posts.astro";
+import { ROUTES } from "@app/configuration/route/Routes";
+import type { PaginatedResult } from "@app/feature/pagination/PaginatedResult";
+
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { PublicationQueryService } from "@app/feature/publication/PublicationQueryService.ts";
+import { PAGINATION_SERVICE as PAGINATION_SERVICE_KEY } from "@bindings";
+
+const PUBLICATION_QUERY_SERVICE: PublicationQueryService = CONTEXT.resolve(PublicationQueryService);
+const PAGINATION_SERVICE = CONTEXT.resolve(PAGINATION_SERVICE_KEY);
+
+const posts: CollectionEntry<"blog">[] = await getCollection("blog");
+
+const sortedPosts: CollectionEntry<"blog">[] = PUBLICATION_QUERY_SERVICE.sortByDate(posts);
+
+const pagination: PaginatedResult<CollectionEntry<"blog">> = PAGINATION_SERVICE.paginate({
+    items: sortedPosts,
+    basePath: ROUTES.publications,
+    isIndex: true,
+});
+---
+
+<Posts {pagination} />

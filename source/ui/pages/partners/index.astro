@@ -1,0 +1,261 @@
+---
+import Control from "@ui/library/element/Control.astro";
+import Footer from "@ui/component/Footer.astro";
+import Header from "@ui/component/Header.astro";
+import Layout from "@ui/layout/Layout.astro";
+import PartnerTerminal from "@ui/feature/partner/component/PartnerTerminal.astro";
+import PlacementOfferList from "@ui/feature/partner/component/PlacementOfferList.astro";
+import ReachLedger from "@ui/feature/partner/component/ReachLedger.astro";
+import ReachTable from "@ui/feature/reach/component/ReachTable.astro";
+import ReadmePreview from "@ui/feature/partner/component/ReadmePreview.astro";
+import SponsorList from "@ui/feature/partner/component/SponsorList.astro";
+import type { FeaturedPress } from "@app/feature/press/coverage/FeaturedPress";
+import type { PartnerProposal } from "@app/feature/partner/PartnerProposal";
+import type { RepositoryProfile } from "@app/feature/repository/profile/RepositoryProfile";
+import type { SignalLine } from "@app/util/signal/SignalLine";
+import type { Sponsor } from "@app/configuration/sponsor/Sponsor";
+import type { StructuredData } from "@app/util/seo/StructuredData";
+import { LOCALE } from "@app/configuration/site/SiteLocale";
+import { PAGE_DESCRIPTIONS } from "@app/configuration/page/PageDescriptions";
+import { PAGE_TITLES } from "@app/configuration/page/PageTitles";
+import { ROUTES } from "@app/configuration/route/Routes";
+import { SITE } from "@app/configuration/site/Site";
+
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { FeaturedPressRetrievalService } from "@app/feature/press/FeaturedPressRetrievalService.ts";
+import { ListFormatter } from "@app/util/text/ListFormatter.ts";
+import { NumberFormatter } from "@app/util/text/NumberFormatter.ts";
+import { PageTitleFormatter } from "@app/util/text/PageTitleFormatter.ts";
+import { PartnerConfiguration } from "@app/feature/partner/PartnerConfiguration.ts";
+import { PartnerRetrievalService } from "@app/feature/partner/PartnerRetrievalService.ts";
+import { PartnerSignalLinesFactory } from "@app/feature/partner/signal/PartnerSignalLinesFactory.ts";
+import { RoutePathResolver } from "@app/util/routing/RoutePathResolver.ts";
+import { SchemaIdentifiers } from "@app/util/seo/SchemaIdentifiers.ts";
+import { SponsorRoll } from "@app/configuration/sponsor/SponsorRoll.ts";
+import { WebPageSchemaBuilder } from "@app/util/seo/page/WebPageSchemaBuilder.ts";
+
+const FEATURED_PRESS_RETRIEVAL_SERVICE: FeaturedPressRetrievalService = CONTEXT.resolve(FeaturedPressRetrievalService);
+const LIST_FORMATTER: ListFormatter = CONTEXT.resolve(ListFormatter);
+const NUMBER_FORMATTER: NumberFormatter = CONTEXT.resolve(NumberFormatter);
+const PAGE_TITLE_FORMATTER: PageTitleFormatter = CONTEXT.resolve(PageTitleFormatter);
+const PARTNER_CONFIGURATION: PartnerConfiguration = CONTEXT.resolve(PartnerConfiguration);
+const PARTNER_RETRIEVAL_SERVICE: PartnerRetrievalService = CONTEXT.resolve(PartnerRetrievalService);
+const PARTNER_SIGNAL_LINES_FACTORY: PartnerSignalLinesFactory = CONTEXT.resolve(PartnerSignalLinesFactory);
+const ROUTE_PATH_RESOLVER: RoutePathResolver = CONTEXT.resolve(RoutePathResolver);
+const SCHEMA_IDENTIFIERS: SchemaIdentifiers = CONTEXT.resolve(SchemaIdentifiers);
+const SPONSOR_ROLL: SponsorRoll = CONTEXT.resolve(SponsorRoll);
+const WEB_PAGE_SCHEMA_BUILDER: WebPageSchemaBuilder = CONTEXT.resolve(WebPageSchemaBuilder);
+
+const partnerProposal: PartnerProposal = await PARTNER_RETRIEVAL_SERVICE.retrieve();
+const lines: SignalLine[] = PARTNER_SIGNAL_LINES_FACTORY.create(partnerProposal);
+const brand: string = PARTNER_CONFIGURATION.getDefaultBrand();
+const leadProfile: RepositoryProfile | null = partnerProposal.getLeadProfile();
+const currentSponsors: Sponsor[] = SPONSOR_ROLL.current();
+const pastSponsors: Sponsor[] = SPONSOR_ROLL.past();
+const featuredPress: FeaturedPress[] = await FEATURED_PRESS_RETRIEVAL_SERVICE.retrieve();
+const publishers: string = LIST_FORMATTER.format([
+    ...new Set(featuredPress.map((press: FeaturedPress) => press.publisherName)),
+]);
+
+const contact: Record<string, string> = {
+    "data-contact-user": PARTNER_CONFIGURATION.getContactUser(),
+    "data-contact-host": PARTNER_CONFIGURATION.getContactHost(),
+    "data-contact-subject": PARTNER_CONFIGURATION.getContactSubject(),
+};
+
+const schema: StructuredData[] = [
+    WEB_PAGE_SCHEMA_BUILDER.build({
+        name: PAGE_TITLES.partners,
+        url: new URL(`${ROUTES.partners}/`, SITE.getWebsite()).href,
+        description: PAGE_DESCRIPTIONS.partners,
+        author: {
+            name: SITE.getAuthor(),
+            url: SITE.getWebsite(),
+            id: SCHEMA_IDENTIFIERS.person(SITE.getWebsite()),
+        },
+        site: { name: SITE.getTitle(), url: SITE.getWebsite() },
+        image: new URL(ROUTE_PATH_RESOLVER.resolvePageImage("partners"), SITE.getWebsite()).href,
+        inLanguage: LOCALE.getLanguage(),
+    }),
+];
+---
+
+<Layout
+    title={PAGE_TITLE_FORMATTER.format(PAGE_TITLES.partners, SITE.getTitle())}
+    description={PAGE_DESCRIPTIONS.partners}
+    ogImage={ROUTE_PATH_RESOLVER.resolvePageImage("partners")}
+    schema={schema}
+>
+    <Header activeNav="partners" />
+    <main id="main-content" class="partners">
+        <section class="partner-hero">
+            <div class="partner-hero-copy">
+                <h1 class="partner-claim">Put your product in front of the developers who use these tools.</h1>
+                <p class="partner-lede">
+                    My tools were downloaded {
+                        NUMBER_FORMATTER.exact(partnerProposal.getReach().getDownloadsLastMonth())
+                    }
+                    times in the last 30 days. A partnership puts your brand on their readmes, where developers read before
+                    they install.
+                </p>
+                <div class="partner-actions">
+                    <Control href={`${ROUTES.about}/`} lead {...contact}>Start a conversation</Control>
+                    <Control href="#placements">See the placements</Control>
+                </div>
+            </div>
+            <PartnerTerminal lines={lines} brand={brand} />
+        </section>
+
+        <section class="partner-section" id="reach" aria-labelledby="reach-title">
+            <h2 class="partner-title" id="reach-title">The reach, today</h2>
+            <p class="partner-intro">
+                Every figure comes from the registries and from GitHub. The site reads them again each time it is built.
+            </p>
+            <div class="partner-body">
+                <ReachLedger reach={partnerProposal.getReach()} />
+            </div>
+        </section>
+
+        <section class="partner-section" id="placements" aria-labelledby="placements-title">
+            <h2 class="partner-title" id="placements-title">Where your brand stands</h2>
+            <p class="partner-intro">
+                Each place shows your brand to the people who use the work. The figures are those of the place itself.
+            </p>
+            <div class="partner-body">
+                <ReachTable
+                    caption="The places for your brand, and the reach of each"
+                    subject="Place"
+                    surfaces={partnerProposal.getPlacements()}
+                />
+            </div>
+            <h3 class="partner-subtitle">More places, without figures</h3>
+            <div class="partner-body">
+                <PlacementOfferList offers={partnerProposal.getOffers()} />
+            </div>
+        </section>
+
+        {
+            leadProfile && (
+                <section class="partner-section" id="preview" aria-labelledby="preview-title">
+                    <h2 class="partner-title" id="preview-title">
+                        How it looks
+                    </h2>
+                    <p class="partner-intro">
+                        The top of the readme of {leadProfile.slug}, with your brand in place. Type the name of your
+                        brand in the terminal above, and it appears here.
+                    </p>
+                    <div class="partner-body partner-preview">
+                        <ReadmePreview
+                            repository={leadProfile.slug}
+                            description={leadProfile.description}
+                            brand={brand}
+                        />
+                    </div>
+                </section>
+            )
+        }
+
+        <section class="partner-section" id="proof" aria-labelledby="proof-title">
+            <h2 class="partner-title" id="proof-title">Who backs this work</h2>
+            <div class="partner-body partner-proof">
+                <SponsorList sponsors={[...currentSponsors, ...pastSponsors]} />
+                {
+                    publishers && (
+                        <p class="partner-press">
+                            Written about by {publishers}. <a href={`${ROUTES.press}/`}>Read the press</a>
+                        </p>
+                    )
+                }
+            </div>
+        </section>
+
+        <section class="partner-section" id="steps" aria-labelledby="steps-title">
+            <h2 class="partner-title" id="steps-title">How a partnership starts</h2>
+            <ol class="partner-body partner-steps">
+                <li class="partner-step">We talk about your product, and choose the places that suit it.</li>
+                <li class="partner-step">Your brand goes on the readmes, and stays for the period we agree.</li>
+                <li class="partner-step">
+                    Every month, you get the true figures of the period, read from the registries.
+                </li>
+            </ol>
+        </section>
+
+        <section class="partner-section partner-close" aria-labelledby="close-title">
+            <h2 class="partner-title" id="close-title"><span data-brand-name>{brand}</span>, on these readmes</h2>
+            <p class="partner-intro">
+                Write to me, and say which product you want to put in front of these developers.
+            </p>
+            <div class="partner-actions">
+                <Control href={`${ROUTES.about}/`} lead {...contact}>Start a conversation</Control>
+            </div>
+        </section>
+    </main>
+    <Footer />
+</Layout>
+
+<style>
+    @reference "../../style/theme.css";
+
+    .partners {
+        @apply pb-section;
+    }
+    .partner-hero {
+        @apply grid gap-head pt-head lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:items-center;
+    }
+    .partner-claim {
+        @apply text-4xl leading-[1.08] text-balance sm:text-5xl;
+    }
+    .partner-lede {
+        @apply mt-part max-w-xl text-lg leading-relaxed opacity-80;
+    }
+    .partner-actions {
+        @apply mt-head flex flex-wrap items-center gap-text;
+    }
+    .partner-section {
+        @apply mt-section;
+    }
+    .partner-title {
+        @apply text-3xl;
+    }
+    .partner-intro {
+        @apply mt-text max-w-2xl text-base leading-relaxed opacity-80;
+    }
+    .partner-body {
+        @apply mt-head;
+    }
+    .partner-preview {
+        @apply max-w-3xl;
+    }
+    .partner-press {
+        @apply mt-head text-base opacity-80;
+    }
+    .partner-press a {
+        @apply underline underline-offset-4 hover:text-skin-accent;
+    }
+    .partner-subtitle {
+        @apply mt-group text-xl;
+    }
+    .partner-steps {
+        @apply grid gap-part sm:grid-cols-3;
+        counter-reset: step;
+    }
+    .partner-step {
+        @apply border-t border-skin-line pt-text text-base leading-relaxed;
+        counter-increment: step;
+    }
+    .partner-step::before {
+        @apply mb-tight block text-sm font-semibold opacity-80;
+        content: counter(step);
+    }
+    .partner-close .partner-title {
+        @apply text-4xl;
+    }
+</style>
+
+<script>
+    import { CONTACT_LINK_ASSEMBLER } from "@ui/script/ContactLinkAssembler";
+    import { PARTNER_PROMPT } from "@ui/script/PartnerPrompt";
+
+    PARTNER_PROMPT.mount();
+    CONTACT_LINK_ASSEMBLER.mount();
+</script>

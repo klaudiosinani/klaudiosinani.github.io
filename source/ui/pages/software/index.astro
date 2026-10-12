@@ -1,0 +1,101 @@
+---
+import { CollectionItem } from "@app/util/seo/page/CollectionItem";
+import SoftwareControls from "@ui/feature/software/component/SoftwareControls.astro";
+import FeaturedSoftwareCard from "@ui/feature/software/component/FeaturedSoftwareCard";
+import Footer from "@ui/component/Footer.astro";
+import Header from "@ui/component/Header.astro";
+import Layout from "@ui/layout/Layout.astro";
+import Main from "@ui/layout/Main.astro";
+import { PAGE_DESCRIPTIONS } from "@app/configuration/page/PageDescriptions";
+import { ROUTES } from "@app/configuration/route/Routes";
+import { PAGE_TITLES } from "@app/configuration/page/PageTitles";
+import { LOCALE } from "@app/configuration/site/SiteLocale";
+import { SITE } from "@app/configuration/site/Site";
+import type { FeaturedSoftwareEntry } from "@app/feature/software/featured/FeaturedSoftwareEntry";
+import type { StructuredData } from "@app/util/seo/StructuredData";
+
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { CollectionPageSchemaBuilder } from "@app/util/seo/page/CollectionPageSchemaBuilder.ts";
+import { FeaturedSoftwareEntryRetrievalService } from "@app/feature/software/featured/FeaturedSoftwareEntryRetrievalService.ts";
+import { RoutePathResolver } from "@app/util/routing/RoutePathResolver.ts";
+import { PageTitleFormatter } from "@app/util/text/PageTitleFormatter.ts";
+import { SchemaIdentifiers } from "@app/util/seo/SchemaIdentifiers.ts";
+
+const COLLECTION_PAGE_SCHEMA_BUILDER: CollectionPageSchemaBuilder = CONTEXT.resolve(CollectionPageSchemaBuilder);
+const FEATURED_SOFTWARE_ENTRY_RETRIEVAL_SERVICE: FeaturedSoftwareEntryRetrievalService = CONTEXT.resolve(
+    FeaturedSoftwareEntryRetrievalService
+);
+const ROUTE_PATH_RESOLVER: RoutePathResolver = CONTEXT.resolve(RoutePathResolver);
+const PAGE_TITLE_FORMATTER: PageTitleFormatter = CONTEXT.resolve(PageTitleFormatter);
+const SCHEMA_IDENTIFIERS: SchemaIdentifiers = CONTEXT.resolve(SchemaIdentifiers);
+
+const featuredSoftware: FeaturedSoftwareEntry[] = await FEATURED_SOFTWARE_ENTRY_RETRIEVAL_SERVICE.retrieve();
+
+const schema: StructuredData[] = [
+    COLLECTION_PAGE_SCHEMA_BUILDER.build({
+        author: {
+            name: SITE.getAuthor(),
+            url: SITE.getWebsite(),
+            id: SCHEMA_IDENTIFIERS.person(SITE.getWebsite()),
+        },
+        image: new URL(ROUTE_PATH_RESOLVER.resolvePageImage("software"), SITE.getWebsite()).href,
+        inLanguage: LOCALE.getLanguage(),
+        siteId: SCHEMA_IDENTIFIERS.website(SITE.getWebsite()),
+        name: "Software",
+        url: new URL(`${ROUTES.software}/`, SITE.getWebsite()).href,
+        description: PAGE_DESCRIPTIONS.software,
+        items: featuredSoftware.map(
+            (featuredSoftwareEntry: FeaturedSoftwareEntry) =>
+                new CollectionItem(
+                    featuredSoftwareEntry.getName(),
+                    featuredSoftwareEntry.hasPage()
+                        ? new URL(
+                              ROUTE_PATH_RESOLVER.resolveRepository(featuredSoftwareEntry.getSlug() ?? ""),
+                              SITE.getWebsite()
+                          ).href
+                        : featuredSoftwareEntry.getUrl()
+                )
+        ),
+    }),
+];
+
+const languages: string[] = [
+    ...new Set(
+        featuredSoftware.flatMap((featuredSoftwareEntry: FeaturedSoftwareEntry) =>
+            featuredSoftwareEntry.getSoftwareSignals().getLanguages()
+        )
+    ),
+].sort();
+---
+
+<Layout
+    title={PAGE_TITLE_FORMATTER.format(PAGE_TITLES.software, SITE.getTitle())}
+    description={PAGE_DESCRIPTIONS.software}
+    ogImage={ROUTE_PATH_RESOLVER.resolvePageImage("software")}
+    schema={schema}
+>
+    <Header activeNav="software" />
+    <Main pageTitle="Software" pageDesc="Software I have authored and contributed to.">
+        <a href={`${ROUTES.softwareArchive}/`} class="section-heading-link focus-outline" slot="title-adornment">
+            Every repository
+        </a>
+        <SoftwareControls languages={languages} />
+
+        <ul class="card-grid" data-software-list>
+            {
+                featuredSoftware.map((software: FeaturedSoftwareEntry, index: number) => (
+                    <FeaturedSoftwareCard entry={software} secHeading={true} lead={index === 0} />
+                ))
+            }
+        </ul>
+    </Main>
+    <Footer />
+</Layout>
+
+<style>
+    @reference "../../style/theme.css";
+
+    .page-heading :global(.section-heading-link) {
+        @apply ml-auto;
+    }
+</style>

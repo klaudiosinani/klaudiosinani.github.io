@@ -1,0 +1,58 @@
+---
+import { type CollectionEntry, getCollection } from "astro:content";
+import TagPosts from "@ui/feature/publication/layout/TagPosts.astro";
+import type { Tag } from "@app/feature/publication/tag/Tag";
+import type { PaginatedResult } from "@app/feature/pagination/PaginatedResult";
+
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { RoutePathResolver } from "@app/util/routing/RoutePathResolver.ts";
+import { PublicationQueryService } from "@app/feature/publication/PublicationQueryService.ts";
+import { PAGINATION_SERVICE as PAGINATION_SERVICE_KEY } from "@bindings";
+
+const ROUTE_PATH_RESOLVER: RoutePathResolver = CONTEXT.resolve(RoutePathResolver);
+const PUBLICATION_QUERY_SERVICE: PublicationQueryService = CONTEXT.resolve(PublicationQueryService);
+const PAGINATION_SERVICE = CONTEXT.resolve(PAGINATION_SERVICE_KEY);
+
+export interface Props {
+    post: CollectionEntry<"blog">;
+    tag: string;
+    tagName: string;
+}
+
+export async function getStaticPaths() {
+    const PUBLICATION_QUERY_SERVICE: PublicationQueryService = CONTEXT.resolve(PublicationQueryService);
+    const PAGINATION_SERVICE = CONTEXT.resolve(PAGINATION_SERVICE_KEY);
+    const posts: CollectionEntry<"blog">[] = await getCollection("blog");
+    const tags: Tag[] = PUBLICATION_QUERY_SERVICE.collectTags(posts);
+
+    return tags.flatMap((tag: Tag) => {
+        const tagPosts: CollectionEntry<"blog">[] = PUBLICATION_QUERY_SERVICE.findByTag(posts, tag.getTag());
+        const pageNumbers: number[] = PAGINATION_SERVICE.subsequentPageNumbers(tagPosts.length);
+
+        return pageNumbers.map((page: number) => ({
+            params: { tag: tag.getTag(), page },
+            props: { tag: tag.getTag(), tagName: tag.getTagName() },
+        }));
+    });
+}
+
+const { page } = Astro.params;
+const { tag, tagName } = Astro.props;
+
+const posts: CollectionEntry<"blog">[] = await getCollection(
+    "blog",
+    ({ data }: CollectionEntry<"blog">) => !data.draft
+);
+
+const postsByTag: CollectionEntry<"blog">[] = PUBLICATION_QUERY_SERVICE.findByTag(posts, tag);
+
+const others: Tag[] = PUBLICATION_QUERY_SERVICE.collectTags(posts).filter((other: Tag) => other.getTag() !== tag);
+
+const pagination: PaginatedResult<CollectionEntry<"blog">> = PAGINATION_SERVICE.paginate({
+    items: postsByTag,
+    page,
+    basePath: ROUTE_PATH_RESOLVER.resolveTag(tag),
+});
+---
+
+<TagPosts {pagination} {tag} {tagName} others={others} />

@@ -1,0 +1,44 @@
+---
+import type { CollectionEntry } from "astro:content";
+import { getCollection } from "astro:content";
+import TagPosts from "@ui/feature/publication/layout/TagPosts.astro";
+import type { Tag } from "@app/feature/publication/tag/Tag";
+import type { PaginatedResult } from "@app/feature/pagination/PaginatedResult";
+
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { RoutePathResolver } from "@app/util/routing/RoutePathResolver.ts";
+import { PublicationQueryService } from "@app/feature/publication/PublicationQueryService.ts";
+import { PAGINATION_SERVICE as PAGINATION_SERVICE_KEY } from "@bindings";
+
+const ROUTE_PATH_RESOLVER: RoutePathResolver = CONTEXT.resolve(RoutePathResolver);
+const PUBLICATION_QUERY_SERVICE: PublicationQueryService = CONTEXT.resolve(PublicationQueryService);
+const PAGINATION_SERVICE = CONTEXT.resolve(PAGINATION_SERVICE_KEY);
+
+export async function getStaticPaths() {
+    const PUBLICATION_QUERY_SERVICE: PublicationQueryService = CONTEXT.resolve(PublicationQueryService);
+    const posts: CollectionEntry<"blog">[] = await getCollection("blog");
+
+    const tags: Tag[] = PUBLICATION_QUERY_SERVICE.collectTags(posts);
+
+    return tags.map((tag: Tag) => {
+        return {
+            params: { tag: tag.getTag() },
+            props: { tag: tag.getTag(), tagName: tag.getTagName(), posts },
+        };
+    });
+}
+
+const { tag, tagName, posts } = Astro.props;
+
+const postsByTag: CollectionEntry<"blog">[] = PUBLICATION_QUERY_SERVICE.findByTag(posts, tag);
+
+const others: Tag[] = PUBLICATION_QUERY_SERVICE.collectTags(posts).filter((other: Tag) => other.getTag() !== tag);
+
+const pagination: PaginatedResult<CollectionEntry<"blog">> = PAGINATION_SERVICE.paginate({
+    items: postsByTag,
+    basePath: ROUTE_PATH_RESOLVER.resolveTag(tag),
+    isIndex: true,
+});
+---
+
+<TagPosts {pagination} {tag} {tagName} others={others} />

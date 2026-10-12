@@ -1,0 +1,75 @@
+---
+import { type CollectionEntry, getCollection } from "astro:content";
+import Posts from "@ui/feature/publication/layout/Posts.astro";
+import PostDetails from "@ui/feature/publication/layout/PostDetails.astro";
+import { ROUTES } from "@app/configuration/route/Routes";
+import type { PaginatedResult } from "@app/feature/pagination/PaginatedResult";
+
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { PublicationNeighbourResolver } from "@app/feature/publication/related/PublicationNeighbourResolver.ts";
+import { RelatedPublicationResolver } from "@app/feature/publication/related/RelatedPublicationResolver.ts";
+import { PublicationQueryService } from "@app/feature/publication/PublicationQueryService.ts";
+import { PAGINATION_SERVICE as PAGINATION_SERVICE_KEY } from "@bindings";
+
+const PUBLICATION_NEIGHBOUR_RESOLVER: PublicationNeighbourResolver = CONTEXT.resolve(PublicationNeighbourResolver);
+const RELATED_PUBLICATION_RESOLVER: RelatedPublicationResolver = CONTEXT.resolve(RelatedPublicationResolver);
+const PUBLICATION_QUERY_SERVICE: PublicationQueryService = CONTEXT.resolve(PublicationQueryService);
+const PAGINATION_SERVICE = CONTEXT.resolve(PAGINATION_SERVICE_KEY);
+
+export interface Props {
+    post: CollectionEntry<"blog">;
+}
+
+export async function getStaticPaths() {
+    const PAGINATION_SERVICE = CONTEXT.resolve(PAGINATION_SERVICE_KEY);
+    const posts: CollectionEntry<"blog">[] = await getCollection(
+        "blog",
+        ({ data }: CollectionEntry<"blog">) => !data.draft
+    );
+
+    const postResult: {
+        params: { slug: string };
+        props: { post: CollectionEntry<"blog"> };
+    }[] = posts.map((post: CollectionEntry<"blog">) => ({
+        params: { slug: post.id },
+        props: { post },
+    }));
+
+    const pagePaths: { params: { slug: string } }[] = PAGINATION_SERVICE.subsequentPageNumbers(posts.length).map(
+        (pageNumber: number) => ({
+            params: { slug: String(pageNumber) },
+        })
+    );
+
+    return [...postResult, ...pagePaths];
+}
+
+const { slug } = Astro.params;
+const { post } = Astro.props;
+
+const posts: CollectionEntry<"blog">[] = await getCollection("blog");
+
+const sortedPosts: CollectionEntry<"blog">[] = PUBLICATION_QUERY_SERVICE.sortByDate(posts);
+
+const published: CollectionEntry<"blog">[] = sortedPosts.filter((entry: CollectionEntry<"blog">) =>
+    PUBLICATION_QUERY_SERVICE.isPublished(entry)
+);
+
+const pagination: PaginatedResult<CollectionEntry<"blog">> = PAGINATION_SERVICE.paginate({
+    items: sortedPosts,
+    page: slug,
+    basePath: ROUTES.publications,
+});
+---
+
+{
+    post ? (
+        <PostDetails
+            post={post}
+            neighbours={PUBLICATION_NEIGHBOUR_RESOLVER.resolve(post, published)}
+            related={RELATED_PUBLICATION_RESOLVER.resolve(post, published)}
+        />
+    ) : (
+        <Posts {pagination} />
+    )
+}

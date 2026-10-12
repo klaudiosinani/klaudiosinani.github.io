@@ -1,0 +1,123 @@
+---
+import type { NavigationItem } from "@app/configuration/navigation/NavigationItem";
+import Layout from "@ui/layout/Layout.astro";
+import Header from "@ui/component/Header.astro";
+import Footer from "@ui/component/Footer.astro";
+import LinkButton from "@ui/component/LinkButton.astro";
+import { NAVIGATION_ITEMS } from "@app/configuration/navigation/NavigationItems";
+import { ROUTES } from "@app/configuration/route/Routes";
+import { PAGE_DESCRIPTIONS } from "@app/configuration/page/PageDescriptions";
+import { PAGE_TITLES } from "@app/configuration/page/PageTitles";
+import type { GithubRepositoryData } from "@app/infrastructure/api/github/repository/data/GithubRepositoryData";
+import { SITE } from "@app/configuration/site/Site";
+
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { RoutePathResolver } from "@app/util/routing/RoutePathResolver.ts";
+import { PageTitleFormatter } from "@app/util/text/PageTitleFormatter.ts";
+import { GITHUB_REPOSITORY_DATA_RETRIEVAL_SERVICE as GITHUB_REPOSITORY_DATA_RETRIEVAL_SERVICE_KEY } from "@bindings";
+
+const ROUTE_PATH_RESOLVER: RoutePathResolver = CONTEXT.resolve(RoutePathResolver);
+const PAGE_TITLE_FORMATTER: PageTitleFormatter = CONTEXT.resolve(PageTitleFormatter);
+const GITHUB_REPOSITORY_DATA_RETRIEVAL_SERVICE = CONTEXT.resolve(GITHUB_REPOSITORY_DATA_RETRIEVAL_SERVICE_KEY);
+
+const repositories: GithubRepositoryData[] = await GITHUB_REPOSITORY_DATA_RETRIEVAL_SERVICE.retrieve();
+const names: string[] = repositories.map((githubRepositoryData: GithubRepositoryData) =>
+    githubRepositoryData.getName()
+);
+---
+
+<Layout
+    title={PAGE_TITLE_FORMATTER.format(PAGE_TITLES.notFound, SITE.getTitle())}
+    description={PAGE_DESCRIPTIONS.notFound}
+    ogImage={ROUTE_PATH_RESOLVER.resolvePageImage("not-found")}
+    noindex
+>
+    <Header />
+
+    <main id="main-content">
+        <div class="not-found-wrapper">
+            <h1>404</h1>
+            <p>Page Not Found</p>
+            <p class="not-found-hint">
+                This page does not exist. Search for the page, or select one of the pages that follow.
+            </p>
+
+            <p class="not-found-guess" data-missing-suggestion hidden></p>
+
+            <form class="not-found-search" action={`${ROUTES.search}/`} method="get">
+                <label class="sr-only" for="not-found-query">Search the publications</label>
+                <input
+                    id="not-found-query"
+                    type="search"
+                    name="q"
+                    class="not-found-field"
+                    placeholder="Search this site"
+                    autocomplete="off"
+                />
+            </form>
+            <nav class="not-found-links">
+                {
+                    NAVIGATION_ITEMS.map((navigationItem: NavigationItem) => (
+                        <LinkButton href={navigationItem.getHref()} className="chip not-found-link">
+                            {navigationItem.getLabel()}
+                        </LinkButton>
+                    ))
+                }
+                <LinkButton href={`${ROUTES.search}/`} className="chip not-found-link"> Search </LinkButton>
+            </nav>
+            <LinkButton href="/" className="my-part text-lg underline decoration-dashed underline-offset-8">
+                Go back home
+            </LinkButton>
+        </div>
+    </main>
+
+    <Footer />
+</Layout>
+
+<style>
+    @reference "../style/theme.css";
+
+    #main-content {
+        @apply mx-auto flex max-w-app flex-1 items-center justify-center;
+    }
+    .not-found-wrapper {
+        @apply mb-group flex flex-col items-center justify-center;
+    }
+    .not-found-wrapper h1 {
+        @apply text-9xl font-bold text-skin-accent;
+    }
+    .not-found-wrapper p {
+        @apply mt-text text-2xl sm:text-3xl;
+    }
+    .not-found-wrapper .not-found-hint {
+        @apply mt-text max-w-md text-center text-base opacity-80 sm:text-base;
+    }
+    .not-found-links {
+        @apply mt-part flex flex-wrap items-center justify-center gap-x-inline gap-y-inline;
+    }
+    .not-found-links :global(.not-found-link) {
+        @apply px-text py-inline text-sm font-medium no-underline hover:text-skin-accent;
+    }
+    .not-found-search {
+        @apply mt-part w-full max-w-md;
+    }
+    .not-found-field {
+        @apply w-full rounded-sm border border-skin-line glass-raised px-text py-text placeholder:italic placeholder:opacity-70 focus:border-skin-accent focus:outline-hidden;
+    }
+    .not-found-guess {
+        @apply mt-text text-base opacity-80;
+    }
+    .not-found-guess :global(a) {
+        @apply text-skin-accent;
+    }
+</style>
+
+<script is:inline type="application/json" id="repository-names" set:html={JSON.stringify(names)} />
+
+<script>
+    import { MISSING_PATH_SUGGESTION } from "@ui/script/MissingPathSuggestion";
+
+    const mount = (): void => MISSING_PATH_SUGGESTION.mount();
+
+    mount();
+</script>

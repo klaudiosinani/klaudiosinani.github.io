@@ -1,0 +1,87 @@
+---
+import type { FeaturedPress } from "@app/feature/press/coverage/FeaturedPress";
+import type { GithubRepositoryData } from "@app/infrastructure/api/github/repository/data/GithubRepositoryData";
+import type { CollectionEntry } from "astro:content";
+import { getCollection } from "astro:content";
+import Layout from "@ui/layout/Layout.astro";
+import Main from "@ui/layout/Main.astro";
+import Header from "@ui/component/Header.astro";
+import Footer from "@ui/component/Footer.astro";
+import Card from "@ui/feature/publication/component/Card";
+import SearchBar from "@ui/feature/search/component/SearchBar";
+import type { SearchItem } from "@app/feature/search/item/SearchItem";
+import { PAGE_DESCRIPTIONS } from "@app/configuration/page/PageDescriptions";
+import { PAGE_TITLES } from "@app/configuration/page/PageTitles";
+import { SITE } from "@app/configuration/site/Site";
+
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { FeaturedPressRetrievalService } from "@app/feature/press/FeaturedPressRetrievalService.ts";
+import { GITHUB_REPOSITORY_DATA_RETRIEVAL_SERVICE as GITHUB_REPOSITORY_DATA_RETRIEVAL_SERVICE_KEY } from "@bindings";
+import { SearchIndexFactory } from "@app/feature/search/item/SearchIndexFactory.ts";
+import { ReadingTimeResolver } from "@app/feature/publication/reading/ReadingTimeResolver.ts";
+import { RoutePathResolver } from "@app/util/routing/RoutePathResolver.ts";
+import { PublicationConfiguration } from "@app/feature/publication/PublicationConfiguration.ts";
+import { PublicationQueryService } from "@app/feature/publication/PublicationQueryService.ts";
+import { PageTitleFormatter } from "@app/util/text/PageTitleFormatter.ts";
+
+const FEATURED_PRESS_RETRIEVAL_SERVICE: FeaturedPressRetrievalService = CONTEXT.resolve(FeaturedPressRetrievalService);
+const GITHUB_REPOSITORY_DATA_RETRIEVAL_SERVICE = CONTEXT.resolve(GITHUB_REPOSITORY_DATA_RETRIEVAL_SERVICE_KEY);
+const SEARCH_INDEX_FACTORY: SearchIndexFactory = CONTEXT.resolve(SearchIndexFactory);
+const READING_TIME_RESOLVER: ReadingTimeResolver = CONTEXT.resolve(ReadingTimeResolver);
+const ROUTE_PATH_RESOLVER: RoutePathResolver = CONTEXT.resolve(RoutePathResolver);
+const PUBLICATION_CONFIGURATION: PublicationConfiguration = CONTEXT.resolve(PublicationConfiguration);
+const PUBLICATION_QUERY_SERVICE: PublicationQueryService = CONTEXT.resolve(PublicationQueryService);
+const PAGE_TITLE_FORMATTER: PageTitleFormatter = CONTEXT.resolve(PageTitleFormatter);
+
+const posts: CollectionEntry<"blog">[] = await getCollection(
+    "blog",
+    ({ data }: CollectionEntry<"blog">) => !data.draft
+);
+const sortedPosts: CollectionEntry<"blog">[] = PUBLICATION_QUERY_SERVICE.sortByDate(posts);
+
+const repositories: GithubRepositoryData[] = await GITHUB_REPOSITORY_DATA_RETRIEVAL_SERVICE.retrieve();
+const features: FeaturedPress[] = await FEATURED_PRESS_RETRIEVAL_SERVICE.retrieve();
+
+const searchList: SearchItem[] = SEARCH_INDEX_FACTORY.create(sortedPosts, repositories, features);
+
+const recent: CollectionEntry<"blog">[] = sortedPosts.slice(0, PUBLICATION_CONFIGURATION.getPublicationsPerIndex());
+---
+
+<Layout
+    title={PAGE_TITLE_FORMATTER.format(PAGE_TITLES.search, SITE.getTitle())}
+    description={PAGE_DESCRIPTIONS.search}
+    ogImage={ROUTE_PATH_RESOLVER.resolvePageImage("search")}
+    noindex
+>
+    <Header activeNav="search" />
+    <Main pageTitle="Search">
+        <SearchBar client:load searchList={searchList} />
+
+        {
+            recent.length > 0 && (
+                <section id="search-suggestions" data-search-suggestions>
+                    <h2 class="band-label">Recent publications</h2>
+                    <ul class="card-grid">
+                        {recent.map(({ data, id, body }: CollectionEntry<"blog">) => (
+                            <Card
+                                href={ROUTE_PATH_RESOLVER.resolvePublication(id)}
+                                frontmatter={data}
+                                minutes={READING_TIME_RESOLVER.minutes(body ?? "")}
+                                secHeading={false}
+                            />
+                        ))}
+                    </ul>
+                </section>
+            )
+        }
+    </Main>
+    <Footer />
+</Layout>
+
+<style>
+    @reference "../../style/theme.css";
+
+    #search-suggestions {
+        @apply pt-head;
+    }
+</style>

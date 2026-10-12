@@ -1,0 +1,516 @@
+---
+import BandLabel from "@ui/library/element/BandLabel.astro";
+import Chip from "@ui/library/element/Chip.astro";
+import type { ColourToken } from "@ui/library/token/ColourToken";
+import Control from "@ui/library/element/Control.astro";
+import DownloadIcon from "@ui/component/icon/DownloadIcon";
+import type { EmphasisStep } from "@ui/library/token/EmphasisStep";
+import FilterGroup from "@ui/library/element/FilterGroup.astro";
+import FilterOption from "@ui/library/element/FilterOption.astro";
+import Footer from "@ui/component/Footer.astro";
+import type { GlassDepth } from "@ui/library/token/GlassDepth";
+import Header from "@ui/component/Header.astro";
+import KeyCap from "@ui/library/element/KeyCap.astro";
+import Layout from "@ui/layout/Layout.astro";
+import type { MarkSize } from "@ui/library/token/MarkSize";
+import Main from "@ui/layout/Main.astro";
+import MetricTile from "@ui/library/element/MetricTile.astro";
+import Panel from "@ui/library/element/Panel.astro";
+import type { RadiusStep } from "@ui/library/token/RadiusStep";
+import type { SpaceStep } from "@ui/library/token/SpaceStep";
+import StarIcon from "@ui/component/icon/StarIcon";
+import FieldDataScript from "@ui/feature/field/component/FieldDataScript.astro";
+import FieldNote from "@ui/feature/field/component/FieldNote.astro";
+import ReachRecord from "@ui/feature/reach/component/ReachRecord.astro";
+import ProjectCards from "@ui/feature/reach/component/ProjectCards.astro";
+import ReachTable from "@ui/feature/reach/component/ReachTable.astro";
+import SignalLog from "@ui/library/element/SignalLog.astro";
+import Surface from "@ui/library/element/Surface.astro";
+import Terminal from "@ui/library/element/Terminal.astro";
+import type { TypeFace } from "@ui/library/token/TypeFace";
+import type { TypeStep } from "@ui/library/token/TypeStep";
+
+import { COLOUR_TOKENS } from "@ui/library/token/ColourTokens";
+import { EMPHASIS_STEPS } from "@ui/library/token/EmphasisSteps";
+import { GLASS_DEPTHS } from "@ui/library/token/GlassDepths";
+import { MARK_SIZES } from "@ui/library/token/MarkSizes";
+import { RADIUS_STEPS } from "@ui/library/token/RadiusSteps";
+import { SPACE_STEPS } from "@ui/library/token/SpaceSteps";
+import { SITE } from "@app/configuration/site/Site";
+import type { FieldData } from "@app/feature/field/FieldData";
+import type { FieldSceneKey } from "@ui/script/field/FieldSceneKey";
+import type { Reach } from "@app/feature/reach/Reach";
+import type { SignalLine } from "@app/util/signal/SignalLine";
+import type { SurfaceReach } from "@app/feature/reach/surface/SurfaceReach";
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { NumberFormatter } from "@app/util/text/NumberFormatter.ts";
+import { FIELD_SCENE_KEYS } from "@ui/script/field/FieldSceneKeys";
+import { FieldDataRetrievalService } from "@app/feature/field/FieldDataRetrievalService.ts";
+import { ReachConfiguration } from "@app/feature/reach/ReachConfiguration.ts";
+import { ReachRetrievalService } from "@app/feature/reach/ReachRetrievalService.ts";
+import { ReachSignalLinesFactory } from "@app/feature/reach/signal/ReachSignalLinesFactory.ts";
+import { RepositoryReachRetrievalService } from "@app/feature/reach/surface/RepositoryReachRetrievalService.ts";
+import { SoftwareSlugRetrievalService } from "@app/feature/software/sector/SoftwareSlugRetrievalService.ts";
+import { TYPE_FACES } from "@ui/library/token/TypeFaces";
+import { TYPE_STEPS } from "@ui/library/token/TypeSteps";
+
+const NUMBER_FORMATTER: NumberFormatter = CONTEXT.resolve(NumberFormatter);
+const REACH_CONFIGURATION: ReachConfiguration = CONTEXT.resolve(ReachConfiguration);
+
+const reach: Reach = await CONTEXT.resolve(ReachRetrievalService).retrieve();
+const lines: SignalLine[] = CONTEXT.resolve(ReachSignalLinesFactory).create(reach);
+const fieldData: FieldData = await CONTEXT.resolve(FieldDataRetrievalService).retrieve();
+const projectSurfaces: SurfaceReach[] = (
+    await CONTEXT.resolve(RepositoryReachRetrievalService).retrieve(
+        await CONTEXT.resolve(SoftwareSlugRetrievalService).retrieve("open-source")
+    )
+).slice(0, 3);
+const surfaces: SurfaceReach[] = await CONTEXT.resolve(RepositoryReachRetrievalService).retrieve([
+    REACH_CONFIGURATION.getLeadRepository(),
+]);
+import HeartIcon from "@ui/component/icon/HeartIcon";
+---
+
+<Layout
+    title={`Design library - ${SITE.getTitle()}`}
+    description="The colours, the type, the glass and the elements that this site is built from."
+    noindex
+>
+    <Header />
+    <Main
+        pageTitle="Design library"
+        pageDesc="Every colour, step of type, depth of glass and element that this site is built from. The page shows the parts themselves, so it cannot go out of step with them."
+    >
+        <section class="band">
+            <BandLabel element="h2">Colour</BandLabel>
+            <p class="library-note">
+                Each theme sets these colours. One name then serves the words, the ground, the edge and the fill of a
+                shape. The marks of the terminal take the colours of signale.
+            </p>
+            <div class="swatch-grid">
+                {
+                    COLOUR_TOKENS.map((colourToken: ColourToken) => (
+                        <Surface depth="raised" className="swatch">
+                            <span class="swatch-patch" style={`background:${colourToken.resolveColour()}`} />
+                            <div class="swatch-body">
+                                <p class="swatch-name">{colourToken.getName()}</p>
+                                <p class="swatch-code">{colourToken.getVariable()}</p>
+                                <p class="swatch-code">bg-{colourToken.getUtility()}</p>
+                                <p class="swatch-role">{colourToken.getRole()}</p>
+                            </div>
+                        </Surface>
+                    ))
+                }
+            </div>
+        </section>
+
+        <section class="band">
+            <BandLabel element="h2">Type</BandLabel>
+            <p class="library-note">Three faces, and each one has one job. Twelve steps of size serve all three.</p>
+            <dl class="library-rows">
+                {
+                    TYPE_FACES.map((typeFace: TypeFace) => (
+                        <div class="library-row">
+                            <dt class="library-row-key">
+                                <code class="library-code">{typeFace.getUtility()}</code>
+                                <span class="library-row-size">{typeFace.getName()}</span>
+                            </dt>
+                            <dd class="library-row-body">
+                                <p class:list={["type-specimen", "text-2xl", typeFace.getUtility()]}>
+                                    {SITE.getAuthor()}. {NUMBER_FORMATTER.exact(reach.getDownloadsAllTime())} downloads.
+                                </p>
+                                <p class="library-row-role">{typeFace.getRole()}</p>
+                            </dd>
+                        </div>
+                    ))
+                }
+            </dl>
+            <dl class="library-rows">
+                {
+                    TYPE_STEPS.map((typeStep: TypeStep) => (
+                        <div class="library-row">
+                            <dt class="library-row-key">
+                                <code class="library-code">{typeStep.getUtility()}</code>
+                                <span class="library-row-size">{typeStep.getSize()}</span>
+                            </dt>
+                            <dd class="library-row-body">
+                                <p class:list={["type-specimen", typeStep.getUtility()]}>
+                                    Software Engineering, Open Source Software.
+                                </p>
+                                <p class="library-row-role">{typeStep.getRole()}</p>
+                            </dd>
+                        </div>
+                    ))
+                }
+            </dl>
+        </section>
+
+        <section class="band">
+            <BandLabel element="h2">Glass</BandLabel>
+            <p class="library-note">
+                Six depths and two faces. A rule names the one it is, and takes the tint, the blur, the light on its top
+                edge and the shadow with it.
+            </p>
+            <div class="depth-grid">
+                {
+                    GLASS_DEPTHS.map((glassDepth: GlassDepth) => (
+                        <Surface depth={glassDepth.getName()} className="depth-card">
+                            <p class="depth-name">{glassDepth.getUtility()}</p>
+                            <p class="depth-blur">
+                                {glassDepth.hasBlur() ? `Blurs the page at ${glassDepth.getBlur()}` : "No blur"}
+                            </p>
+                            <p class="depth-role">{glassDepth.getRole()}</p>
+                        </Surface>
+                    ))
+                }
+            </div>
+        </section>
+
+        <section class="band">
+            <BandLabel element="h2">Space</BandLabel>
+            <p class="library-note">
+                The golden ladder. Each step is about 1.618 times the step under it, and each one states a relation and
+                not a size. Name the relation and the step follows. A guard, <code class="library-code"
+                    >npm run check:spacing</code
+                >, refuses a space that stands off it.
+            </p>
+            <dl class="library-rows">
+                {
+                    SPACE_STEPS.map((spaceStep: SpaceStep) => (
+                        <div class="library-row">
+                            <dt class="library-row-key">
+                                <code class="library-code">{spaceStep.getName()}</code>
+                                <span class="library-row-size">
+                                    {spaceStep.comesCloserOnAPhone()
+                                        ? `${spaceStep.getSize()} · ${spaceStep.getPhoneSize()} on a phone`
+                                        : spaceStep.getSize()}
+                                </span>
+                            </dt>
+                            <dd class="library-row-body">
+                                <span class="space-rule" style={`inline-size:${spaceStep.getSize()}`} />
+                                <p class="library-row-role">{spaceStep.getRole()}</p>
+                            </dd>
+                        </div>
+                    ))
+                }
+            </dl>
+        </section>
+
+        <section class="band">
+            <BandLabel element="h2">Emphasis</BandLabel>
+            <p class="library-note">
+                One colour carries the words. How loud a thing is says what it is: a heading, a note, or a figure that
+                nobody answered for.
+            </p>
+            <dl class="library-rows">
+                {
+                    EMPHASIS_STEPS.map((emphasisStep: EmphasisStep) => (
+                        <div class="library-row">
+                            <dt class="library-row-key">
+                                <code class="library-code">{emphasisStep.getName()}</code>
+                                <span class="library-row-size">{emphasisStep.getUtility()}</span>
+                            </dt>
+                            <dd class="library-row-body">
+                                <p class={emphasisStep.getUtility()}>Software engineering, open source software.</p>
+                                <p class="library-row-role">{emphasisStep.getRole()}</p>
+                            </dd>
+                        </div>
+                    ))
+                }
+            </dl>
+        </section>
+
+        <section class="band">
+            <BandLabel element="h2">Marks</BandLabel>
+            <p class="library-note">
+                Seven sizes for the mark that stands beside a word. The size says where the mark is, not what it means.
+            </p>
+            <dl class="library-rows">
+                {
+                    MARK_SIZES.map((markSize: MarkSize) => (
+                        <div class="library-row">
+                            <dt class="library-row-key">
+                                <code class="library-code">{markSize.getName()}</code>
+                                <span class="library-row-size">{markSize.getSize()}</span>
+                            </dt>
+                            <dd class="library-row-body">
+                                <StarIcon className={`${markSize.getUtility()} fill-skin-base opacity-70`} ariaHidden />
+                                <p class="library-row-role">{markSize.getRole()}</p>
+                            </dd>
+                        </div>
+                    ))
+                }
+            </dl>
+        </section>
+
+        <section class="band">
+            <BandLabel element="h2">Corners</BandLabel>
+            <div class="radius-row">
+                {
+                    RADIUS_STEPS.map((radiusStep: RadiusStep) => (
+                        <div class="radius-item">
+                            <span class:list={["radius-patch", radiusStep.getUtility()]} />
+                            <p class="library-code">{radiusStep.getUtility()}</p>
+                            <p class="library-row-size">{radiusStep.getSize()}</p>
+                            <p class="depth-role">{radiusStep.getRole()}</p>
+                        </div>
+                    ))
+                }
+            </div>
+        </section>
+
+        <section class="band">
+            <BandLabel element="h2">Elements</BandLabel>
+            <p class="library-note">Each one is a component. The page below draws the component itself.</p>
+
+            <div class="library-demo">
+                <BandLabel element="h3">Chip</BandLabel>
+                <div class="library-strip">
+                    <Chip>JavaScript</Chip>
+                    <Chip>TypeScript <span class="chip-share">27.1%</span></Chip>
+                    <Chip href="/software/">A chip that leads somewhere</Chip>
+                </div>
+            </div>
+
+            <div class="library-demo">
+                <BandLabel element="h3">Control</BandLabel>
+                <div class="library-strip">
+                    <Control href="/software/">Read the work</Control>
+                    <Control href="/thanks/" lead>
+                        <HeartIcon className="heart-mark" ariaHidden />
+                        Support this work
+                    </Control>
+                    <Control title="A control that acts on this page">A button</Control>
+                </div>
+            </div>
+
+            <div class="library-demo">
+                <BandLabel element="h3">Key cap</BandLabel>
+                <div class="library-strip">
+                    <KeyCap>⌘K</KeyCap>
+                    <KeyCap>Esc</KeyCap>
+                    <KeyCap>g</KeyCap>
+                    <KeyCap>/</KeyCap>
+                </div>
+            </div>
+
+            <div class="library-demo">
+                <BandLabel element="h3">Row of options</BandLabel>
+                <FilterGroup label="An example">
+                    <FilterOption pressed={true}>By stars</FilterOption>
+                    <FilterOption pressed={false}>By last change</FilterOption>
+                    <FilterOption pressed={false}>By name</FilterOption>
+                </FilterGroup>
+            </div>
+
+            <div class="library-demo">
+                <BandLabel element="h3">Tile of figures</BandLabel>
+                <dl class="metric-cluster-tiles">
+                    <MetricTile label="stars" icon={StarIcon}>
+                        <span>{NUMBER_FORMATTER.compact(reach.getStars())}</span>
+                    </MetricTile>
+                    <MetricTile
+                        label="downloads"
+                        icon={DownloadIcon}
+                        note={`since ${REACH_CONFIGURATION.getRecordStartYear()}`}
+                    >
+                        <span>{NUMBER_FORMATTER.compact(reach.getDownloadsAllTime())}</span>
+                    </MetricTile>
+                    <MetricTile label="git clones" icon={DownloadIcon} title="Not every source answered">
+                        <span class="metric-tile-unknown">—</span>
+                    </MetricTile>
+                </dl>
+            </div>
+
+            <div class="library-demo">
+                <BandLabel element="h3">Terminal</BandLabel>
+                <p class="library-note">
+                    The one dark object on a page. It speaks in the marks of signale, and each mark has one colour with
+                    one job.
+                </p>
+                <div class="library-sample">
+                    <Terminal label="The reach of the work, read from the registries">
+                        <span slot="bar">{REACH_CONFIGURATION.getLeadRepository()}</span>
+                        <SignalLog lines={lines} brand={null} />
+                    </Terminal>
+                </div>
+            </div>
+
+            <div class="library-demo">
+                <BandLabel element="h3">Record of figures</BandLabel>
+                <p class="library-note">
+                    The figures that state the standing of the work, in exact digits, each with its meaning below it.
+                </p>
+                <div class="library-sample">
+                    <ReachRecord reach={reach} />
+                </div>
+            </div>
+
+            <div class="library-demo">
+                <BandLabel element="h3">Scenes of the opening</BandLabel>
+                <p class="library-note">
+                    Five scenes from computer science, each fed with the downloads and the dependents of the work. The
+                    landing page takes one at random.
+                </p>
+                <div class="library-scenes">
+                    {
+                        FIELD_SCENE_KEYS.map((fieldSceneKey: FieldSceneKey) => (
+                            <div class="library-scene" data-field-stage data-field-scene={fieldSceneKey}>
+                                <canvas class="library-scene-canvas" data-field-canvas aria-hidden="true" />
+                                <FieldNote />
+                            </div>
+                        ))
+                    }
+                </div>
+                <FieldDataScript fieldData={fieldData} />
+            </div>
+
+            <div class="library-demo">
+                <BandLabel element="h3">Project cards</BandLabel>
+                <p class="library-note">
+                    One card for each project. A solid mark from the name of the project stands in a tile of ink. The
+                    figures of the project stand below its name.
+                </p>
+                <div class="library-sample">
+                    <ProjectCards surfaces={projectSurfaces} />
+                </div>
+            </div>
+
+            <div class="library-demo">
+                <BandLabel element="h3">Table of figures</BandLabel>
+                <p class="library-note">
+                    A row for each place, and a column for each figure. On a phone, each figure takes a line with its
+                    name.
+                </p>
+                <div class="library-sample">
+                    <ReachTable caption="The reach of one tool" subject="Tool" surfaces={surfaces} />
+                </div>
+            </div>
+
+            <div class="library-demo">
+                <BandLabel element="h3">Card</BandLabel>
+                <div class="card-grid">
+                    <Panel>
+                        <p class="card-title">A card that leads somewhere</p>
+                        <p class="card-summary">It comes forward under the pointer.</p>
+                    </Panel>
+                    <Panel still>
+                        <p class="card-title">A card that holds text</p>
+                        <p class="card-summary">It answers the pointer with nothing, because it leads nowhere.</p>
+                    </Panel>
+                </div>
+            </div>
+        </section>
+    </Main>
+    <Footer />
+</Layout>
+
+<style>
+    @reference "../../style/theme.css";
+
+    .library-note {
+        @apply mt-inline max-w-article text-sm italic opacity-80;
+    }
+    .swatch-grid {
+        @apply mt-part grid gap-text sm:grid-cols-2 lg:grid-cols-3;
+    }
+    .swatch {
+        @apply flex items-start gap-text rounded-xl border border-skin-line p-text;
+    }
+    .swatch-patch {
+        @apply mt-[2px] block h-10 w-10 shrink-0 rounded-lg border border-skin-line;
+    }
+    .swatch-body {
+        @apply min-w-0;
+    }
+    .swatch-name {
+        @apply text-sm font-medium;
+    }
+    .swatch-code {
+        @apply text-2xs opacity-70;
+    }
+    .swatch-role {
+        @apply mt-tight text-xs opacity-80;
+    }
+    .library-rows {
+        @apply mt-part flex flex-col gap-tight;
+    }
+    .library-row {
+        @apply grid items-baseline gap-x-text gap-y-tight border-b border-skin-line/60 py-text last:border-b-0 sm:grid-cols-[10rem_1fr];
+    }
+    .library-row-key {
+        @apply flex items-baseline gap-inline;
+    }
+    .library-code {
+        @apply text-xs;
+    }
+    .library-row-size {
+        @apply text-2xs tabular-nums opacity-70;
+    }
+    .library-row-body {
+        @apply min-w-0;
+    }
+    .type-specimen {
+        @apply max-w-full overflow-x-auto;
+    }
+    .space-rule {
+        @apply block h-tight rounded-mark bg-skin-accent opacity-70;
+    }
+    .library-row-role {
+        @apply mt-tight text-xs opacity-70;
+    }
+    .depth-grid {
+        @apply mt-part grid gap-text sm:grid-cols-2 lg:grid-cols-3;
+    }
+    .depth-card {
+        @apply rounded-xl border border-skin-line p-text;
+    }
+    .depth-name {
+        @apply text-sm font-medium;
+    }
+    .depth-blur {
+        @apply text-2xs tabular-nums opacity-70;
+    }
+    .depth-role {
+        @apply mt-inline text-xs opacity-80;
+    }
+    .radius-row {
+        @apply mt-part flex flex-wrap gap-part;
+    }
+    .radius-item {
+        @apply w-40;
+    }
+    .radius-patch {
+        @apply mb-inline block h-14 w-14 border border-skin-line bg-skin-card;
+    }
+    .library-demo {
+        @apply mt-head;
+    }
+    .library-strip {
+        @apply mt-text flex flex-wrap items-center gap-text;
+    }
+    .library-demo .metric-cluster-tiles {
+        @apply mt-text;
+    }
+    .library-demo .card-grid {
+        @apply mt-text;
+    }
+    .library-sample {
+        @apply mt-text;
+    }
+    .library-scenes {
+        @apply grid gap-part sm:grid-cols-2 lg:grid-cols-3;
+    }
+    .library-scene {
+        @apply overflow-hidden rounded-lg border border-skin-line p-part;
+    }
+    .library-scene-canvas {
+        @apply block h-64 w-full;
+    }
+</style>
+
+<script>
+    import { FIELD_STAGE } from "@ui/script/field/FieldStage";
+
+    FIELD_STAGE.mount();
+</script>

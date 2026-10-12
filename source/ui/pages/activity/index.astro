@@ -1,0 +1,140 @@
+---
+import ContributionCalendar from "@ui/feature/impact/component/ContributionCalendar.astro";
+import SourceStates from "@ui/feature/impact/component/SourceStates.astro";
+import type { ActivityMonth } from "@app/feature/activity/timeline/ActivityMonth";
+import ImpactPeriodToggle from "@ui/feature/impact/component/ImpactPeriodToggle.astro";
+import { IMPACT_PERIOD_CONFIGURATION } from "@ui/feature/impact/component/ImpactPeriodConfiguration";
+import Header from "@ui/component/Header.astro";
+import Footer from "@ui/component/Footer.astro";
+import Layout from "@ui/layout/Layout.astro";
+import Main from "@ui/layout/Main.astro";
+import ActivityIndicator from "@ui/feature/activity/component/ActivityIndicator.astro";
+import ActivityBreakdown from "@ui/feature/activity/component/ActivityBreakdown.astro";
+import ImpactSection from "@ui/feature/impact/component/ImpactSection.astro";
+import TimelineEntry from "@ui/feature/activity/component/TimelineEntry";
+import { IMPACT_MESSAGING } from "@ui/feature/impact/component/ImpactMessaging";
+import { PAGE_DESCRIPTIONS } from "@app/configuration/page/PageDescriptions";
+import { ROUTES } from "@app/configuration/route/Routes";
+import { PAGE_TITLES } from "@app/configuration/page/PageTitles";
+import { LOCALE } from "@app/configuration/site/SiteLocale";
+import { SITE } from "@app/configuration/site/Site";
+import type { ImpactData } from "@app/feature/impact/metric/ImpactData";
+import type { ActivityData } from "@app/feature/activity/data/ActivityData";
+import type { ActivityEntry } from "@app/feature/activity/timeline/ActivityEntry";
+import type { StructuredData } from "@app/util/seo/StructuredData";
+
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { ActivityMonthGrouper } from "@app/feature/activity/timeline/ActivityMonthGrouper.ts";
+import { RoutePathResolver } from "@app/util/routing/RoutePathResolver.ts";
+import { ActivityTimelineResolver } from "@app/feature/activity/timeline/ActivityTimelineResolver.ts";
+import { ACTIVITY_DATA_RETRIEVAL_SERVICE as ACTIVITY_DATA_RETRIEVAL_SERVICE_KEY } from "@bindings";
+import { ActivityConfiguration } from "@app/feature/activity/ActivityConfiguration.ts";
+import { PageTitleFormatter } from "@app/util/text/PageTitleFormatter.ts";
+import { SchemaIdentifiers } from "@app/util/seo/SchemaIdentifiers.ts";
+import { WebPageSchemaBuilder } from "@app/util/seo/page/WebPageSchemaBuilder.ts";
+import { ACTIVITY_DATASET_RETRIEVAL_SERVICE as ACTIVITY_DATASET_RETRIEVAL_SERVICE_KEY } from "@bindings";
+
+const ACTIVITY_MONTH_GROUPER: ActivityMonthGrouper = CONTEXT.resolve(ActivityMonthGrouper);
+const ROUTE_PATH_RESOLVER: RoutePathResolver = CONTEXT.resolve(RoutePathResolver);
+const ACTIVITY_TIMELINE_RESOLVER: ActivityTimelineResolver = CONTEXT.resolve(ActivityTimelineResolver);
+const ACTIVITY_DATA_RETRIEVAL_SERVICE = CONTEXT.resolve(ACTIVITY_DATA_RETRIEVAL_SERVICE_KEY);
+const ACTIVITY_CONFIGURATION: ActivityConfiguration = CONTEXT.resolve(ActivityConfiguration);
+const PAGE_TITLE_FORMATTER: PageTitleFormatter = CONTEXT.resolve(PageTitleFormatter);
+const SCHEMA_IDENTIFIERS: SchemaIdentifiers = CONTEXT.resolve(SchemaIdentifiers);
+const WEB_PAGE_SCHEMA_BUILDER: WebPageSchemaBuilder = CONTEXT.resolve(WebPageSchemaBuilder);
+const ACTIVITY_DATASET_RETRIEVAL_SERVICE = CONTEXT.resolve(ACTIVITY_DATASET_RETRIEVAL_SERVICE_KEY);
+const impact: ImpactData = await ACTIVITY_DATASET_RETRIEVAL_SERVICE.retrieve();
+const activity: ActivityData = await ACTIVITY_DATA_RETRIEVAL_SERVICE.retrieve();
+const timeline: ActivityEntry[] = ACTIVITY_TIMELINE_RESOLVER.resolve(
+    activity,
+    ACTIVITY_CONFIGURATION.getEntriesPerKind()
+);
+const schema: StructuredData[] = [
+    WEB_PAGE_SCHEMA_BUILDER.build({
+        name: "Activity",
+        url: new URL(`${ROUTES.activity}/`, SITE.getWebsite()).href,
+        description: PAGE_DESCRIPTIONS.activity,
+        author: {
+            name: SITE.getAuthor(),
+            url: SITE.getWebsite(),
+            id: SCHEMA_IDENTIFIERS.person(SITE.getWebsite()),
+        },
+        site: { name: SITE.getTitle(), url: SITE.getWebsite() },
+        image: new URL(ROUTE_PATH_RESOLVER.resolvePageImage("activity"), SITE.getWebsite()).href,
+        inLanguage: LOCALE.getLanguage(),
+    }),
+];
+---
+
+<Layout
+    title={PAGE_TITLE_FORMATTER.format(PAGE_TITLES.activity, SITE.getTitle())}
+    description={PAGE_DESCRIPTIONS.activity}
+    ogImage={ROUTE_PATH_RESOLVER.resolvePageImage("activity")}
+    schema={schema}
+>
+    <Header activeNav="activity" />
+    <Main pageTitle="Activity" pageDesc={IMPACT_MESSAGING.SUMMARY}>
+        <ActivityIndicator slot="title-adornment" />
+        <div slot="title-adornment" class="period-row">
+            <ImpactPeriodToggle
+                labels={IMPACT_PERIOD_CONFIGURATION.LABELS}
+                selected={IMPACT_PERIOD_CONFIGURATION.DEFAULT}
+            />
+        </div>
+
+        <ImpactSection impact={impact} heading={null} withPeriods={false} />
+
+        <ContributionCalendar days={impact.getContributionDays()} />
+
+        <SourceStates impact={impact} />
+
+        {
+            timeline.length > 0 && (
+                <section id="activity">
+                    <div class="activity-header">
+                        <p class="band-label">Recent activity</p>
+                        <ActivityBreakdown entries={timeline} filterable />
+                    </div>
+                    {ACTIVITY_MONTH_GROUPER.group(timeline).map((month: ActivityMonth) => (
+                        <div class="activity-month" data-activity-month>
+                            <p class="band-label band-label-sticky">{month.getName()}</p>
+                            <ol class="timeline">
+                                {month.getEntries().map((entry: ActivityEntry) => (
+                                    <TimelineEntry entry={entry} />
+                                ))}
+                            </ol>
+                        </div>
+                    ))}
+                </section>
+            )
+        }
+    </Main>
+    <Footer />
+</Layout>
+
+<style>
+    @reference "../../style/theme.css";
+
+    .activity-month {
+        @apply mt-head first:mt-text;
+    }
+
+    .period-row {
+        @apply w-full sm:ml-auto sm:w-auto;
+    }
+
+    #activity {
+        @apply pt-inline pb-inline;
+    }
+    .activity-header {
+        @apply flex flex-wrap items-center justify-between gap-x-text gap-y-tight;
+    }
+</style>
+
+<script>
+    import { ACTIVITY_FILTER } from "@ui/script/ActivityFilter";
+
+    const mount = (): void => ACTIVITY_FILTER.mount();
+
+    mount();
+</script>

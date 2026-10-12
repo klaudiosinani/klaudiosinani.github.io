@@ -1,0 +1,166 @@
+---
+import type { RenderedContent } from "@app/infrastructure/content/section/RenderedContent";
+import type { Sponsor } from "@app/configuration/sponsor/Sponsor";
+import ExternalLink from "@ui/component/ExternalLink";
+import { SPONSOR_LINK } from "@app/configuration/sponsor/SiteSponsorLink";
+import HeartIcon from "@ui/component/icon/HeartIcon";
+import Header from "@ui/component/Header.astro";
+import Footer from "@ui/component/Footer.astro";
+import Layout from "@ui/layout/Layout.astro";
+import Main from "@ui/layout/Main.astro";
+import { PAGE_DESCRIPTIONS } from "@app/configuration/page/PageDescriptions";
+import { ROUTES } from "@app/configuration/route/Routes";
+import { PAGE_TITLES } from "@app/configuration/page/PageTitles";
+import { LOCALE } from "@app/configuration/site/SiteLocale";
+import { SITE } from "@app/configuration/site/Site";
+import type { RenderedSection } from "@app/infrastructure/content/section/RenderedSection";
+import type { StructuredData } from "@app/util/seo/StructuredData";
+
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { SponsorRoll } from "@app/configuration/sponsor/SponsorRoll.ts";
+import { RoutePathResolver } from "@app/util/routing/RoutePathResolver.ts";
+import { RenderedSectionService } from "@app/infrastructure/content/section/RenderedSectionService.ts";
+import { PageTitleFormatter } from "@app/util/text/PageTitleFormatter.ts";
+import { SchemaIdentifiers } from "@app/util/seo/SchemaIdentifiers.ts";
+import { WebPageSchemaBuilder } from "@app/util/seo/page/WebPageSchemaBuilder.ts";
+
+const SPONSOR_ROLL: SponsorRoll = CONTEXT.resolve(SponsorRoll);
+const ROUTE_PATH_RESOLVER: RoutePathResolver = CONTEXT.resolve(RoutePathResolver);
+const RENDERED_SECTION_SERVICE: RenderedSectionService = CONTEXT.resolve(RenderedSectionService);
+const PAGE_TITLE_FORMATTER: PageTitleFormatter = CONTEXT.resolve(PageTitleFormatter);
+const SCHEMA_IDENTIFIERS: SchemaIdentifiers = CONTEXT.resolve(SchemaIdentifiers);
+const WEB_PAGE_SCHEMA_BUILDER: WebPageSchemaBuilder = CONTEXT.resolve(WebPageSchemaBuilder);
+
+const current: Sponsor[] = SPONSOR_ROLL.current();
+const past: Sponsor[] = SPONSOR_ROLL.past();
+
+const renderedSections: RenderedSection[] = await RENDERED_SECTION_SERVICE.getSections("thanks");
+const schema: StructuredData[] = [
+    WEB_PAGE_SCHEMA_BUILDER.build({
+        name: "Thanks",
+        url: new URL(`${ROUTES.thanks}/`, SITE.getWebsite()).href,
+        description: PAGE_DESCRIPTIONS.thanks,
+        author: {
+            name: SITE.getAuthor(),
+            url: SITE.getWebsite(),
+            id: SCHEMA_IDENTIFIERS.person(SITE.getWebsite()),
+        },
+        site: { name: SITE.getTitle(), url: SITE.getWebsite() },
+        image: new URL(ROUTE_PATH_RESOLVER.resolvePageImage("thanks"), SITE.getWebsite()).href,
+        inLanguage: LOCALE.getLanguage(),
+    }),
+];
+---
+
+<Layout
+    title={PAGE_TITLE_FORMATTER.format(PAGE_TITLES.thanks, SITE.getTitle())}
+    description={PAGE_DESCRIPTIONS.thanks}
+    ogImage={ROUTE_PATH_RESOLVER.resolvePageImage("thanks")}
+    schema={schema}
+>
+    <Header activeNav="thanks" />
+    <Main pageTitle="Thanks" pageDesc="The companies and the people who give money for this open source work.">
+        <section id="thanks" class="mx-auto prose w-full max-w-app px-0">
+            {
+                renderedSections.map((renderedSection: RenderedSection) => {
+                    const Content: RenderedContent = renderedSection.getContent();
+                    const title: string = renderedSection.getTitle();
+
+                    return (
+                        <>
+                            {title && <h2>{title}</h2>}
+                            <Content />
+                        </>
+                    );
+                })
+            }
+        </section>
+
+        {
+            [{ label: "Sponsors", shown: [...current, ...past] }].map(
+                ({ label, shown }: { label: string; shown: Sponsor[] }) =>
+                    shown.length > 0 ? (
+                        <div class="sponsor-band">
+                            <p class="band-label">{label}</p>
+                            <ul class="sponsor-grid">
+                                {shown.map((sponsor: Sponsor) => (
+                                    <li class={sponsor.isFeatured() ? "sponsor sponsor-featured" : "sponsor"}>
+                                        <ExternalLink
+                                            href={sponsor.getHref()}
+                                            className="sponsor-link"
+                                            title={`${sponsor.getName()} on GitHub`}
+                                        >
+                                            <img
+                                                src={sponsor.getMark()}
+                                                alt=""
+                                                class="sponsor-mark"
+                                                width="128"
+                                                height="128"
+                                                loading="lazy"
+                                                decoding="async"
+                                            />
+                                            <span class="sponsor-name">{sponsor.getName()}</span>
+                                        </ExternalLink>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    ) : null
+            )
+        }
+
+        <section id="support" class="support panel panel-static">
+            <h2 class="support-title">Support this work</h2>
+            <p class="support-line">
+                Sponsors pay for the maintenance, for the releases, and for the replies to the issues that users write.
+            </p>
+            <ExternalLink
+                href={SPONSOR_LINK.getHref()}
+                className="support-action control control-lead"
+                title={SPONSOR_LINK.getTitle()}
+            >
+                <HeartIcon className="heart-mark" ariaHidden />
+                {SPONSOR_LINK.getLabel()}
+            </ExternalLink>
+        </section>
+    </Main>
+    <Footer />
+</Layout>
+
+<style>
+    @reference "../../style/theme.css";
+
+    .sponsor-band {
+        @apply mt-group;
+    }
+    .sponsor-band :global(.band-label) {
+        @apply mb-text block;
+    }
+    .sponsor-grid {
+        @apply grid grid-cols-2 gap-text sm:grid-cols-3 lg:grid-cols-4;
+    }
+    .sponsor :global(.sponsor-link) {
+        @apply flex items-center gap-text rounded-lg border border-skin-line p-text no-underline hover:border-skin-accent;
+    }
+    .sponsor-mark {
+        @apply h-10 w-10 shrink-0 rounded-sm bg-white object-contain p-[2px];
+    }
+    .sponsor-name {
+        @apply truncate text-sm font-medium;
+    }
+    .sponsor-featured :global(.sponsor-link) {
+        @apply border-skin-accent/40 glass-lifted;
+    }
+    #support.support {
+        @apply mt-group ml-0 max-w-2xl items-start p-part sm:p-head;
+    }
+    .support-title {
+        @apply text-lg font-semibold tracking-tight;
+    }
+    .support-line {
+        @apply mt-inline max-w-xl text-sm leading-relaxed opacity-80;
+    }
+    .support :global(.support-action) {
+        @apply mt-part;
+    }
+</style>

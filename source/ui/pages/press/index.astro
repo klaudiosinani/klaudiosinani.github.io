@@ -1,0 +1,138 @@
+---
+import { CollectionItem } from "@app/util/seo/page/CollectionItem";
+import FeaturedPressCard from "@ui/feature/press/component/FeaturedPressCard";
+import PublisherStrip from "@ui/feature/press/component/PublisherStrip.astro";
+import Footer from "@ui/component/Footer.astro";
+import Header from "@ui/component/Header.astro";
+import Layout from "@ui/layout/Layout.astro";
+import Main from "@ui/layout/Main.astro";
+import { PAGE_DESCRIPTIONS } from "@app/configuration/page/PageDescriptions";
+import { ROUTES } from "@app/configuration/route/Routes";
+import { PAGE_TITLES } from "@app/configuration/page/PageTitles";
+import { LOCALE } from "@app/configuration/site/SiteLocale";
+import { SITE } from "@app/configuration/site/Site";
+import type { FeaturedPress } from "@app/feature/press/coverage/FeaturedPress";
+import type { PublisherMark } from "@app/feature/press/mark/PublisherMark";
+import type { GithubRepositoryData } from "@app/infrastructure/api/github/repository/data/GithubRepositoryData";
+import type { StructuredData } from "@app/util/seo/StructuredData";
+
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { PressCoverageFormatter } from "@app/feature/press/coverage/PressCoverageFormatter.ts";
+import { RoutePathResolver } from "@app/util/routing/RoutePathResolver.ts";
+import { CollectionPageSchemaBuilder } from "@app/util/seo/page/CollectionPageSchemaBuilder.ts";
+import { FeaturedPressRetrievalService } from "@app/feature/press/FeaturedPressRetrievalService.ts";
+import { PageTitleFormatter } from "@app/util/text/PageTitleFormatter.ts";
+import { SchemaIdentifiers } from "@app/util/seo/SchemaIdentifiers.ts";
+import { PRESS_ICON_RESOLVER as PRESS_ICON_RESOLVER_KEY } from "@bindings";
+import { PressProjectResolver } from "@app/feature/press/coverage/PressProjectResolver.ts";
+import { GITHUB_REPOSITORY_DATA_RETRIEVAL_SERVICE as GITHUB_REPOSITORY_DATA_RETRIEVAL_SERVICE_KEY } from "@bindings";
+import { WebAddressFormatter } from "@app/util/text/WebAddressFormatter.ts";
+import { PublisherMarksFactory } from "@app/feature/press/mark/PublisherMarksFactory.ts";
+
+const PRESS_COVERAGE_FORMATTER: PressCoverageFormatter = CONTEXT.resolve(PressCoverageFormatter);
+const ROUTE_PATH_RESOLVER: RoutePathResolver = CONTEXT.resolve(RoutePathResolver);
+const COLLECTION_PAGE_SCHEMA_BUILDER: CollectionPageSchemaBuilder = CONTEXT.resolve(CollectionPageSchemaBuilder);
+const FEATURED_PRESS_RETRIEVAL_SERVICE: FeaturedPressRetrievalService = CONTEXT.resolve(FeaturedPressRetrievalService);
+const PAGE_TITLE_FORMATTER: PageTitleFormatter = CONTEXT.resolve(PageTitleFormatter);
+const SCHEMA_IDENTIFIERS: SchemaIdentifiers = CONTEXT.resolve(SchemaIdentifiers);
+const PRESS_ICON_RESOLVER = CONTEXT.resolve(PRESS_ICON_RESOLVER_KEY);
+const PRESS_PROJECT_RESOLVER: PressProjectResolver = CONTEXT.resolve(PressProjectResolver);
+const GITHUB_REPOSITORY_DATA_RETRIEVAL_SERVICE = CONTEXT.resolve(GITHUB_REPOSITORY_DATA_RETRIEVAL_SERVICE_KEY);
+const WEB_ADDRESS_FORMATTER: WebAddressFormatter = CONTEXT.resolve(WebAddressFormatter);
+const PUBLISHER_MARKS_FACTORY: PublisherMarksFactory = CONTEXT.resolve(PublisherMarksFactory);
+
+const featuredPress: FeaturedPress[] = await FEATURED_PRESS_RETRIEVAL_SERVICE.retrieve();
+
+const repositories: GithubRepositoryData[] = await GITHUB_REPOSITORY_DATA_RETRIEVAL_SERVICE.retrieve();
+const names: string[] = repositories.map((githubRepositoryData: GithubRepositoryData) =>
+    githubRepositoryData.getName()
+);
+
+const icons = PRESS_ICON_RESOLVER;
+
+const coverage: string | null = PRESS_COVERAGE_FORMATTER.format(featuredPress);
+
+interface PressCard {
+    readonly press: FeaturedPress;
+    readonly softwareHref: string;
+    readonly publisherIcon: string | null;
+}
+
+const cards: PressCard[] = await Promise.all(
+    featuredPress.map(async (press: FeaturedPress) => ({
+        press,
+        softwareHref: PRESS_PROJECT_RESOLVER.resolve(press.softwareRepositoryUrl, names),
+        publisherIcon: await icons.resolve(WEB_ADDRESS_FORMATTER.host(press.publicationUrl)),
+    }))
+);
+
+const publishers: readonly PublisherMark[] = PUBLISHER_MARKS_FACTORY.create(
+    cards.map((card: PressCard) => ({
+        name: card.press.publisherName,
+        mark: card.publisherIcon,
+    }))
+);
+
+const schema: StructuredData[] = [
+    COLLECTION_PAGE_SCHEMA_BUILDER.build({
+        author: {
+            name: SITE.getAuthor(),
+            url: SITE.getWebsite(),
+            id: SCHEMA_IDENTIFIERS.person(SITE.getWebsite()),
+        },
+        image: new URL(ROUTE_PATH_RESOLVER.resolvePageImage("press"), SITE.getWebsite()).href,
+        inLanguage: LOCALE.getLanguage(),
+        siteId: SCHEMA_IDENTIFIERS.website(SITE.getWebsite()),
+        name: "In the Press",
+        url: new URL(`${ROUTES.press}/`, SITE.getWebsite()).href,
+        description: PAGE_DESCRIPTIONS.press,
+        items: featuredPress.map(
+            ({ publicationTitle, publicationUrl }: FeaturedPress) =>
+                new CollectionItem(publicationTitle, publicationUrl)
+        ),
+    }),
+];
+---
+
+<Layout
+    title={PAGE_TITLE_FORMATTER.format(PAGE_TITLES.press, SITE.getTitle())}
+    description={PAGE_DESCRIPTIONS.press}
+    ogImage={ROUTE_PATH_RESOLVER.resolvePageImage("press")}
+    schema={schema}
+>
+    <Header activeNav="press" />
+    <Main
+        pageTitle="In the Press"
+        pageDesc="Magazines, newsletters and editors write about my open source software. Select a card to read the article."
+    >
+        {coverage && <p class="press-coverage">{coverage}</p>}
+
+        <PublisherStrip publishers={publishers} />
+
+        <ul class="card-grid">
+            {
+                cards.map((card: PressCard) => (
+                    <FeaturedPressCard
+                        publicationTitle={card.press.publicationTitle}
+                        summary={card.press.summary}
+                        publisherName={card.press.publisherName}
+                        publicationUrl={card.press.publicationUrl}
+                        softwareTitle={card.press.softwareTitle}
+                        issueNumber={card.press.issueNumber}
+                        softwareHref={card.softwareHref}
+                        publisherIcon={card.publisherIcon}
+                    />
+                ))
+            }
+        </ul>
+    </Main>
+    <Footer />
+</Layout>
+
+<style>
+    @reference "../../style/theme.css";
+
+    .press-coverage {
+        @apply mt-part text-sm tabular-nums opacity-70;
+    }
+</style>
