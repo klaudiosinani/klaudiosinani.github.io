@@ -1,3 +1,4 @@
+import { OptionalReaderFactory } from "@app/infrastructure/common/OptionalReaderFactory.ts";
 import type { InstanceFactoryRegistry } from "@app/injection/InstanceFactoryRegistry.ts";
 import type { InstanceResolver } from "@app/injection/InstanceResolver.ts";
 import {
@@ -97,7 +98,8 @@ export const bindPort = (registry: InstanceFactoryRegistry, resolver: InstanceRe
             .contributedWorkService(
                 resolver.resolve(ContributionSummaryFactory),
                 resolver.resolve(GithubCommitApiService),
-                resolver.resolve(ContributionFactory)
+                resolver.resolve(ContributionFactory),
+                resolver.resolve(OptionalReaderFactory)
             )
     );
     registry.bind(CONTRIBUTION_SOURCE, () => resolver.resolve(GitHubContributionsProvider));
@@ -151,7 +153,8 @@ export const bindPort = (registry: InstanceFactoryRegistry, resolver: InstanceRe
             .contributedWorkService(
                 resolver.resolve(ContributionSummaryFactory),
                 resolver.resolve(GithubCommitApiService),
-                resolver.resolve(ContributionFactory)
+                resolver.resolve(ContributionFactory),
+                resolver.resolve(OptionalReaderFactory)
             )
     );
     registry.bind(RETRIEVAL_SERVICE_FEATURED_PRESS, () => resolver.resolve(FeaturedPressRetrievalService));

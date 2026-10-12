@@ -6,6 +6,7 @@ import { ContributedWorkService } from "@app/feature/contribution/ContributedWor
 import type { ContributionFactory } from "@app/feature/contribution/work/ContributionFactory.ts";
 import type { ContributionSummaryFactory } from "@app/feature/contribution/work/ContributionSummaryFactory.ts";
 import type { GithubCommitApiService } from "@app/infrastructure/api/github/commit/GithubCommitApiService.ts";
+import type { OptionalReaderFactory } from "@app/infrastructure/common/OptionalReaderFactory.ts";
 import { ActivityDataRetrievalService } from "@app/feature/activity/ActivityDataRetrievalService.ts";
 import { ActivityDatasetRetrievalService } from "@app/feature/impact/ActivityDatasetRetrievalService.ts";
 import { GITHUB_USERNAME } from "@app/configuration/author/GitHubUsername.ts";
@@ -69,13 +70,15 @@ export class ApplicationConfiguration {
     public contributedWorkService(
         contributionSummaryFactory: ContributionSummaryFactory,
         githubCommitApiService: GithubCommitApiService,
-        contributionFactory: ContributionFactory
+        contributionFactory: ContributionFactory,
+        optionalReaderFactory: OptionalReaderFactory
     ): ContributedWorkService {
         return new ContributedWorkService(
             CONTRIBUTED_REPOSITORIES,
             contributionSummaryFactory,
             githubCommitApiService,
-            contributionFactory
+            contributionFactory,
+            optionalReaderFactory.create("GitHub")
         );
     }
 
