@@ -1,0 +1,44 @@
+---
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { PUBLIC_ASSET_RESOLVER as PUBLIC_ASSET_RESOLVER_KEY } from "@bindings";
+
+const PUBLIC_ASSET_RESOLVER = CONTEXT.resolve(PUBLIC_ASSET_RESOLVER_KEY);
+
+export interface Props {
+    slug: string;
+    project: string;
+}
+
+const { slug, project } = Astro.props;
+
+const cast: string | null = await PUBLIC_ASSET_RESOLVER.resolve(`/casts/${slug}.svg`);
+---
+
+{
+    cast && (
+        <section class="cast" id="cast">
+            <p class="band-label">The tool, at work</p>
+            <img
+                src={cast}
+                alt={`A recording of ${project} in a terminal`}
+                class="cast-picture"
+                loading="lazy"
+                decoding="async"
+            />
+        </section>
+    )
+}
+
+<style>
+    @reference "../../../style/theme.css";
+
+    .cast {
+        @apply pt-head pb-inline;
+    }
+    .cast :global(.band-label) {
+        @apply mb-text block;
+    }
+    .cast-picture {
+        @apply w-full max-w-article rounded-lg border border-skin-line glass-raised;
+    }
+</style>

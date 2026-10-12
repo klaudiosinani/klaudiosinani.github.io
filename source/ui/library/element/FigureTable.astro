@@ -1,0 +1,28 @@
+---
+export interface Props {
+    caption: string;
+    subject: string;
+    columns: readonly string[];
+}
+
+const { caption, subject, columns } = Astro.props;
+---
+
+<table class="figure-table" role="table">
+    <caption class="sr-only">{caption}</caption>
+    <thead role="rowgroup">
+        <tr role="row">
+            <th scope="col" role="columnheader" class="figure-table-subject">{subject}</th>
+            {
+                columns.map((column: string) => (
+                    <th scope="col" role="columnheader" class="figure-table-column">
+                        {column}
+                    </th>
+                ))
+            }
+        </tr>
+    </thead>
+    <tbody role="rowgroup">
+        <slot />
+    </tbody>
+</table>

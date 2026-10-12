@@ -1,0 +1,211 @@
+---
+import type { NavigationKey } from "@app/configuration/navigation/NavigationKey";
+import MenuIcon from "./icon/MenuIcon";
+import MoonIcon from "./icon/MoonIcon";
+import SearchIcon from "./icon/SearchIcon";
+import SunIcon from "./icon/SunIcon";
+import Hr from "./Hr.astro";
+import { PRIMARY_NAVIGATION_ITEMS } from "@app/configuration/navigation/PrimaryNavigationItems";
+import { ROUTES } from "@app/configuration/route/Routes";
+import { SITE } from "@app/configuration/site/Site";
+import type { NavigationItem } from "@app/configuration/navigation/NavigationItem";
+
+export interface Props {
+    activeNav?: NavigationKey;
+    home?: boolean;
+}
+
+const { activeNav, home = false } = Astro.props;
+---
+
+<header>
+    <a id="skip-to-content" href="#main-content">Skip to content</a>
+    <div class="nav-container">
+        <div class="top-nav-wrap">
+            {
+                home ? (
+                    <h1 class="logo-heading">
+                        <a href="/" class="logo whitespace-nowrap">
+                            {SITE.getTitle()}
+                        </a>
+                    </h1>
+                ) : (
+                    <a href="/" class="logo whitespace-nowrap">
+                        {SITE.getTitle()}
+                    </a>
+                )
+            }
+            <nav id="nav-menu">
+                <button
+                    class="hamburger-menu focus-outline"
+                    aria-label="Open Menu"
+                    aria-expanded="false"
+                    aria-controls="menu-items"
+                >
+                    <MenuIcon />
+                </button>
+                <ul id="menu-items" class="display-none lg:flex">
+                    {
+                        PRIMARY_NAVIGATION_ITEMS.map((navigationItem: NavigationItem) => (
+                            <li>
+                                <a
+                                    href={navigationItem.getHref()}
+                                    class={`nav-link ${activeNav === navigationItem.getKey() ? "is-current" : ""}`}
+                                    aria-current={activeNav === navigationItem.getKey() ? "page" : undefined}
+                                >
+                                    {navigationItem.getLabel()}
+                                </a>
+                            </li>
+                        ))
+                    }
+                    <li>
+                        <a
+                            href={`${ROUTES.search}/`}
+                            class:list={["search-control", "focus-outline", { "is-current": activeNav === "search" }]}
+                            aria-label="Search"
+                            title="Search this site (press / or the key shown)"
+                            data-open-search
+                        >
+                            <SearchIcon className="scale-125 lg:scale-100" />
+                            <span class="sr-only">Search</span>
+                            <kbd class="key-cap search-key" data-search-key>⌘K</kbd>
+                        </a>
+                    </li>
+                    <li>
+                        <button
+                            id="theme-btn"
+                            class="focus-outline"
+                            title="Toggles light & dark"
+                            aria-label="auto"
+                            aria-live="polite"
+                        >
+                            <MoonIcon />
+                            <SunIcon />
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+    <Hr />
+</header>
+
+<style>
+    @reference "../style/theme.css";
+
+    #skip-to-content {
+        @apply absolute -top-full left-16 z-50 bg-skin-accent px-text py-inline text-skin-fill glass-solid transition-all duration-200 focus:top-4;
+    }
+    header {
+        @apply relative;
+    }
+    .nav-container {
+        @apply mx-auto flex max-w-app flex-col items-center justify-between lg:flex-row;
+    }
+    .top-nav-wrap {
+        @apply relative flex w-full items-start justify-between px-gutter py-text lg:items-center lg:py-head;
+    }
+    .logo {
+        @apply absolute py-tight text-xl font-semibold lg:static lg:text-2xl;
+    }
+    .logo-heading {
+        @apply contents;
+    }
+    .hamburger-menu {
+        @apply -mr-text self-end p-text lg:hidden;
+    }
+    .hamburger-menu :global(svg) {
+        @apply h-6 w-6 scale-125 fill-skin-base;
+    }
+
+    nav {
+        @apply flex w-full flex-col items-center lg:ml-inline lg:flex-row lg:justify-end lg:space-x-text lg:py-0;
+    }
+    nav ul {
+        @apply mt-text grid w-44 auto-rows-min grid-cols-2 gap-x-inline gap-y-inline lg:mt-0 lg:ml-0 lg:w-auto lg:gap-x-part lg:gap-y-0;
+    }
+    @media (width < 64rem) {
+        .top-nav-wrap {
+            @apply static;
+        }
+        nav ul:not(.display-none) {
+            @apply absolute inset-x-0 top-full glass-floating mt-0 w-full justify-items-stretch gap-y-0 border-b border-skin-line px-inline pt-inline pb-text;
+            transition:
+                opacity 0.2s ease-out,
+                translate 0.2s ease-out;
+            opacity: 1;
+            translate: 0 0;
+        }
+        @starting-style {
+            nav ul:not(.display-none) {
+                opacity: 0;
+                translate: 0 -0.5rem;
+            }
+        }
+    }
+    nav ul li {
+        @apply col-span-2 flex items-center justify-center;
+    }
+    nav ul li a {
+        @apply w-full px-text py-text text-center lg:my-0 lg:px-inline lg:py-tight;
+    }
+    .search-control {
+        @apply inline-flex items-center gap-inline p-text hover:text-skin-accent lg:p-tight;
+    }
+    .search-key {
+        @apply hidden tracking-tight;
+    }
+    :global(html[data-palette]) .search-key {
+        @apply lg:inline-block;
+    }
+    nav ul li:nth-last-child(2) a {
+        @apply w-auto;
+    }
+    nav ul li:nth-last-child(1),
+    nav ul li:nth-last-child(2) {
+        @apply col-span-1;
+    }
+    nav :global(a.is-current svg) {
+        @apply fill-skin-accent;
+    }
+
+    nav button {
+        @apply p-tight;
+    }
+    nav button :global(svg) {
+        @apply h-6 w-6 fill-skin-base hover:fill-skin-accent;
+    }
+    #theme-btn {
+        @apply p-text lg:p-tight;
+    }
+    #theme-btn :global(svg) {
+        @apply scale-125 hover:rotate-12 lg:scale-100;
+    }
+
+    .hamburger-menu :global(.menu-icon line) {
+        @apply transition-opacity duration-200 ease-in-out;
+    }
+    .hamburger-menu :global(.menu-icon .close) {
+        opacity: 0;
+    }
+    .hamburger-menu :global(.menu-icon.is-active .line) {
+        @apply opacity-0;
+    }
+    .hamburger-menu :global(.menu-icon.is-active .close) {
+        @apply opacity-100;
+    }
+</style>
+
+<script>
+    import { KEYBOARD_NAVIGATION } from "@ui/script/KeyboardNavigation";
+    import { NAVIGATION_MENU } from "@ui/script/NavigationMenu";
+    import { SEARCH_PANEL_OPENER } from "@ui/script/SearchPanelOpener";
+
+    const mount = (): void => {
+        NAVIGATION_MENU.mount();
+        KEYBOARD_NAVIGATION.mount();
+        SEARCH_PANEL_OPENER.mount();
+    };
+
+    mount();
+</script>

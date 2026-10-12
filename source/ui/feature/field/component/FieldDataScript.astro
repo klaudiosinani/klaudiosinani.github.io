@@ -1,0 +1,14 @@
+---
+import type { FieldData } from "@app/feature/field/FieldData";
+import { FieldDataRecorder } from "@ui/script/field/FieldDataRecorder";
+
+export interface Props {
+    fieldData: FieldData;
+}
+
+const FIELD_DATA_RECORDER: FieldDataRecorder = new FieldDataRecorder();
+
+const { fieldData } = Astro.props;
+---
+
+<script is:inline type="application/json" data-field-data set:html={FIELD_DATA_RECORDER.record(fieldData)} />

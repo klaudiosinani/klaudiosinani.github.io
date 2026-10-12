@@ -1,0 +1,25 @@
+---
+export interface Props {
+    href?: string;
+    lead?: boolean;
+    title?: string;
+    ariaLabel?: string;
+    className?: string;
+    [key: string]: unknown;
+}
+
+const { href, lead, title, ariaLabel, className, ...rest } = Astro.props;
+const classes = ["control", lead ? "control-lead" : undefined, "focus-outline", className];
+---
+
+{
+    href ? (
+        <a href={href} title={title} aria-label={ariaLabel} class:list={classes} {...rest}>
+            <slot />
+        </a>
+    ) : (
+        <button type="button" title={title} aria-label={ariaLabel} class:list={classes} {...rest}>
+            <slot />
+        </button>
+    )
+}

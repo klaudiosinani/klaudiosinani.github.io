@@ -1,0 +1,168 @@
+@layer theme, base;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@theme {
+    --breakpoint-*: initial;
+    --breakpoint-sm: 640px;
+    --breakpoint-lg: 1024px;
+
+    --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+
+    --font-mono:
+        "IBM Plex Mono", "Plex Mono Stand-in Apple", "Plex Mono Stand-in Windows", "Plex Mono Stand-in", monospace;
+
+    --container-app: 90rem;
+    --container-article: 48rem;
+
+    --spacing-tight: 5px;
+    --spacing-inline: 8px;
+    --spacing-text: 13px;
+    --spacing-part: 21px;
+    --spacing-head: 34px;
+    --spacing-group: 55px;
+    --spacing-section: 89px;
+
+    --spacing-inset-card: var(--spacing-part);
+    --spacing-inset-panel: var(--spacing-head);
+    --spacing-inset-band: var(--spacing-section);
+    --spacing-gutter: var(--spacing-head);
+
+    --text-3xs: 0.625rem;
+    --text-3xs--line-height: 1rem;
+    --text-2xs: 0.6875rem;
+    --text-2xs--line-height: 1rem;
+
+    --radius-mark: 0.125rem;
+    --radius-thumbnail: 0.1875rem;
+
+    --color-skin-live: rgb(var(--color-live));
+    --color-skin-live-strong: rgb(var(--color-live-strong));
+    --color-skin-release: rgb(var(--color-release));
+    --color-skin-commit: rgb(var(--color-commit));
+    --color-skin-base: rgb(var(--color-text-base));
+    --color-skin-accent: rgb(var(--color-accent));
+    --color-skin-fill: rgb(var(--color-fill));
+    --color-skin-inverted: rgb(var(--color-text-base));
+    --color-skin-card: rgb(var(--color-card));
+    --color-skin-card-muted: rgb(var(--color-card-muted));
+    --color-skin-muted: rgb(var(--color-card-muted));
+    --color-skin-line: rgb(var(--color-border));
+    --color-skin-signal-success: rgb(var(--color-signal-success));
+    --color-skin-signal-star: rgb(var(--color-signal-star));
+    --color-skin-signal-info: rgb(var(--color-signal-info));
+    --color-skin-signal-complete: rgb(var(--color-signal-complete));
+    --color-skin-signal-fav: rgb(var(--color-signal-fav));
+    --color-skin-terminal: rgb(var(--color-terminal));
+    --color-skin-terminal-ink: rgb(var(--color-terminal-ink));
+    --color-skin-terminal-muted: rgb(var(--color-terminal-muted));
+    --color-skin-terminal-rim: rgb(var(--color-terminal-rim));
+}
+
+@utility glass-inline {
+    background-color: var(--glass-tint-inline);
+    background-image: var(--glass-sheen);
+    box-shadow:
+        inset 0 1px 0 0 var(--glass-edge-top),
+        inset 0 -1px 0 0 var(--glass-edge-bottom),
+        var(--glass-shadow-inline);
+    backdrop-filter: blur(var(--glass-blur-inline)) saturate(var(--glass-saturate-inline));
+
+    @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+        background-color: rgb(var(--color-card));
+        background-image: none;
+        backdrop-filter: none;
+    }
+}
+
+@utility glass-raised {
+    background-color: var(--glass-tint-raised);
+    background-image: var(--glass-sheen);
+    box-shadow:
+        inset 0 1px 0 0 var(--glass-edge-top),
+        inset 0 -1px 0 0 var(--glass-edge-bottom),
+        var(--glass-shadow-raised);
+    backdrop-filter: blur(var(--glass-blur-raised)) saturate(var(--glass-saturate-raised));
+
+    @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+        background-color: rgb(var(--color-card));
+        background-image: none;
+        backdrop-filter: none;
+    }
+}
+
+@utility glass-lifted {
+    background-color: var(--glass-tint-raised-lifted);
+    box-shadow:
+        inset 0 1px 0 0 var(--glass-edge-top),
+        inset 0 -1px 0 0 var(--glass-edge-bottom),
+        var(--glass-shadow-raised-lifted);
+
+    @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+        background-color: rgb(var(--color-card-muted));
+    }
+}
+
+@utility glass-sticky {
+    z-index: 20;
+    background-color: var(--glass-tint-sticky);
+    background-image: var(--glass-sheen);
+    box-shadow:
+        inset 0 1px 0 0 var(--glass-edge-top),
+        inset 0 -1px 0 0 var(--glass-edge-bottom),
+        var(--glass-shadow-sticky);
+    backdrop-filter: blur(var(--glass-blur-sticky)) saturate(var(--glass-saturate-sticky));
+
+    @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+        background-color: rgb(var(--color-fill));
+        background-image: none;
+        backdrop-filter: none;
+    }
+}
+
+@utility glass-floating {
+    z-index: 40;
+    background-color: var(--glass-tint-floating);
+    background-image: var(--glass-sheen);
+    box-shadow:
+        inset 0 1px 0 0 var(--glass-edge-top),
+        inset 0 -1px 0 0 var(--glass-edge-bottom),
+        var(--glass-shadow-floating);
+    backdrop-filter: blur(var(--glass-blur-floating)) saturate(var(--glass-saturate-floating));
+
+    @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+        background-color: rgb(var(--color-fill));
+        background-image: none;
+        backdrop-filter: none;
+    }
+}
+
+@utility glass-overlay {
+    z-index: 50;
+    background-color: var(--glass-tint-overlay);
+    background-image: var(--glass-sheen);
+    box-shadow:
+        inset 0 1px 0 0 var(--glass-edge-top),
+        inset 0 -1px 0 0 var(--glass-edge-bottom),
+        var(--glass-shadow-overlay);
+    backdrop-filter: blur(var(--glass-blur-overlay)) saturate(var(--glass-saturate-overlay));
+
+    @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+        background-color: rgb(var(--color-fill));
+        background-image: none;
+        backdrop-filter: none;
+    }
+}
+
+@utility glass-solid {
+    backdrop-filter: none;
+}
+
+@utility glass-flat {
+    background-image: none;
+    box-shadow: var(--glass-shadow-raised);
+}

@@ -1,0 +1,38 @@
+---
+import FilterGroup from "@ui/library/element/FilterGroup.astro";
+import FilterOption from "@ui/library/element/FilterOption.astro";
+import type { ReportingPeriod } from "@app/util/period/ReportingPeriod";
+
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { ReportingPeriods } from "@app/util/period/ReportingPeriods.ts";
+
+const REPORTING_PERIODS: ReportingPeriods = CONTEXT.resolve(ReportingPeriods);
+
+export interface Props {
+    labels: Record<ReportingPeriod, string>;
+    selected: ReportingPeriod;
+}
+
+const { labels, selected } = Astro.props;
+---
+
+<FilterGroup label="Reporting window" className="impact-periods">
+    {
+        REPORTING_PERIODS.ALL.map((period: "month" | "quarter" | "year" | "all") => (
+            <FilterOption pressed={period === selected} className="impact-period" data-period={period}>
+                {labels[period]}
+            </FilterOption>
+        ))
+    }
+</FilterGroup>
+
+<style>
+    @reference "../../../style/theme.css";
+
+    .impact-periods {
+        @apply grid w-full grid-cols-4 sm:ml-auto sm:flex sm:w-auto;
+    }
+    .impact-period {
+        @apply min-h-[2.5rem] justify-center px-0 text-2xs tracking-tight sm:min-h-0 sm:px-text sm:text-xs sm:tracking-wide;
+    }
+</style>

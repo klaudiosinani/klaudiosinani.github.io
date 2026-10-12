@@ -1,0 +1,107 @@
+---
+import ExternalIcon from "@ui/component/icon/ExternalIcon";
+import ExternalLink from "@ui/component/ExternalLink";
+import type { RepositoryManual } from "@app/feature/repository/document/RepositoryManual";
+import SectionRail from "@ui/component/SectionRail.astro";
+import TableOfContents from "@ui/component/TableOfContents.astro";
+
+export interface Props {
+    manual: RepositoryManual;
+    source: string;
+    note?: string;
+    label?: string;
+}
+
+const {
+    manual,
+    source,
+    note = "This is the readme of the repository. The build reads it again each time.",
+    label = "Sections of the manual",
+} = Astro.props;
+---
+
+<section class="manual" id="documentation">
+    <p class="manual-head">
+        <span class="manual-what">{note}</span>
+        <ExternalLink href={source} className="manual-source">
+            Read it on GitHub
+            <ExternalIcon className="manual-source-out" ariaHidden />
+        </ExternalLink>
+    </p>
+
+    <div class="manual-layout">
+        <SectionRail headings={manual.getHeadings()} label={label} />
+
+        <div class="manual-column">
+            <div class="manual-contents">
+                <TableOfContents headings={manual.getHeadings()} />
+            </div>
+            <article class="manual-body prose" set:html={manual.getHtml()} />
+        </div>
+    </div>
+</section>
+
+<style>
+    @reference "../../../style/theme.css";
+
+    .manual {
+        @apply pt-part pb-inline;
+    }
+    .manual-head {
+        @apply mb-part flex flex-wrap items-baseline gap-x-text gap-y-tight text-sm;
+    }
+    .manual-what {
+        @apply opacity-70;
+    }
+    .manual-layout {
+        @apply gap-x-group lg:grid lg:grid-cols-[13rem_minmax(0,1fr)];
+    }
+    .manual-column {
+        @apply min-w-0 lg:col-start-2 lg:row-start-1;
+    }
+    .manual-contents {
+        @apply lg:hidden;
+    }
+    .manual-body {
+        @apply mt-part max-w-article lg:mt-0;
+    }
+    .manual-body :global(h2) {
+        @apply mt-group! mb-text! border-t border-skin-line pt-head text-xl;
+        scroll-margin-top: var(--section-offset);
+    }
+    .manual-body :global(h2:first-child) {
+        @apply mt-0! border-t-0 pt-0;
+    }
+    .manual-body :global(h3) {
+        @apply mt-head! mb-inline! text-base not-italic;
+        scroll-margin-top: var(--section-offset);
+    }
+    .manual-body :global(h4),
+    .manual-body :global(h5) {
+        @apply mt-part! mb-tight! text-sm tracking-wider uppercase opacity-80;
+    }
+    .manual-body :global(div[align="center"]),
+    .manual-body :global(p[align="center"]) {
+        @apply text-center;
+    }
+    .manual-body :global(img) {
+        @apply inline-block rounded-lg border-0!;
+    }
+    .manual-body :global(table) {
+        @apply block w-full overflow-x-auto;
+    }
+    .manual :global(.manual-source) {
+        @apply ml-auto inline-flex items-center gap-inline text-xs font-medium no-underline opacity-70 hover:text-skin-accent hover:opacity-100;
+    }
+    .manual :global(.manual-source-out) {
+        @apply h-2.5 w-2.5 shrink-0 fill-skin-base opacity-60;
+    }
+</style>
+
+<script>
+    import { SECTION_NAVIGATION } from "@ui/script/SectionNavigation";
+
+    const mount = (): void => SECTION_NAVIGATION.mount();
+
+    mount();
+</script>

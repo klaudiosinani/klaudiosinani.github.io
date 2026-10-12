@@ -1,0 +1,47 @@
+---
+import type { Outlet } from "@app/feature/press/outlet/Outlet";
+import type { PressIconResolver } from "@app/feature/press/mark/PressIconResolver";
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { PRESS_ICON_RESOLVER as PRESS_ICON_RESOLVER_KEY } from "@bindings";
+import { WebAddressFormatter } from "@app/util/text/WebAddressFormatter.ts";
+import MarkCard from "@ui/library/element/MarkCard.astro";
+
+export interface Props {
+    outlets: readonly Outlet[];
+}
+
+const { outlets } = Astro.props;
+
+const PRESS_ICON_RESOLVER: PressIconResolver = CONTEXT.resolve(PRESS_ICON_RESOLVER_KEY);
+const WEB_ADDRESS_FORMATTER: WebAddressFormatter = CONTEXT.resolve(WebAddressFormatter);
+
+const marks: Array<string | null> = await Promise.all(
+    outlets.map((outlet: Outlet) => PRESS_ICON_RESOLVER.resolve(WEB_ADDRESS_FORMATTER.host(outlet.getHref())))
+);
+---
+
+<ul class="outlet-list">
+    {
+        outlets.map((outlet: Outlet, position: number) => (
+            <li class="outlet">
+                <MarkCard
+                    href={outlet.getHref()}
+                    mark={marks[position] ?? null}
+                    name={outlet.getName()}
+                    detail={WEB_ADDRESS_FORMATTER.host(outlet.getHref())}
+                />
+            </li>
+        ))
+    }
+</ul>
+
+<style>
+    @reference "../../../style/theme.css";
+
+    .outlet-list {
+        @apply m-0 grid list-none gap-part p-0 sm:grid-cols-2 lg:grid-cols-4;
+    }
+    .outlet {
+        @apply flex flex-col;
+    }
+</style>

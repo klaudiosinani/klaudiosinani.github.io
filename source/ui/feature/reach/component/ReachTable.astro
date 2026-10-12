@@ -1,0 +1,38 @@
+---
+import FigureRow from "@ui/library/element/FigureRow.astro";
+import FigureTable from "@ui/library/element/FigureTable.astro";
+import type { SurfaceReach } from "@app/feature/reach/surface/SurfaceReach";
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { NumberFormatter } from "@app/util/text/NumberFormatter.ts";
+
+export interface Props {
+    caption: string;
+    subject: string;
+    surfaces: readonly SurfaceReach[];
+}
+
+const NUMBER_FORMATTER: NumberFormatter = CONTEXT.resolve(NumberFormatter);
+const COLUMNS: readonly string[] = ["Stars", "Downloads", "Used by"];
+
+const { caption, subject, surfaces } = Astro.props;
+
+const figureOf = (value: number | null): string | null => (value === null ? null : NUMBER_FORMATTER.exact(value));
+---
+
+<FigureTable caption={caption} subject={subject} columns={COLUMNS}>
+    {
+        surfaces.map((surfaceReach: SurfaceReach) => (
+            <FigureRow
+                name={surfaceReach.getName()}
+                note={surfaceReach.getNote()}
+                href={surfaceReach.getHref()}
+                columns={COLUMNS}
+                figures={[
+                    figureOf(surfaceReach.getStars()),
+                    figureOf(surfaceReach.getDownloads()),
+                    figureOf(surfaceReach.getDependentRepositories()),
+                ]}
+            />
+        ))
+    }
+</FigureTable>

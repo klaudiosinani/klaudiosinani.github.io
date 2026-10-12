@@ -1,0 +1,54 @@
+---
+import { PauseIcon } from "@ui/component/icon/PauseIcon";
+import { PlayIcon } from "@ui/component/icon/PlayIcon";
+---
+
+<div class="field-note" data-field-note hidden>
+    <button type="button" class="field-switch" data-field-switch aria-label="Stop the motion" aria-pressed="false">
+        <PauseIcon className="field-switch-pause" ariaHidden={true} />
+        <PlayIcon className="field-switch-play" ariaHidden={true} />
+    </button>
+    <div class="field-words">
+        <p class="field-caption" data-field-caption></p>
+        <p class="field-ticker" data-field-ticker aria-hidden="true"></p>
+    </div>
+    <p class="field-label" data-field-label aria-hidden="true" hidden></p>
+</div>
+
+<style>
+    @reference "../../../style/theme.css";
+
+    .field-note {
+        @apply relative mt-part flex items-start gap-inline;
+    }
+    .field-words {
+        @apply min-w-0 flex-1;
+    }
+    .field-caption {
+        @apply max-w-xl font-serif text-base leading-relaxed opacity-80;
+    }
+    .field-ticker {
+        @apply mt-text grid min-h-[1.5em] text-sm font-medium tabular-nums opacity-80;
+    }
+    .field-ticker :global(span) {
+        grid-area: 1 / 1;
+    }
+    .field-switch {
+        @apply -mx-tight -mb-tight flex shrink-0 rounded-md p-tight text-skin-base transition-colors duration-200 hover:bg-skin-card hover:text-skin-accent;
+    }
+    .field-switch :global(svg) {
+        @apply block h-4 w-4 fill-current;
+    }
+    .field-switch[aria-pressed="true"] :global(.field-switch-pause),
+    .field-switch[aria-pressed="false"] :global(.field-switch-play) {
+        @apply hidden;
+    }
+    .field-label {
+        @apply pointer-events-none absolute top-0 left-0 glass-floating rounded-md border border-skin-line px-inline py-tight text-xs whitespace-nowrap text-skin-base tabular-nums;
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .field-switch {
+            @apply hidden;
+        }
+    }
+</style>

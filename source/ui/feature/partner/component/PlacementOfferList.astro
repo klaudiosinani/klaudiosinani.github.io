@@ -1,0 +1,37 @@
+---
+import type { PlacementOffer } from "@app/feature/partner/placement/PlacementOffer";
+
+export interface Props {
+    offers: readonly PlacementOffer[];
+}
+
+const { offers } = Astro.props;
+---
+
+<ul class="offer-list">
+    {
+        offers.map((placementOffer: PlacementOffer) => (
+            <li class="offer">
+                <span class="offer-name">{placementOffer.getName()}</span>
+                <span class="offer-note">{placementOffer.getNote()}</span>
+            </li>
+        ))
+    }
+</ul>
+
+<style>
+    @reference "../../../style/theme.css";
+
+    .offer-list {
+        @apply grid gap-part sm:grid-cols-3;
+    }
+    .offer {
+        @apply border-t border-skin-line pt-text;
+    }
+    .offer-name {
+        @apply block text-lg font-semibold;
+    }
+    .offer-note {
+        @apply mt-tight block text-sm opacity-80;
+    }
+</style>

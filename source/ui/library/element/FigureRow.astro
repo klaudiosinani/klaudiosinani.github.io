@@ -1,0 +1,29 @@
+---
+export interface Props {
+    name: string;
+    note: string;
+    href: string;
+    columns: readonly string[];
+    figures: readonly (string | null)[];
+}
+
+const { name, note, href, columns, figures } = Astro.props;
+---
+
+<tr class="figure-row" role="row">
+    <th scope="row" role="rowheader" class="figure-row-subject">
+        <a class="figure-row-name" href={href}>{name}</a>
+        <span class="figure-row-note">{note}</span>
+    </th>
+    {
+        figures.map((figure: string | null, index: number) => (
+            <td
+                role="cell"
+                class:list={["figure-row-figure", { "figure-row-figure-empty": figure === null }]}
+                data-label={columns[index]}
+            >
+                {figure}
+            </td>
+        ))
+    }
+</tr>

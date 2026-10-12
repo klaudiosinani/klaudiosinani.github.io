@@ -1,0 +1,32 @@
+---
+import { SIGNAL_BADGES } from "@app/util/signal/SignalBadges";
+import type { SignalLine } from "@app/util/signal/SignalLine";
+
+export interface Props {
+    lines: readonly SignalLine[];
+    brand: string | null;
+}
+
+const { lines, brand } = Astro.props;
+---
+
+<ol class="signal-log">
+    {
+        lines.map((signalLine: SignalLine) => (
+            <li class="signal-line" data-signal={signalLine.getType()}>
+                <span class="signal-badge" aria-hidden="true">
+                    {SIGNAL_BADGES[signalLine.getType()]}
+                </span>
+                <span class="signal-label">{signalLine.getType()}</span>
+                <span class="signal-message">
+                    {signalLine.mentionsBrand() && brand !== null && (
+                        <strong class="signal-brand" data-brand-name>
+                            {brand}
+                        </strong>
+                    )}{" "}
+                    {signalLine.getMessage()}
+                </span>
+            </li>
+        ))
+    }
+</ol>

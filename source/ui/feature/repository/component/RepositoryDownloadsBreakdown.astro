@@ -1,0 +1,144 @@
+---
+import DownloadIcon from "@ui/component/icon/DownloadIcon";
+import InfoTooltip from "@ui/component/InfoTooltip.astro";
+import type { CountedDownloadSource } from "@app/feature/repository/download/CountedDownloadSource";
+
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { ListFormatter } from "@app/util/text/ListFormatter.ts";
+import { NumberFormatter } from "@app/util/text/NumberFormatter.ts";
+
+const LIST_FORMATTER: ListFormatter = CONTEXT.resolve(ListFormatter);
+const NUMBER_FORMATTER: NumberFormatter = CONTEXT.resolve(NumberFormatter);
+
+export interface Props {
+    downloads: number;
+    sources: CountedDownloadSource[];
+}
+
+const { downloads, sources } = Astro.props;
+
+const counted: string = LIST_FORMATTER.format(
+    sources.map((countedDownloadSource: CountedDownloadSource) => countedDownloadSource.getLabel())
+);
+
+const ranked: CountedDownloadSource[] = [...sources].sort(
+    (first: CountedDownloadSource, second: CountedDownloadSource) => second.getValue() - first.getValue()
+);
+
+const share = (value: number): number => (downloads > 0 ? value / downloads : 0);
+---
+
+<figure class="repository-breakdown">
+    <figcaption class="repository-headline">
+        <span class="repository-headline-figure">
+            <DownloadIcon className="repository-headline-icon" ariaHidden />
+            <span class="repository-downloads" aria-label={`${NUMBER_FORMATTER.exact(downloads)} downloads`}
+                >{NUMBER_FORMATTER.display(downloads)}</span
+            >
+        </span>
+        <span class="repository-downloads-label">
+            downloads
+            <InfoTooltip label="What the downloads figure counts" id="repository-downloads-info">
+                How many times this project has been downloaded from {counted}. Neither one publishes a record over
+                time, so this is a total and not a curve.
+            </InfoTooltip>
+        </span>
+    </figcaption>
+    <ul class="breakdown-sources">
+        {
+            ranked.map((countedDownloadSource: CountedDownloadSource) => (
+                <li class="breakdown-source">
+                    <span class="breakdown-source-head">
+                        <span class="breakdown-source-label">{countedDownloadSource.getLabel()}</span>
+                        <span
+                            class="breakdown-source-value"
+                            aria-label={`${NUMBER_FORMATTER.exact(countedDownloadSource.getValue())} from ${countedDownloadSource.getLabel()}`}
+                        >
+                            {NUMBER_FORMATTER.display(countedDownloadSource.getValue())}
+                        </span>
+                        <span class="breakdown-source-share" aria-hidden="true">
+                            {NUMBER_FORMATTER.share(share(countedDownloadSource.getValue()))}
+                        </span>
+                    </span>
+                    <span class="breakdown-source-track" aria-hidden="true">
+                        <span
+                            class="breakdown-source-fill"
+                            style={`--share:${(share(countedDownloadSource.getValue()) * 100).toFixed(2)}%`}
+                        />
+                    </span>
+                    {countedDownloadSource.getNote() && (
+                        <p class="breakdown-source-note">{countedDownloadSource.getNote()}.</p>
+                    )}
+                </li>
+            ))
+        }
+    </ul>
+</figure>
+
+<style>
+    @reference "../../../style/theme.css";
+
+    .repository-breakdown {
+        @apply relative;
+    }
+    .repository-headline {
+        @apply relative px-0;
+    }
+    .repository-headline-figure {
+        @apply flex items-center gap-text;
+    }
+    .repository-headline-icon {
+        @apply h-7 w-7 shrink-0 fill-skin-base opacity-70 sm:h-8 sm:w-8;
+    }
+    .repository-downloads {
+        @apply block text-4xl font-semibold tabular-nums sm:text-5xl;
+    }
+    .repository-downloads-label {
+        @apply mt-tight block text-sm opacity-80 first-letter:uppercase;
+    }
+    .breakdown-sources {
+        @apply mt-part flex list-none flex-col gap-text p-0;
+    }
+    .breakdown-source-head {
+        @apply flex items-baseline gap-inline;
+    }
+    .breakdown-source-label {
+        @apply text-sm opacity-80;
+    }
+    .breakdown-source-value {
+        @apply ml-auto text-sm font-semibold tabular-nums;
+    }
+    .breakdown-source-share {
+        @apply w-14 text-right text-xs tabular-nums opacity-70;
+    }
+    .breakdown-source-track {
+        @apply mt-inline block h-1.5 w-full overflow-hidden rounded-full;
+        background: rgba(var(--color-live), 0.12);
+    }
+    .breakdown-source-fill {
+        @apply block h-full rounded-full;
+        width: max(var(--share), 3px);
+        background: rgb(var(--color-live));
+        animation: breakdown-grow 0.8s ease-out both;
+    }
+    .breakdown-source-note {
+        @apply mt-inline text-xs opacity-70;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .breakdown-source-fill {
+            animation: none;
+        }
+    }
+
+    @keyframes breakdown-grow {
+        from {
+            transform: scaleX(0);
+            transform-origin: left;
+        }
+        to {
+            transform: scaleX(1);
+            transform-origin: left;
+        }
+    }
+</style>

@@ -1,0 +1,77 @@
+---
+import type { ImpactData } from "@app/feature/impact/metric/ImpactData";
+import type { SourceState } from "./SourceState";
+import { SOURCE_STATE_FACTORY } from "@ui/feature/impact/component/SourceStateFactory";
+
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { DatetimeFormatter } from "@app/util/datetime/DatetimeFormatter.ts";
+
+const DATETIME_FORMATTER: DatetimeFormatter = CONTEXT.resolve(DatetimeFormatter);
+
+export interface Props {
+    impact: ImpactData;
+}
+
+const { impact } = Astro.props;
+
+const states: SourceState[] = SOURCE_STATE_FACTORY.create(impact);
+const silent: SourceState[] = states.filter(({ answered }: SourceState) => !answered);
+
+const read: Date = new Date();
+const at: string = `${read.toISOString().slice(11, 16)} UTC on ${DATETIME_FORMATTER.formatDate(read.toISOString())}`;
+---
+
+<details class="sources">
+    <summary class="sources-summary focus-outline">
+        <span>The build read the figures at {at}</span>
+        <span class="sources-count">
+            {
+                silent.length === 0
+                    ? "every source answered"
+                    : `${silent.length} of ${states.length} sources did not answer`
+            }
+        </span>
+    </summary>
+    <ul class="sources-list">
+        {
+            states.map(({ name, answered, absent }: SourceState) => (
+                <li class="sources-item">
+                    <span class="check-dot" data-conclusion={answered ? "success" : null} />
+                    {name}
+                    <span class="sources-note">
+                        {answered ? "answered" : `did not answer, and the page does not show ${absent}`}
+                    </span>
+                </li>
+            ))
+        }
+    </ul>
+</details>
+
+<style>
+    @reference "../../../style/theme.css";
+
+    .sources {
+        @apply mt-part text-xs;
+    }
+    .sources-summary {
+        @apply flex cursor-pointer flex-wrap items-center gap-x-text gap-y-tight opacity-70 hover:opacity-100;
+    }
+    .sources-count {
+        @apply tabular-nums;
+    }
+    .sources-list {
+        @apply mt-text grid gap-x-head gap-y-inline sm:grid-cols-2;
+    }
+    .sources-item {
+        @apply inline-flex items-center gap-inline opacity-80;
+    }
+    .sources-note {
+        @apply opacity-90;
+    }
+    .sources-summary::-webkit-details-marker {
+        display: none;
+    }
+    .sources-summary::marker {
+        content: "";
+    }
+</style>

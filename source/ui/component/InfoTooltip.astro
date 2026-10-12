@@ -1,0 +1,58 @@
+---
+import InfoIcon from "./icon/InfoIcon";
+
+export interface Props {
+    label: string;
+    id: string;
+}
+
+const { label, id } = Astro.props;
+---
+
+<span class="info-tooltip">
+    <button
+        type="button"
+        class="info-trigger focus-outline"
+        aria-label={label}
+        aria-describedby={id}
+        aria-expanded="false"
+    >
+        <InfoIcon className="info-icon" ariaHidden />
+    </button>
+    <span {id} class="info-bubble" role="tooltip"><slot /></span>
+</span>
+
+<style>
+    @reference "../style/theme.css";
+
+    .info-tooltip {
+        @apply inline-flex align-middle;
+    }
+    .info-trigger {
+        @apply relative inline-flex cursor-help items-center opacity-70 hover:opacity-100;
+    }
+    .info-trigger::after {
+        @apply absolute -inset-4;
+        content: "";
+    }
+    .info-trigger :global(.info-icon) {
+        @apply h-3.5 w-3.5 fill-skin-base;
+    }
+    .info-trigger[aria-expanded="true"] {
+        @apply opacity-100;
+    }
+    .info-bubble {
+        @apply pointer-events-none absolute top-full left-0 glass-floating mt-inline w-64 max-w-full rounded-lg border border-skin-line p-text text-left text-xs leading-relaxed font-normal tracking-normal normal-case opacity-0 transition-opacity duration-200;
+    }
+    .info-tooltip:hover .info-bubble,
+    .info-trigger:focus-visible ~ .info-bubble,
+    .info-trigger[aria-expanded="true"] ~ .info-bubble {
+        @apply pointer-events-auto opacity-100;
+    }
+</style>
+
+<script>
+    import { INFO_TOOLTIPS } from "@ui/script/InfoTooltips";
+
+    INFO_TOOLTIPS.mount();
+</script>

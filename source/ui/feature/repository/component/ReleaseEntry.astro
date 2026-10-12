@@ -1,0 +1,146 @@
+---
+import ArrowRightIcon from "@ui/component/icon/ArrowRightIcon";
+import CalendarIcon from "@ui/component/icon/CalendarIcon";
+import DownloadIcon from "@ui/component/icon/DownloadIcon";
+import TagIcon from "@ui/component/icon/TagIcon";
+import type { RepositoryRelease } from "@app/feature/repository/release/RepositoryRelease";
+
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { ReleaseMessaging } from "@app/feature/repository/release/ReleaseMessaging.ts";
+import { DatetimeFormatter } from "@app/util/datetime/DatetimeFormatter.ts";
+import { NumberFormatter } from "@app/util/text/NumberFormatter.ts";
+import { ReleaseNotesRenderer } from "@app/feature/repository/release/ReleaseNotesRenderer.ts";
+
+const RELEASE_MESSAGING: ReleaseMessaging = CONTEXT.resolve(ReleaseMessaging);
+const DATETIME_FORMATTER: DatetimeFormatter = CONTEXT.resolve(DatetimeFormatter);
+const NUMBER_FORMATTER: NumberFormatter = CONTEXT.resolve(NumberFormatter);
+const RELEASE_NOTES_RENDERER: ReleaseNotesRenderer = CONTEXT.resolve(ReleaseNotesRenderer);
+
+export interface Props {
+    release: RepositoryRelease;
+    repository: string;
+    href?: string | null;
+}
+
+const { release, repository, href = null } = Astro.props;
+
+const notes: string = await RELEASE_NOTES_RENDERER.render(release.getNotes(), repository);
+---
+
+<article class="panel panel-static">
+    <div class="panel-body">
+        <div class="panel-content">
+            <h3 class="card-title release-title">
+                <TagIcon className="release-icon" />
+                {
+                    href ? (
+                        <a href={href} class="release-tag">
+                            {release.getName()}
+                        </a>
+                    ) : (
+                        <a
+                            href={release.getUrl()}
+                            class="release-tag"
+                            rel="noopener noreferrer"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            {release.getName()}
+                        </a>
+                    )
+                }
+            </h3>
+            {
+                notes ? (
+                    <div class="release-notes" set:html={notes} />
+                ) : (
+                    <p class="release-notes release-notes-empty">{RELEASE_MESSAGING.NO_NOTES}</p>
+                )
+            }
+        </div>
+        <div class="card-meta card-footer">
+            <span title="Published">
+                <CalendarIcon className="card-meta-icon" ariaHidden />
+                <time datetime={release.getPublishedAt()}>
+                    {DATETIME_FORMATTER.formatDate(release.getPublishedAt())}
+                </time>
+            </span>
+            {
+                release.getDownloads() > 0 && (
+                    <span title="Downloads of the attached files">
+                        <DownloadIcon className="card-meta-icon" ariaHidden />
+                        {NUMBER_FORMATTER.display(release.getDownloads())}
+                    </span>
+                )
+            }
+            {
+                href && (
+                    <a href={href} class="release-more">
+                        Read the release notes
+                        <ArrowRightIcon ariaHidden />
+                    </a>
+                )
+            }
+        </div>
+    </div>
+</article>
+
+<style>
+    @reference "../../../style/theme.css";
+
+    .release-title {
+        @apply flex items-center gap-inline;
+    }
+    .release-title :global(.release-icon) {
+        @apply h-3.5 w-3.5 shrink-0 fill-skin-live;
+    }
+    .release-tag {
+        @apply font-semibold decoration-solid underline-offset-4 hover:text-skin-accent hover:underline sm:text-xl;
+    }
+    .release-notes {
+        @apply mt-inline text-sm leading-relaxed opacity-90;
+    }
+    .release-more {
+        @apply ml-auto inline-flex items-center gap-inline no-underline hover:text-skin-accent;
+    }
+    .release-more :global(svg) {
+        @apply h-3.5 w-3.5 fill-skin-base opacity-70;
+    }
+    .release-more:hover :global(svg) {
+        @apply fill-skin-accent opacity-100;
+    }
+    .release-notes-empty {
+        @apply italic opacity-70;
+    }
+    .release-notes :global(h1),
+    .release-notes :global(h2),
+    .release-notes :global(h3),
+    .release-notes :global(h4) {
+        @apply mt-text mb-tight text-xs font-semibold tracking-wider uppercase opacity-70;
+    }
+    .release-notes :global(pre) {
+        @apply mt-inline overflow-x-auto rounded-lg border border-skin-line glass-raised p-text text-xs;
+    }
+    .release-notes :global(img) {
+        @apply mt-inline max-w-full rounded-sm;
+    }
+    .release-notes :global(p) {
+        @apply mt-inline;
+    }
+    .release-notes :global(ul) {
+        @apply mt-inline space-y-tight;
+    }
+    .release-notes :global(li) {
+        @apply relative pl-text;
+    }
+    .release-notes :global(li)::before {
+        @apply absolute left-0 opacity-40;
+        content: "—";
+    }
+    .release-notes :global(code) {
+        @apply rounded-sm glass-inline px-tight py-[2px] text-xs;
+    }
+    .release-notes :global(a) {
+        @apply underline decoration-solid underline-offset-4 hover:text-skin-accent;
+    }
+</style>

@@ -1,0 +1,72 @@
+---
+import type { CommitChecks } from "@app/feature/repository/commit/CommitChecks";
+import CommitIcon from "@ui/component/icon/CommitIcon";
+import type { RepositoryCommit } from "@app/feature/repository/commit/RepositoryCommit";
+
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { CommitChecksFormatter } from "@app/feature/repository/commit/CommitChecksFormatter.ts";
+import { CommitShaFormatter } from "@app/util/text/CommitShaFormatter.ts";
+import { DatetimeFormatter } from "@app/util/datetime/DatetimeFormatter.ts";
+
+const COMMIT_CHECKS_FORMATTER: CommitChecksFormatter = CONTEXT.resolve(CommitChecksFormatter);
+const COMMIT_SHA_FORMATTER: CommitShaFormatter = CONTEXT.resolve(CommitShaFormatter);
+const DATETIME_FORMATTER: DatetimeFormatter = CONTEXT.resolve(DatetimeFormatter);
+
+export interface Props {
+    commit: RepositoryCommit;
+}
+
+const { commit } = Astro.props;
+
+const checks: CommitChecks | null = commit.getChecks();
+---
+
+<div class="commit-strip">
+    <CommitIcon className="commit-icon" />
+    <a href={commit.getUrl()} class="commit-message" rel="noopener noreferrer" target="_blank" rel="noopener noreferrer"
+        >{commit.getMessage()}</a
+    >
+    <code class="commit-sha">{COMMIT_SHA_FORMATTER.format(commit.getSha())}</code>
+    <span class="commit-meta">
+        <time datetime={commit.getCommittedAt()}>
+            {DATETIME_FORMATTER.formatDate(commit.getCommittedAt())}
+        </time>
+        {
+            checks && (
+                <span class="commit-checks">
+                    <span class="check-dot" data-conclusion={checks.getConclusion()} aria-hidden="true" />
+                    {COMMIT_CHECKS_FORMATTER.verdict(checks)}
+                    <span class="commit-checks-count">
+                        {checks.getPassed()}/{checks.getTotal()}
+                    </span>
+                </span>
+            )
+        }
+    </span>
+</div>
+
+<style>
+    @reference "../../../style/theme.css";
+
+    .commit-strip {
+        @apply mt-text flex flex-wrap items-center gap-x-text gap-y-inline;
+    }
+    .commit-strip :global(.commit-icon) {
+        @apply h-4 w-4 shrink-0 fill-skin-base opacity-60;
+    }
+    .commit-message {
+        @apply min-w-0 font-medium decoration-solid underline-offset-4 hover:underline;
+    }
+    .commit-sha {
+        @apply rounded-sm glass-inline px-inline py-[2px] text-xs;
+    }
+    .commit-meta {
+        @apply ml-auto flex flex-wrap items-center gap-x-text text-xs opacity-80;
+    }
+    .commit-checks {
+        @apply inline-flex items-center gap-inline;
+    }
+    .commit-checks-count {
+        @apply tabular-nums;
+    }
+</style>

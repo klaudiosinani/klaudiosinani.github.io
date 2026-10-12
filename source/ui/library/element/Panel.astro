@@ -1,0 +1,12 @@
+---
+export interface Props {
+    still?: boolean;
+    className?: string;
+}
+
+const { still, className } = Astro.props;
+---
+
+<div class:list={["panel", still ? "panel-static" : undefined, className]}>
+    <div class="panel-body"><slot /></div>
+</div>

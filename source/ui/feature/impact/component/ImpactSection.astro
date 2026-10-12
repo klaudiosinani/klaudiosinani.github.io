@@ -1,0 +1,498 @@
+---
+import MetricTile from "@ui/library/element/MetricTile.astro";
+import type { PeriodMetricKey } from "@app/feature/impact/metric/PeriodMetricKey";
+import type { ChartPoint } from "@app/util/chart/ChartPoint";
+import type { DownloadShare } from "@ui/feature/impact/component/DownloadShare";
+import { DOWNLOAD_SHARE_CALCULATOR } from "@ui/feature/impact/component/DownloadShareCalculator";
+import type { ReportingPeriod } from "@app/util/period/ReportingPeriod";
+import type { StandingFigure } from "@ui/feature/impact/component/StandingFigure";
+import type { WindowedMetric } from "@ui/feature/impact/component/WindowedMetric";
+import type { ActivityEntry } from "@app/feature/activity/timeline/ActivityEntry";
+import ActivityIndicator from "@ui/feature/activity/component/ActivityIndicator.astro";
+import DownloadIcon from "@ui/component/icon/DownloadIcon";
+import type { ImpactData } from "@app/feature/impact/metric/ImpactData";
+import { IMPACT_CHART_CALCULATOR } from "@ui/feature/impact/component/ImpactChartCalculator";
+import { IMPACT_CHART_CONFIGURATION } from "@ui/feature/impact/component/ImpactChartConfiguration";
+import { IMPACT_FIGURE_FORMATTER } from "@ui/feature/impact/component/ImpactFigureFormatter";
+import { IMPACT_MESSAGING } from "@ui/feature/impact/component/ImpactMessaging";
+import { IMPACT_PERIOD_CONFIGURATION } from "@ui/feature/impact/component/ImpactPeriodConfiguration";
+import ImpactPeriodToggle from "./ImpactPeriodToggle.astro";
+import InfoTooltip from "@ui/component/InfoTooltip.astro";
+import SectionHeading from "@ui/component/SectionHeading.astro";
+import { STANDING_CLUSTER_FACTORY } from "@ui/feature/impact/component/StandingClusterFactory";
+import TimelineEntry from "@ui/feature/activity/component/TimelineEntry";
+import { WINDOWED_CLUSTER_FACTORY } from "@ui/feature/impact/component/WindowedClusterFactory";
+import { WINDOWED_METRICS } from "@ui/feature/impact/component/WindowedMetrics";
+
+import type { PeriodFigures } from "@ui/feature/impact/component/PeriodFigures";
+import type { ImpactChart } from "@ui/feature/impact/component/ImpactChart";
+import type { PeriodDeltas } from "@app/feature/impact/change/PeriodDeltas";
+import type { ImpactFigure } from "@ui/feature/impact/component/ImpactFigure";
+import type { MetricDelta } from "@app/feature/impact/change/MetricDelta";
+import type { WindowedCluster } from "@ui/feature/impact/component/WindowedCluster";
+import type { StandingCluster } from "@ui/feature/impact/component/StandingCluster";
+
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { ChartPointsFactory } from "@app/util/chart/ChartPointsFactory.ts";
+import { LastCompleteMonthResolver } from "@app/util/period/LastCompleteMonthResolver.ts";
+import { ReportingPeriods } from "@app/util/period/ReportingPeriods.ts";
+import { ReportingWindowCalculator } from "@app/util/period/ReportingWindowCalculator.ts";
+import { ReportingWindowFormatter } from "@app/util/period/ReportingWindowFormatter.ts";
+import { NumberFormatter } from "@app/util/text/NumberFormatter.ts";
+import { PeriodDeltasCalculator } from "@app/feature/impact/change/PeriodDeltasCalculator.ts";
+import { DependentTotalCalculator } from "@app/feature/reach/DependentTotalCalculator.ts";
+import { ProfileCollectionService } from "@app/feature/repository/profile/ProfileCollectionService.ts";
+
+const CHART_POINTS_FACTORY: ChartPointsFactory = CONTEXT.resolve(ChartPointsFactory);
+const LAST_COMPLETE_MONTH_RESOLVER: LastCompleteMonthResolver = CONTEXT.resolve(LastCompleteMonthResolver);
+const REPORTING_PERIODS: ReportingPeriods = CONTEXT.resolve(ReportingPeriods);
+const REPORTING_WINDOW_CALCULATOR: ReportingWindowCalculator = CONTEXT.resolve(ReportingWindowCalculator);
+const REPORTING_WINDOW_FORMATTER: ReportingWindowFormatter = CONTEXT.resolve(ReportingWindowFormatter);
+const NUMBER_FORMATTER: NumberFormatter = CONTEXT.resolve(NumberFormatter);
+const PERIOD_DELTAS_CALCULATOR: PeriodDeltasCalculator = CONTEXT.resolve(PeriodDeltasCalculator);
+const DEPENDENT_TOTAL_CALCULATOR: DependentTotalCalculator = CONTEXT.resolve(DependentTotalCalculator);
+const PROFILE_COLLECTION_SERVICE: ProfileCollectionService = CONTEXT.resolve(ProfileCollectionService);
+export interface Props {
+    impact: ImpactData;
+    latest?: ActivityEntry[];
+    href?: string;
+    heading?: string | null;
+    index?: string;
+    withPeriods?: boolean;
+    withWindowed?: boolean;
+}
+
+const { impact, latest = [], href, heading = "Activity", index, withPeriods = true, withWindowed = true } = Astro.props;
+
+const period: "month" | "quarter" | "year" | "all" = IMPACT_PERIOD_CONFIGURATION.DEFAULT;
+
+const figures: PeriodFigures = IMPACT_FIGURE_FORMATTER.format(impact);
+const charts: Record<"month" | "quarter" | "year" | "all", ImpactChart> = IMPACT_CHART_CALCULATOR.compute(
+    impact.getDownloadTrend()
+);
+const deltas: PeriodDeltas = PERIOD_DELTAS_CALCULATOR.compute(impact, WINDOWED_METRICS.KEYS);
+
+const shown: Record<string, ImpactFigure> = figures[period];
+const chart: ImpactChart = charts[period];
+const delta: Partial<Record<PeriodMetricKey, MetricDelta | null>> = deltas[period];
+
+const windowed: WindowedCluster[] = WINDOWED_CLUSTER_FACTORY.create(shown);
+
+const lastPublishedDay: string | null = impact.getLastPublishedDay();
+const today: Date = lastPublishedDay ? new Date(`${lastPublishedDay}T00:00:00Z`) : new Date();
+const starts: Record<ReportingPeriod, Date | null> = Object.fromEntries(
+    REPORTING_PERIODS.ALL.map((each: ReportingPeriod) => [
+        each,
+        each === "all" ? null : REPORTING_WINDOW_CALCULATOR.compute(each, 0, today).getStart(),
+    ])
+) as Record<ReportingPeriod, Date | null>;
+
+const lastMonthEnd: Date | null = LAST_COMPLETE_MONTH_RESOLVER.resolve(lastPublishedDay);
+
+const points: Record<ReportingPeriod, ChartPoint[]> = CHART_POINTS_FACTORY.all(
+    impact.getDownloadTrend(),
+    starts,
+    today,
+    lastMonthEnd
+);
+
+const ranges: Record<string, string> = Object.fromEntries(
+    REPORTING_PERIODS.ALL.map((each: ReportingPeriod) => [
+        each,
+        REPORTING_WINDOW_FORMATTER.between(
+            each === "all" ? null : REPORTING_WINDOW_CALCULATOR.compute(each, 0, today).getStart(),
+            each === "all" ? (lastMonthEnd ?? today) : today
+        ),
+    ])
+);
+const dependentRepositories: number | null = DEPENDENT_TOTAL_CALCULATOR.total(
+    await PROFILE_COLLECTION_SERVICE.retrieve()
+);
+const clusters: StandingCluster[] = STANDING_CLUSTER_FACTORY.create(impact, dependentRepositories);
+---
+
+<section id="impact">
+    {
+        heading ? (
+            <div class="impact-head">
+                <SectionHeading title={heading} index={index} href={href} more={href ? "All activity" : undefined} />
+                <p class="impact-summary">{IMPACT_MESSAGING.SUMMARY}</p>
+                {withPeriods && (
+                    <div class="impact-periods-row">
+                        <ImpactPeriodToggle labels={IMPACT_PERIOD_CONFIGURATION.LABELS} selected={period} />
+                    </div>
+                )}
+            </div>
+        ) : (
+            withPeriods && (
+                <div class="impact-periods-row">
+                    <ImpactPeriodToggle labels={IMPACT_PERIOD_CONFIGURATION.LABELS} selected={period} />
+                </div>
+            )
+        )
+    }
+
+    <figure class="impact-chart panel panel-static">
+        <figcaption class="impact-headline">
+            <span class="impact-headline-figure">
+                <DownloadIcon className="impact-headline-icon" ariaHidden />
+                <span
+                    class="impact-downloads"
+                    data-metric="downloads"
+                    data-label="downloads"
+                    aria-label={`${shown.downloads.exact} downloads`}>{shown.downloads.compact}</span
+                >
+                <span
+                    class:list={["impact-delta", { "display-none": !delta.downloads }]}
+                    data-delta
+                    data-delta-key="downloads"
+                    data-direction={delta.downloads?.getDirection()}
+                    aria-label={delta.downloads?.getLabel()}>{delta.downloads?.getText()}</span
+                >
+            </span>
+            <span class="impact-downloads-label">
+                downloads{!withWindowed && `, ${IMPACT_PERIOD_CONFIGURATION.LABELS[period].toLowerCase()}`}
+                <InfoTooltip label="What the downloads figure counts" id="impact-downloads-info">
+                    How many times my open source software has been downloaded, across every registry I publish to.
+                </InfoTooltip>
+            </span>
+        </figcaption>
+        <div
+            class="impact-plot-frame"
+            data-impact-plot
+            data-readout-frame
+            data-period={period}
+            tabindex="0"
+            role="slider"
+            aria-label="Read the downloads on a day"
+            aria-valuemin="0"
+            aria-valuemax={Math.max(points[period].length - 1, 0)}
+            aria-valuenow="0"
+            aria-valuetext="Point at the curve, or use the arrow keys"
+        >
+            <span class="chart-readout-rule" data-readout-rule aria-hidden="true"></span>
+            <span class="chart-readout-dot" data-readout-dot aria-hidden="true"></span>
+            <span class="chart-readout-bubble" data-readout-bubble aria-hidden="true"></span>
+            <svg
+                class="impact-plot"
+                viewBox={IMPACT_CHART_CONFIGURATION.VIEW_BOX}
+                preserveAspectRatio="none"
+                role="img"
+                aria-label="Downloads over the selected window"
+            >
+                <defs>
+                    <linearGradient id="impact-fade" x1="0" y1="0" x2="0" y2="1">
+                        <stop class="impact-fade-top" offset="0%"></stop>
+                        <stop class="impact-fade-bottom" offset="100%"></stop>
+                    </linearGradient>
+                    <linearGradient id="impact-stroke" x1="0" y1="0" x2="1" y2="0">
+                        <stop class="impact-stroke-start" offset="0%"></stop>
+                        <stop class="impact-stroke-end" offset="35%"></stop>
+                    </linearGradient>
+                </defs>
+                <path class="impact-area" data-area d={chart.area}></path>
+                <path class="impact-line" data-chart d={chart.line}></path>
+            </svg>
+            {chart.marker && <span class="impact-point" data-point style={chart.marker} />}
+        </div>
+        <div class="impact-caption">
+            {
+                REPORTING_PERIODS.ALL.map((each: ReportingPeriod) => {
+                    const shares: DownloadShare[] = DOWNLOAD_SHARE_CALCULATOR.compute(impact.getOutlets(), each);
+
+                    return shares.length > 1 ? (
+                        <p class="impact-outlets" data-period-only={each} hidden={each !== period}>
+                            {shares.map(({ name, value }: DownloadShare, index: number) => (
+                                <>
+                                    {index > 0 && (
+                                        <span class="impact-outlet-gap" aria-hidden="true">
+                                            ·
+                                        </span>
+                                    )}
+                                    {name} <span class="impact-outlet-value">{NUMBER_FORMATTER.display(value)}</span>
+                                </>
+                            ))}
+                        </p>
+                    ) : null;
+                })
+            }
+            <p class="impact-range" data-impact-range>{ranges[period]}</p>
+        </div>
+
+        {
+            withWindowed && (
+                <div class="impact-windowed">
+                    <p class="band-label">{IMPACT_MESSAGING.WINDOWED}</p>
+                    <div class="metric-clusters metric-clusters-inline">
+                        {windowed.map((cluster: WindowedCluster) => (
+                            <div
+                                class="metric-cluster"
+                                role="group"
+                                aria-label={cluster.name}
+                                style={`--tiles:${cluster.metrics.length}`}
+                            >
+                                <p class="metric-cluster-label">{cluster.name}</p>
+                                <dl class="metric-cluster-tiles">
+                                    {cluster.metrics.map((windowedMetric: WindowedMetric) => (
+                                        <MetricTile label={windowedMetric.label} icon={windowedMetric.icon}>
+                                            <span
+                                                data-metric={windowedMetric.key}
+                                                data-label={windowedMetric.label}
+                                                aria-label={`${shown[windowedMetric.key].exact} ${windowedMetric.label}`}
+                                            >
+                                                {shown[windowedMetric.key].compact}
+                                            </span>
+                                            <span
+                                                class:list={[
+                                                    "metric-delta",
+                                                    { "display-none": !delta[windowedMetric.key] },
+                                                ]}
+                                                data-delta
+                                                data-delta-key={windowedMetric.key}
+                                                data-direction={delta[windowedMetric.key]?.getDirection()}
+                                                aria-label={delta[windowedMetric.key]?.getLabel()}
+                                            >
+                                                {delta[windowedMetric.key]?.getText()}
+                                            </span>
+                                        </MetricTile>
+                                    ))}
+                                </dl>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )
+        }
+    </figure>
+
+    <div class="impact-band panel panel-static">
+        <p class="band-label">{IMPACT_MESSAGING.STANDING}</p>
+        <div class="metric-clusters">
+            {
+                clusters.map((cluster: StandingCluster) => (
+                    <div
+                        class="metric-cluster"
+                        role="group"
+                        aria-label={cluster.name}
+                        style={`--tiles:${cluster.figures.length}`}
+                    >
+                        <p class="metric-cluster-label">{cluster.name}</p>
+                        <dl class="metric-cluster-tiles">
+                            {cluster.figures.map((standingFigure: StandingFigure) => (
+                                <MetricTile
+                                    label={standingFigure.label}
+                                    icon={standingFigure.icon}
+                                    note={standingFigure.note}
+                                    title={standingFigure.title}
+                                >
+                                    <span
+                                        aria-label={`${NUMBER_FORMATTER.exact(standingFigure.value)} ${standingFigure.label}`}
+                                    >
+                                        {NUMBER_FORMATTER.display(standingFigure.value)}
+                                    </span>
+                                </MetricTile>
+                            ))}
+                        </dl>
+                    </div>
+                ))
+            }
+        </div>
+    </div>
+
+    {
+        latest.length > 0 && (
+            <div class="impact-band impact-latest">
+                <SectionHeading title="Latest activity">
+                    <ActivityIndicator />
+                </SectionHeading>
+                <ol class="timeline timeline-compact">
+                    {latest.map((entry: ActivityEntry) => (
+                        <TimelineEntry entry={entry} />
+                    ))}
+                </ol>
+            </div>
+        )
+    }
+
+    <script
+        is:inline
+        type="application/json"
+        id="impact-data"
+        data-impact-figures
+        set:html={JSON.stringify({ figures, charts, deltas, ranges, points })}
+    />
+</section>
+
+<style>
+    @reference "../../../style/theme.css";
+
+    #impact {
+        @apply pt-head pb-part;
+    }
+    .impact-head {
+        @apply flex flex-col gap-y-inline sm:grid sm:grid-cols-[1fr_auto] sm:items-center sm:gap-x-text;
+    }
+    .impact-head :global(.section-heading) {
+        @apply sm:col-span-2 sm:col-start-1 sm:row-start-1;
+    }
+    .impact-summary {
+        @apply italic opacity-80 sm:col-start-1 sm:row-start-2;
+    }
+    .impact-periods-row {
+        @apply flex sm:col-start-2 sm:row-start-2;
+    }
+
+    .impact-chart {
+        @apply relative mt-part overflow-clip! p-text sm:p-part;
+    }
+    .impact-chart:first-child {
+        @apply mt-0;
+    }
+    .impact-headline {
+        @apply relative px-0;
+    }
+    .impact-headline-figure {
+        @apply flex items-center gap-text;
+    }
+    .impact-headline-icon {
+        @apply h-7 w-7 shrink-0 fill-skin-base opacity-70 sm:h-8 sm:w-8;
+    }
+    .impact-downloads {
+        @apply block text-4xl font-semibold tabular-nums sm:text-6xl;
+    }
+    .impact-delta {
+        @apply ml-tight self-end pb-inline text-sm font-semibold text-skin-live-strong tabular-nums sm:pb-inline;
+    }
+    .impact-delta[data-direction="down"] {
+        @apply text-red-600 dark:text-red-400;
+    }
+    .metric-delta {
+        @apply ml-inline text-xs font-semibold text-skin-live-strong tabular-nums;
+    }
+    .metric-delta[data-direction="down"] {
+        @apply text-red-600 dark:text-red-400;
+    }
+    .impact-downloads-label {
+        @apply mt-tight block text-sm opacity-80 first-letter:uppercase;
+    }
+    .impact-plot-frame {
+        @apply relative mt-part;
+    }
+    .impact-plot {
+        @apply block h-36 w-full sm:h-44;
+    }
+    .impact-line {
+        @apply fill-none;
+        stroke: url(#impact-stroke);
+        stroke-width: 2;
+        stroke-linejoin: round;
+        stroke-linecap: round;
+        vector-effect: non-scaling-stroke;
+        animation: impact-draw 1.1s ease-out both;
+    }
+    .impact-stroke-start {
+        stop-color: rgba(var(--color-live), 0.25);
+    }
+    .impact-stroke-end {
+        stop-color: rgb(var(--color-live));
+    }
+    .impact-point {
+        @apply absolute block h-2 w-2 rounded-full bg-skin-live;
+        transform: translate(-50%, -50%);
+        box-shadow: 0 0 0 2px rgb(var(--color-fill));
+        animation: impact-appear 0.4s 0.9s ease-out both;
+    }
+    @supports (animation-timeline: view()) {
+        @media (prefers-reduced-motion: no-preference) {
+            .impact-plot-frame {
+                view-timeline: --impact-plot block;
+            }
+            .impact-line {
+                animation: impact-draw linear both;
+                animation-timeline: --impact-plot;
+                animation-range: entry 0% entry 100%;
+            }
+            .impact-point {
+                animation: impact-appear linear both;
+                animation-timeline: --impact-plot;
+                animation-range: entry 90% entry 100%;
+            }
+        }
+    }
+
+    @keyframes impact-draw {
+        from {
+            clip-path: inset(-10% 100% -10% -10%);
+        }
+        99% {
+            clip-path: inset(-10% -10% -10% -10%);
+        }
+        to {
+            clip-path: none;
+        }
+    }
+    @keyframes impact-appear {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+    .impact-area {
+        @apply stroke-none;
+        fill: url(#impact-fade);
+    }
+    .impact-fade-top {
+        stop-color: rgba(var(--color-live), 0.28);
+    }
+    .impact-fade-bottom {
+        stop-color: rgba(var(--color-live), 0.02);
+    }
+
+    .impact-band {
+        @apply mt-part p-text sm:p-part;
+    }
+    .impact-latest-label {
+        @apply flex items-center gap-text opacity-100;
+    }
+    .impact-latest-label > span:first-child {
+        @apply opacity-70;
+    }
+    .impact-latest :global(.section-heading h2) {
+        @apply text-xl sm:text-2xl;
+    }
+    .impact-latest-label :global(.section-heading-link) {
+        @apply ml-auto tracking-normal normal-case;
+    }
+    .impact-range {
+        @apply ml-auto text-right text-xs tabular-nums opacity-70;
+    }
+    .impact-caption {
+        @apply mt-inline flex flex-wrap items-baseline justify-between gap-x-part gap-y-tight;
+    }
+    .impact-outlets {
+        @apply text-xs tabular-nums opacity-70;
+    }
+    .impact-outlet-value {
+        @apply tabular-nums;
+    }
+    .impact-outlet-gap {
+        @apply px-inline;
+    }
+    .impact-windowed {
+        @apply mt-part border-t border-skin-line pt-text;
+    }
+</style>
+
+<script>
+    import { IMPACT_CHART_READOUT } from "@ui/script/ImpactChartReadout";
+    import { IMPACT_PERIOD_SWITCHER } from "@ui/script/ImpactPeriodSwitcher";
+
+    const mount = (): void => {
+        IMPACT_PERIOD_SWITCHER.mount();
+        IMPACT_CHART_READOUT.mount();
+    };
+
+    mount();
+</script>

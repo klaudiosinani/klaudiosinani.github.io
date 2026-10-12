@@ -1,0 +1,88 @@
+---
+import CalendarIcon from "@ui/component/icon/CalendarIcon";
+import DownloadIcon from "@ui/component/icon/DownloadIcon";
+import ExternalIcon from "@ui/component/icon/ExternalIcon";
+import type { RepositoryRelease } from "@app/feature/repository/release/RepositoryRelease";
+import TagIcon from "@ui/component/icon/TagIcon";
+
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { ReleaseMessaging } from "@app/feature/repository/release/ReleaseMessaging.ts";
+import { DatetimeFormatter } from "@app/util/datetime/DatetimeFormatter.ts";
+import { NumberFormatter } from "@app/util/text/NumberFormatter.ts";
+import { ReleaseSummaryFormatter } from "@app/feature/repository/release/ReleaseSummaryFormatter.ts";
+
+const RELEASE_MESSAGING: ReleaseMessaging = CONTEXT.resolve(ReleaseMessaging);
+const DATETIME_FORMATTER: DatetimeFormatter = CONTEXT.resolve(DatetimeFormatter);
+const NUMBER_FORMATTER: NumberFormatter = CONTEXT.resolve(NumberFormatter);
+const RELEASE_SUMMARY_FORMATTER: ReleaseSummaryFormatter = CONTEXT.resolve(ReleaseSummaryFormatter);
+
+export interface Props {
+    release: RepositoryRelease;
+    href?: string | null;
+}
+
+const { release, href = null } = Astro.props;
+
+const SUMMARY: number = 150;
+
+const summary: string = RELEASE_SUMMARY_FORMATTER.format(release.getNotes(), SUMMARY);
+---
+
+<li class="panel">
+    <div class="panel-body">
+        <div class="panel-content">
+            <h3 class="card-title release-card-title">
+                <TagIcon className="release-card-icon" />
+                <a
+                    href={href ?? release.getUrl()}
+                    class="card-link"
+                    rel={href ? undefined : "noopener noreferrer"}
+                    target={href ? undefined : "_blank"}
+                >
+                    {release.getName()}
+                </a>
+                {!href && <ExternalIcon className="release-card-out" ariaHidden />}
+            </h3>
+            {
+                summary ? (
+                    <p class="card-summary">{summary}</p>
+                ) : (
+                    <p class="card-summary release-card-silent">{RELEASE_MESSAGING.NO_NOTES}</p>
+                )
+            }
+        </div>
+        <div class="card-meta card-footer">
+            <span title="Published">
+                <CalendarIcon className="card-meta-icon" ariaHidden />
+                <time datetime={release.getPublishedAt()}>
+                    {DATETIME_FORMATTER.formatDate(release.getPublishedAt())}
+                </time>
+            </span>
+            {
+                release.getDownloads() > 0 && (
+                    <span title="Downloads of the attached files">
+                        <DownloadIcon className="card-meta-icon" ariaHidden />
+                        {NUMBER_FORMATTER.display(release.getDownloads())}
+                    </span>
+                )
+            }
+        </div>
+    </div>
+</li>
+
+<style>
+    @reference "../../../style/theme.css";
+
+    .release-card-title {
+        @apply flex items-center gap-inline;
+    }
+    .release-card-title :global(.release-card-icon) {
+        @apply h-3.5 w-3.5 shrink-0 fill-skin-live;
+    }
+    .release-card-silent {
+        @apply not-italic opacity-70;
+    }
+    .release-card-title :global(.release-card-out) {
+        @apply h-2.5 w-2.5 shrink-0 fill-skin-base opacity-60;
+    }
+</style>

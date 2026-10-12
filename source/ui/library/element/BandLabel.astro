@@ -1,0 +1,11 @@
+---
+export interface Props {
+    element: "p" | "h2" | "h3" | "span" | "dt";
+    className?: string;
+}
+
+const { element, className } = Astro.props;
+const Element = element;
+---
+
+<Element class:list={["band-label", className]}><slot /></Element>

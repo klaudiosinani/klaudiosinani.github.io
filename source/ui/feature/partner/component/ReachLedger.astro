@@ -1,0 +1,67 @@
+---
+import type { Reach } from "@app/feature/reach/Reach";
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { MetricDeltaPhraser } from "@app/feature/impact/change/MetricDeltaPhraser.ts";
+import { NumberFormatter } from "@app/util/text/NumberFormatter.ts";
+import { ReachConfiguration } from "@app/feature/reach/ReachConfiguration.ts";
+import { ReachPhraser } from "@app/feature/reach/ReachPhraser.ts";
+import type { MetricDelta } from "@app/feature/impact/change/MetricDelta";
+
+export interface Props {
+    reach: Reach;
+}
+
+const NUMBER_FORMATTER: NumberFormatter = CONTEXT.resolve(NumberFormatter);
+const METRIC_DELTA_PHRASER: MetricDeltaPhraser = CONTEXT.resolve(MetricDeltaPhraser);
+const REACH_CONFIGURATION: ReachConfiguration = CONTEXT.resolve(ReachConfiguration);
+const REACH_PHRASER: ReachPhraser = CONTEXT.resolve(ReachPhraser);
+
+const { reach } = Astro.props;
+
+const dependentRepositories: number | null = reach.getDependentRepositories();
+const views: number | null = reach.getViews();
+const uniqueVisitors: number | null = reach.getUniqueVisitors();
+const monthDelta: MetricDelta | null = reach.getMonthChange();
+const monthChange: string | null = monthDelta ? METRIC_DELTA_PHRASER.phrase(monthDelta) : null;
+const viewsMeaning: string =
+    uniqueVisitors !== null && uniqueVisitors > 0
+        ? `views of the repositories in the last 14 days, from ${NUMBER_FORMATTER.exact(uniqueVisitors)} visitors`
+        : "views of the repositories in the last 14 days";
+---
+
+<dl class="ledger">
+    <div class="ledger-row">
+        <dt class="ledger-figure">{NUMBER_FORMATTER.exact(reach.getDownloadsLastMonth())}</dt>
+        <dd class="ledger-meaning">
+            downloads in the last 30 days{monthChange && <span class="ledger-change">, {monthChange}</span>}
+        </dd>
+    </div>
+    <div class="ledger-row">
+        <dt class="ledger-figure">{NUMBER_FORMATTER.exact(reach.getDownloadsLastYear())}</dt>
+        <dd class="ledger-meaning">downloads in the last 12 months</dd>
+    </div>
+    <div class="ledger-row">
+        <dt class="ledger-figure">{NUMBER_FORMATTER.exact(reach.getDownloadsAllTime())}</dt>
+        <dd class="ledger-meaning">downloads since {REACH_CONFIGURATION.getRecordStartYear()}</dd>
+    </div>
+    {
+        dependentRepositories !== null && (
+            <div class="ledger-row">
+                <dt class="ledger-figure">{NUMBER_FORMATTER.exact(dependentRepositories)}</dt>
+                <dd class="ledger-meaning">{REACH_PHRASER.dependentsMeaning()}</dd>
+            </div>
+        )
+    }
+    {
+        views !== null && views > 0 && (
+            <div class="ledger-row">
+                <dt class="ledger-figure">{NUMBER_FORMATTER.exact(views)}</dt>
+                <dd class="ledger-meaning">{viewsMeaning}</dd>
+            </div>
+        )
+    }
+    <div class="ledger-row">
+        <dt class="ledger-figure">{NUMBER_FORMATTER.exact(reach.getStars())}</dt>
+        <dd class="ledger-meaning">stars across {reach.getRepositories()} repositories</dd>
+    </div>
+</dl>

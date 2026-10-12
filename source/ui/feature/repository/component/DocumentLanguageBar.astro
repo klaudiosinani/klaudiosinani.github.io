@@ -1,0 +1,49 @@
+---
+import type { DocumentAlternate } from "@app/feature/repository/document/DocumentAlternate";
+
+export interface Props {
+    alternates: DocumentAlternate[];
+}
+
+const { alternates } = Astro.props;
+---
+
+{
+    alternates.length > 1 && (
+        <nav class="languages" aria-label="The manual in other languages">
+            <span class="languages-label band-label">Read this in</span>
+            <ul class="languages-list">
+                {alternates.map((documentAlternate: DocumentAlternate) => (
+                    <li>
+                        <a
+                            href={documentAlternate.getHref()}
+                            class:list={["languages-link", "chip", { "is-current": documentAlternate.isCurrent() }]}
+                            hreflang={documentAlternate.getTag()}
+                            lang={documentAlternate.getTag()}
+                            aria-current={documentAlternate.isCurrent() ? "page" : undefined}
+                        >
+                            {documentAlternate.getName()}
+                        </a>
+                    </li>
+                ))}
+            </ul>
+        </nav>
+    )
+}
+
+<style>
+    @reference "../../../style/theme.css";
+
+    .languages {
+        @apply mb-part flex flex-wrap items-baseline gap-x-text gap-y-inline;
+    }
+    .languages-list {
+        @apply flex flex-wrap gap-inline;
+    }
+    .languages-link {
+        @apply no-underline hover:text-skin-accent;
+    }
+    .languages-link.is-current {
+        @apply border-skin-accent text-skin-accent;
+    }
+</style>

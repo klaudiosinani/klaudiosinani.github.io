@@ -1,0 +1,68 @@
+---
+import ExternalIcon from "@ui/component/icon/ExternalIcon";
+import ExternalLink from "@ui/component/ExternalLink";
+import type { RepositoryCitation } from "@app/feature/repository/profile/RepositoryCitation";
+
+export interface Props {
+    citation: RepositoryCitation;
+}
+
+const { citation } = Astro.props;
+---
+
+<details class="citation">
+    <summary class="citation-summary">
+        <span class="citation-caret" aria-hidden="true">›</span>
+        How to cite
+        <span class="citation-file">CITATION.cff</span>
+    </summary>
+    <div class="citation-body">
+        {citation.getTitle() && <p class="citation-title">{citation.getTitle()}</p>}
+        <pre><code>{citation.getText()}</code></pre>
+        <ExternalLink href={citation.getUrl()} className="citation-source">
+            Read the file on GitHub
+            <ExternalIcon className="citation-source-out" ariaHidden />
+        </ExternalLink>
+    </div>
+</details>
+
+<style>
+    @reference "../../../style/theme.css";
+
+    .citation {
+        @apply mt-part rounded-lg border border-skin-line glass-raised;
+    }
+    .citation-summary {
+        @apply flex cursor-pointer items-center gap-inline px-text py-text text-sm font-medium select-none;
+    }
+    .citation-summary::-webkit-details-marker {
+        display: none;
+    }
+    .citation-summary::marker {
+        content: "";
+    }
+    .citation-caret {
+        @apply inline-block text-skin-live-strong transition-transform duration-200;
+    }
+    .citation[open] .citation-caret {
+        @apply rotate-90;
+    }
+    .citation-file {
+        @apply rounded-sm glass-inline px-inline py-[2px] text-xs font-normal opacity-80;
+    }
+    .citation-body {
+        @apply border-t border-skin-line px-text pt-text pb-text;
+    }
+    .citation-title {
+        @apply mb-text text-sm italic opacity-80;
+    }
+    .citation-body :global(pre) {
+        @apply overflow-x-auto rounded-sm glass-raised p-text text-xs leading-relaxed;
+    }
+    .citation-source {
+        @apply mt-text inline-flex items-center gap-inline text-xs font-medium no-underline opacity-80 hover:text-skin-accent hover:opacity-100;
+    }
+    .citation-body :global(.citation-source-out) {
+        @apply h-2.5 w-2.5 shrink-0 fill-skin-base opacity-60;
+    }
+</style>

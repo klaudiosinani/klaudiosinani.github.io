@@ -1,0 +1,10 @@
+---
+export interface Props {
+    label: string;
+    className?: string;
+}
+
+const { label, className } = Astro.props;
+---
+
+<div class:list={["filter", className]} role="group" aria-label={label}><slot /></div>

@@ -1,0 +1,59 @@
+---
+import type { Sponsor } from "@app/configuration/sponsor/Sponsor";
+
+export interface Props {
+    sponsors: readonly Sponsor[];
+}
+
+const { sponsors } = Astro.props;
+---
+
+{
+    sponsors.length > 0 && (
+        <dl class="sponsor-line">
+            <dt class="sponsor-line-label">Supported by</dt>
+            <dd class="sponsor-line-value">
+                <ul class="sponsor-line-list">
+                    {sponsors.map((sponsor: Sponsor) => (
+                        <li>
+                            <a class="sponsor-line-link" href={sponsor.getWebsite()}>
+                                <img
+                                    class="sponsor-line-mark"
+                                    src={sponsor.getMark()}
+                                    alt=""
+                                    width="128"
+                                    height="128"
+                                    decoding="async"
+                                />
+                                {sponsor.getName()}
+                            </a>
+                        </li>
+                    ))}
+                </ul>
+            </dd>
+        </dl>
+    )
+}
+
+<style>
+    @reference "../../../style/theme.css";
+
+    .sponsor-line {
+        @apply m-0 flex flex-wrap items-center gap-x-part gap-y-tight;
+    }
+    .sponsor-line-label {
+        @apply text-sm font-medium opacity-70;
+    }
+    .sponsor-line-value {
+        @apply m-0 sm:border-l sm:border-skin-line sm:pl-part;
+    }
+    .sponsor-line-list {
+        @apply m-0 flex list-none flex-wrap items-center gap-x-part gap-y-inline p-0;
+    }
+    .sponsor-line-link {
+        @apply inline-flex items-center gap-inline text-base font-semibold no-underline hover:text-skin-accent hover:underline;
+    }
+    .sponsor-line-mark {
+        @apply h-9 w-9 shrink-0 rounded-lg border border-skin-line bg-white;
+    }
+</style>

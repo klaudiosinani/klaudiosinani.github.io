@@ -1,0 +1,58 @@
+---
+import FilterGroup from "@ui/library/element/FilterGroup.astro";
+import FilterOption from "@ui/library/element/FilterOption.astro";
+export interface Props {
+    languages: string[];
+    withRecent?: boolean;
+}
+
+const { languages, withRecent = false } = Astro.props;
+---
+
+<div class="software-controls">
+    <FilterGroup label="Order" className="software-control">
+        <FilterOption pressed={true} data-software-sort="stars">By stars</FilterOption>
+        {
+            withRecent && (
+                <FilterOption pressed={false} data-software-sort="updated">
+                    By last change
+                </FilterOption>
+            )
+        }
+        <FilterOption pressed={false} data-software-sort="name">By name</FilterOption>
+    </FilterGroup>
+
+    {
+        languages.length > 1 && (
+            <FilterGroup label="Language" className="software-control">
+                <FilterOption pressed={true} data-software-language="all">
+                    Every language
+                </FilterOption>
+                {languages.map((language: string) => (
+                    <FilterOption pressed={false} data-software-language={language}>
+                        {language}
+                    </FilterOption>
+                ))}
+            </FilterGroup>
+        )
+    }
+</div>
+
+<style>
+    @reference "../../../style/theme.css";
+
+    .software-controls {
+        @apply mt-part flex flex-wrap items-center gap-x-part gap-y-inline text-xs;
+    }
+    .software-control {
+        @apply gap-y-tight;
+    }
+</style>
+
+<script>
+    import { SOFTWARE_ORDER } from "@ui/script/SoftwareOrder";
+
+    const mount = (): void => SOFTWARE_ORDER.mount();
+
+    mount();
+</script>

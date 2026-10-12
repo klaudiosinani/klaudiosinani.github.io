@@ -1,0 +1,75 @@
+---
+import CommitIcon from "@ui/component/icon/CommitIcon";
+import TagIcon from "@ui/component/icon/TagIcon";
+import type { ActivityEntry } from "@app/feature/activity/timeline/ActivityEntry";
+
+import type { ActivityKind } from "@app/feature/activity/timeline/ActivityKind";
+
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { CountFormatter } from "@app/util/text/CountFormatter.ts";
+import { ActivityKindTally } from "@app/feature/activity/timeline/ActivityKindTally.ts";
+
+const COUNT_FORMATTER: CountFormatter = CONTEXT.resolve(CountFormatter);
+const ACTIVITY_KIND_TALLY: ActivityKindTally = CONTEXT.resolve(ActivityKindTally);
+export interface Props {
+    entries: ActivityEntry[];
+    filterable?: boolean;
+}
+
+const { entries, filterable = false } = Astro.props;
+
+const tally: Record<ActivityKind, number> = ACTIVITY_KIND_TALLY.of(entries);
+---
+
+<div class:list={["activity-breakdown", { filter: filterable }]} role={filterable ? "group" : undefined}>
+    {
+        filterable && (
+            <button
+                type="button"
+                class="activity-breakdown-all filter-option focus-outline"
+                data-activity-filter="all"
+                aria-pressed="true"
+            >
+                All
+            </button>
+        )
+    }
+    {
+        filterable ? (
+            <button
+                type="button"
+                class="filter-option focus-outline"
+                data-kind="release"
+                data-activity-filter="release"
+                aria-pressed="false"
+            >
+                <TagIcon className="activity-breakdown-icon" />
+                {COUNT_FORMATTER.of(tally.release, "release")}
+            </button>
+        ) : (
+            <span data-kind="release">
+                <TagIcon className="activity-breakdown-icon" />
+                {COUNT_FORMATTER.of(tally.release, "release")}
+            </span>
+        )
+    }
+    {
+        filterable ? (
+            <button
+                type="button"
+                class="filter-option focus-outline"
+                data-kind="commit"
+                data-activity-filter="commit"
+                aria-pressed="false"
+            >
+                <CommitIcon className="activity-breakdown-icon" />
+                {COUNT_FORMATTER.of(tally.commit, "commit")}
+            </button>
+        ) : (
+            <span data-kind="commit">
+                <CommitIcon className="activity-breakdown-icon" />
+                {COUNT_FORMATTER.of(tally.commit, "commit")}
+            </span>
+        )
+    }
+</div>

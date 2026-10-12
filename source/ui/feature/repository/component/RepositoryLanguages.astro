@@ -1,0 +1,48 @@
+---
+import LanguageBar from "@ui/component/LanguageBar";
+import LanguageChip from "@ui/component/LanguageChip";
+import type { RepositoryProfile } from "@app/feature/repository/profile/RepositoryProfile";
+
+import type { RepositoryLanguage } from "@app/feature/repository/profile/RepositoryLanguage";
+export interface Props {
+    profile: RepositoryProfile;
+}
+
+const { profile } = Astro.props;
+
+const languages: RepositoryLanguage[] =
+    profile.languages.length > 0 ? profile.languages : profile.language ? [{ name: profile.language, share: 1 }] : [];
+---
+
+{
+    languages.length > 0 && (
+        <div class="metric-clusters languages">
+            <div class="metric-cluster languages-cluster">
+                <p class="metric-cluster-label">Written in</p>
+                <LanguageBar languages={languages} />
+                <div class="languages-list">
+                    {languages.map(({ name, share }: RepositoryLanguage) => (
+                        <LanguageChip language={name} share={share} />
+                    ))}
+                </div>
+            </div>
+        </div>
+    )
+}
+
+<style>
+    @reference "../../../style/theme.css";
+
+    .languages {
+        @apply mt-part;
+    }
+    .languages-cluster {
+        @apply min-w-[16rem] px-text py-text;
+    }
+    .languages-cluster :global(.language-bar) {
+        @apply mt-text;
+    }
+    .languages-list {
+        @apply mt-text flex flex-wrap items-center gap-x-text gap-y-inline;
+    }
+</style>

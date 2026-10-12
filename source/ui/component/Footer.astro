@@ -1,0 +1,155 @@
+---
+import ExternalLink from "./ExternalLink";
+import HeartIcon from "./icon/HeartIcon";
+import SocialIcon from "./icon/SocialIcon.astro";
+import type { SocialIconName } from "@ui/icon/SocialIconName";
+import Hr from "./Hr.astro";
+import type { NavigationItem } from "@app/configuration/navigation/NavigationItem";
+import { NAVIGATION_ITEMS } from "@app/configuration/navigation/NavigationItems";
+import { ROUTES } from "@app/configuration/route/Routes";
+import { SITE } from "@app/configuration/site/Site";
+import { SOCIAL_LINKS } from "@app/configuration/social/SocialLinks";
+import type { SocialLink } from "@app/configuration/social/SocialLink";
+import { SPONSOR_LINK } from "@app/configuration/sponsor/SiteSponsorLink";
+
+import { AUTHOR_DISCIPLINES } from "@app/configuration/author/AuthorDisciplines";
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { SentenceListFormatter } from "@app/util/text/SentenceListFormatter.ts";
+import { SystemClock } from "@app/util/datetime/SystemClock.ts";
+
+const SYSTEM_CLOCK: SystemClock = CONTEXT.resolve(SystemClock);
+const SENTENCE_LIST_FORMATTER: SentenceListFormatter = CONTEXT.resolve(SentenceListFormatter);
+
+const currentYear: number = SYSTEM_CLOCK.currentYear();
+const fields: string = SENTENCE_LIST_FORMATTER.format(AUTHOR_DISCIPLINES);
+
+export interface Props {
+    noMarginTop?: boolean;
+}
+
+const { noMarginTop = false } = Astro.props;
+
+const elsewhere: SocialLink[] = SOCIAL_LINKS.filter((socialLink: SocialLink) => socialLink.isActive());
+
+const FOOTER_NAMES: Readonly<Record<string, string>> = {
+    Mail: "Email",
+};
+---
+
+<footer class={`${noMarginTop ? "" : "mt-auto"}`}>
+    <Hr noPadding />
+    <div class="footer-columns">
+        <nav class="footer-column" aria-label="Pages of this site">
+            <p class="footer-label band-label">Explore</p>
+            <ul class="footer-list">
+                {
+                    NAVIGATION_ITEMS.map((navigationItem: NavigationItem) => (
+                        <li>
+                            <a href={navigationItem.getHref()} class="footer-link">
+                                {navigationItem.getLabel()}
+                            </a>
+                        </li>
+                    ))
+                }
+                <li><a href={`${ROUTES.search}/`} class="footer-link">Search</a></li>
+            </ul>
+        </nav>
+
+        <nav class="footer-column" aria-label="Elsewhere">
+            <p class="footer-label band-label">Elsewhere</p>
+            <ul class="footer-list">
+                {
+                    elsewhere.map((socialLink: SocialLink) => (
+                        <li>
+                            <ExternalLink
+                                href={socialLink.getHref()}
+                                className="footer-link footer-elsewhere"
+                                title={socialLink.getLinkTitle()}
+                            >
+                                <SocialIcon name={socialLink.getName() as SocialIconName} />
+                                {FOOTER_NAMES[socialLink.getName()] ?? socialLink.getName()}
+                            </ExternalLink>
+                        </li>
+                    ))
+                }
+                <li>
+                    <ExternalLink
+                        href={SPONSOR_LINK.getHref()}
+                        className="footer-link footer-elsewhere footer-sponsor"
+                        title={SPONSOR_LINK.getTitle()}
+                    >
+                        <HeartIcon className="footer-icon heart-mark" ariaHidden />
+                        {SPONSOR_LINK.getLabel()}
+                    </ExternalLink>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="footer-column footer-identity">
+            <p class="footer-label band-label">{SITE.getAuthor()}</p>
+            <p class="footer-sentence">{fields}</p>
+            <p class="footer-sentence">Since {SITE.getStartYear()}.</p>
+        </div>
+    </div>
+
+    <div class="footer-close">
+        <div class="footer-mark" role="img" aria-label="Dia, Liri" title="Dia, Liri"></div>
+        <p class="footer-copyright">
+            Copyright &#169; {SITE.getStartYear()} - {currentYear}
+        </p>
+    </div>
+</footer>
+
+<style>
+    @reference "../style/theme.css";
+
+    footer {
+        @apply w-full;
+    }
+    .footer-columns {
+        @apply mx-auto grid w-full max-w-app gap-x-head gap-y-head pt-head pb-head sm:grid-cols-3;
+    }
+    .footer-label {
+        @apply mb-text;
+    }
+    .footer-list {
+        @apply space-y-inline text-sm;
+    }
+    .footer-columns :global(.footer-link) {
+        @apply no-underline opacity-80 hover:text-skin-accent hover:opacity-100;
+    }
+    .footer-columns :global(.footer-elsewhere) {
+        @apply inline-flex items-center gap-inline;
+    }
+    .footer-columns :global(.footer-elsewhere svg) {
+        @apply h-3.5! w-3.5! shrink-0 scale-100!;
+    }
+    .footer-columns :global(.footer-elsewhere svg:not(.icon-tabler)) {
+        @apply fill-current!;
+    }
+    .footer-columns :global(.footer-sponsor) {
+        @apply text-skin-accent opacity-100;
+    }
+    .footer-sentence {
+        @apply max-w-xs text-sm opacity-70;
+    }
+    .footer-close {
+        @apply mx-auto flex w-full max-w-app flex-col items-center gap-part border-t border-skin-line pt-head pb-head;
+    }
+    .footer-mark {
+        @apply w-full opacity-70;
+        max-width: 15rem;
+        aspect-ratio: 697 / 297;
+        background-color: currentColor;
+        -webkit-mask: url("/footer-mark.png") center / contain no-repeat;
+        mask: url("/footer-mark.png") center / contain no-repeat;
+    }
+    @supports not ((mask: url("/a.png")) or (-webkit-mask: url("/a.png"))) {
+        .footer-mark {
+            display: none;
+        }
+    }
+    .footer-copyright {
+        @apply text-sm opacity-70;
+    }
+</style>

@@ -1,0 +1,123 @@
+---
+import type { IconComponent } from "@ui/icon/IconComponent";
+import type { CommitCheckConclusion } from "@app/feature/repository/commit/CommitCheckConclusion";
+import type { InstallCommand } from "@app/feature/repository/package/InstallCommand";
+import InstallTabs from "./InstallTabs.astro";
+import { SPONSOR_LINK } from "@app/configuration/sponsor/SiteSponsorLink";
+import HeartIcon from "@ui/component/icon/HeartIcon";
+import CopyableCommand from "@ui/component/CopyableCommand.astro";
+import ExternalLink from "@ui/component/ExternalLink";
+import type { RepositoryProfile } from "@app/feature/repository/profile/RepositoryProfile";
+import RepositoryRegistries from "./RepositoryRegistries.astro";
+import type { RepositoryMetadatum } from "@app/feature/repository/page/RepositoryMetadatum";
+
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { InstallCommandsFactory } from "@app/feature/repository/package/InstallCommandsFactory.ts";
+import { RepositoryMetadataFactory } from "@app/feature/repository/page/RepositoryMetadataFactory.ts";
+
+const INSTALL_COMMANDS_FACTORY: InstallCommandsFactory = CONTEXT.resolve(InstallCommandsFactory);
+const REPOSITORY_METADATA_FACTORY: RepositoryMetadataFactory = CONTEXT.resolve(RepositoryMetadataFactory);
+export interface Props {
+    profile: RepositoryProfile;
+}
+
+const { profile } = Astro.props;
+
+const install: string | null = profile.manual?.getInstall() ?? null;
+const metadata: RepositoryMetadatum[] = REPOSITORY_METADATA_FACTORY.create(profile);
+const commands: InstallCommand[] = INSTALL_COMMANDS_FACTORY.create(profile);
+---
+
+<div class="hero">
+    <p class="hero-description">{profile.description}</p>
+
+    <ul class="hero-facts">
+        {
+            metadata.map((repositoryMetadatum: RepositoryMetadatum) => {
+                const Icon: IconComponent = repositoryMetadatum.getIcon();
+                const href: string | undefined = repositoryMetadatum.getHref();
+                const state: CommitCheckConclusion | undefined = repositoryMetadatum.getState();
+
+                return (
+                    <li class="hero-fact" title={repositoryMetadatum.getTitle()}>
+                        <Icon className="hero-fact-icon" ariaHidden />
+                        {href ? (
+                            <ExternalLink href={href} className="hero-fact-link">
+                                {repositoryMetadatum.getLabel()}
+                            </ExternalLink>
+                        ) : (
+                            repositoryMetadatum.getLabel()
+                        )}
+                        {state && <span class="check-dot" data-conclusion={state} aria-hidden="true" />}
+                    </li>
+                );
+            })
+        }
+    </ul>
+
+    <div class="hero-get">
+        {
+            commands.length > 0 ? (
+                <InstallTabs commands={commands} label="Install" />
+            ) : (
+                install && <CopyableCommand command={install} label="Install" />
+            )
+        }
+        <div class="hero-links">
+            <RepositoryRegistries profile={profile} />
+            <ExternalLink
+                href={SPONSOR_LINK.getHref()}
+                className="control control-lead"
+                title={SPONSOR_LINK.getTitle()}
+            >
+                <HeartIcon className="heart-mark" ariaHidden />
+                {SPONSOR_LINK.getLabel()}
+            </ExternalLink>
+        </div>
+    </div>
+</div>
+
+<style>
+    @reference "../../../style/theme.css";
+
+    .hero-links {
+        @apply flex flex-wrap items-center gap-inline;
+    }
+
+    .hero {
+        @apply mt-inline;
+        container-type: inline-size;
+        container-name: hero;
+    }
+    .hero-description {
+        @apply max-w-article leading-relaxed opacity-90;
+    }
+    .hero-facts {
+        @apply mt-text flex flex-wrap items-center gap-x-part gap-y-inline text-sm;
+    }
+    .hero-fact {
+        @apply inline-flex items-center gap-inline opacity-80;
+    }
+    .hero-fact :global(.hero-fact-icon) {
+        @apply h-3.5 w-3.5 shrink-0 fill-skin-base opacity-70;
+    }
+    .hero-fact :global(.hero-fact-link) {
+        @apply font-medium tabular-nums no-underline decoration-solid underline-offset-4 hover:text-skin-accent hover:underline;
+    }
+    .hero-get {
+        @apply mt-part flex flex-col items-start gap-y-part;
+    }
+    @container hero (min-width: 44rem) {
+        .hero-get {
+            @apply flex-row flex-wrap items-end justify-between gap-x-head;
+        }
+    }
+    @supports not (container-type: inline-size) {
+        .hero-get {
+            @apply sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-x-head;
+        }
+    }
+    .hero :global(.command) {
+        @apply mt-0 max-w-full;
+    }
+</style>

@@ -1,0 +1,34 @@
+---
+import ProjectCard from "./ProjectCard.astro";
+import type { SurfaceReach } from "@app/feature/reach/surface/SurfaceReach";
+
+export interface Props {
+    surfaces: readonly SurfaceReach[];
+}
+
+const { surfaces } = Astro.props;
+---
+
+<ul class="project-cards">
+    {
+        surfaces.map((surfaceReach: SurfaceReach) => (
+            <li class="project-cards-item">
+                <ProjectCard surfaceReach={surfaceReach} />
+            </li>
+        ))
+    }
+</ul>
+
+<style>
+    @reference "../../../style/theme.css";
+
+    .project-cards {
+        @apply grid gap-part sm:grid-cols-2 lg:grid-cols-3;
+    }
+    .project-cards-item {
+        @apply flex;
+    }
+    .project-cards-item > :global(.project-card) {
+        @apply w-full;
+    }
+</style>

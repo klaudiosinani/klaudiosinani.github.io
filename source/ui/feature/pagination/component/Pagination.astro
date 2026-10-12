@@ -1,0 +1,56 @@
+---
+import ArrowLeftIcon from "@ui/component/icon/ArrowLeftIcon";
+import ArrowRightIcon from "@ui/component/icon/ArrowRightIcon";
+import LinkButton from "@ui/component/LinkButton.astro";
+import type { PaginationBand } from "@app/feature/pagination/PaginationBand";
+
+export interface Props {
+    band: PaginationBand;
+}
+
+const { band } = Astro.props;
+const currentPage: number = band.getCurrentPage();
+const totalPages: number = band.getTotalPages();
+const prevUrl: string = band.getPrevUrl();
+const nextUrl: string = band.getNextUrl();
+
+const isPrevDisabled: boolean = !band.hasPrevious();
+const isNextDisabled: boolean = !band.hasNext();
+---
+
+{
+    totalPages > 1 && (
+        <nav class="pagination-wrapper" aria-label="Pagination">
+            <LinkButton
+                disabled={isPrevDisabled}
+                href={prevUrl}
+                className={`mr-text select-none ${isPrevDisabled ? "disabled" : ""}`}
+                ariaLabel="Previous"
+            >
+                <ArrowLeftIcon className={isPrevDisabled ? "disabled-svg" : undefined} />
+                Prev
+            </LinkButton>
+            {currentPage} / {totalPages}
+            <LinkButton
+                disabled={isNextDisabled}
+                href={nextUrl}
+                className={`ml-text select-none ${isNextDisabled ? "disabled" : ""}`}
+                ariaLabel="Next"
+            >
+                Next
+                <ArrowRightIcon className={isNextDisabled ? "disabled-svg" : undefined} />
+            </LinkButton>
+        </nav>
+    )
+}
+
+<style>
+    @reference "../../../style/theme.css";
+
+    .pagination-wrapper {
+        @apply mt-auto mb-head flex justify-center;
+    }
+    .disabled {
+        @apply pointer-events-none opacity-40 select-none group-hover:fill-skin-base hover:text-skin-base;
+    }
+</style>

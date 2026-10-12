@@ -1,0 +1,96 @@
+---
+import { BREADCRUMB_HOME } from "@app/configuration/navigation/BreadcrumbHome";
+import { BREADCRUMB_SEPARATOR } from "@app/configuration/navigation/BreadcrumbSeparator";
+import { ROUTES } from "@app/configuration/route/Routes";
+import type { TrailStep } from "@app/util/routing/TrailStep";
+
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { BreadcrumbTrailResolver } from "@app/util/routing/BreadcrumbTrailResolver.ts";
+
+const BREADCRUMB_TRAIL_RESOLVER: BreadcrumbTrailResolver = CONTEXT.resolve(BreadcrumbTrailResolver);
+
+export interface Props {
+    trail?: TrailStep[];
+}
+
+const { trail } = Astro.props;
+
+const segments: string[] = BREADCRUMB_TRAIL_RESOLVER.resolve(Astro.url.pathname);
+---
+
+<nav class="breadcrumb" aria-label="breadcrumb">
+    <ul>
+        <li>
+            <a href={ROUTES.home}>{BREADCRUMB_HOME}</a>
+            <span class="separator" aria-hidden="true">{BREADCRUMB_SEPARATOR}</span>
+        </li>
+        {
+            trail
+                ? trail.map((step: TrailStep, index: number) =>
+                      index + 1 === trail.length ? (
+                          <li>
+                              <span aria-current="page">{step.getName()}</span>
+                          </li>
+                      ) : (
+                          <li>
+                              <a href={step.getHref()}>{step.getName()}</a>
+                              <span class="separator" aria-hidden="true">
+                                  {BREADCRUMB_SEPARATOR}
+                              </span>
+                          </li>
+                      )
+                  )
+                : segments.map((segment: string, index: number) =>
+                      index + 1 === segments.length ? (
+                          <li>
+                              <span
+                                  class={`${BREADCRUMB_TRAIL_RESOLVER.isTagName(segments, index) ? "lowercase" : "capitalize"}`}
+                                  aria-current="page"
+                              >
+                                  {decodeURIComponent(segment)}
+                              </span>
+                          </li>
+                      ) : (
+                          <li>
+                              <a href={BREADCRUMB_TRAIL_RESOLVER.address(segments, index)} class="derived">
+                                  {segment}
+                              </a>
+                              <span class="separator" aria-hidden="true">
+                                  {BREADCRUMB_SEPARATOR}
+                              </span>
+                          </li>
+                      )
+                  )
+        }
+    </ul>
+</nav>
+
+<style>
+    @reference "../style/theme.css";
+
+    .breadcrumb {
+        @apply mx-auto mt-head mb-text w-full max-w-app px-gutter text-sm;
+    }
+    .breadcrumb ul li {
+        @apply inline;
+    }
+    .breadcrumb ul li a {
+        @apply relative opacity-80;
+    }
+    .breadcrumb ul li a::after {
+        @apply absolute inset-x-0 -inset-y-1.5;
+        content: "";
+    }
+    .breadcrumb ul li a.derived {
+        @apply capitalize;
+    }
+    .breadcrumb ul li span {
+        @apply opacity-70;
+    }
+    .breadcrumb ul li .separator {
+        @apply px-[2px];
+    }
+    .breadcrumb ul li:not(:last-child) a {
+        @apply hover:opacity-100;
+    }
+</style>

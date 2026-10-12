@@ -1,0 +1,9 @@
+---
+export interface Props {
+    className?: string;
+}
+
+const { className } = Astro.props;
+---
+
+<kbd class:list={["key-cap", className]}><slot /></kbd>

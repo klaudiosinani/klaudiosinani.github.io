@@ -1,0 +1,238 @@
+---
+import RepositoryPageNav from "./RepositoryPageNav.astro";
+import { TrailStep } from "@app/util/routing/TrailStep";
+import ArrowLeftIcon from "@ui/component/icon/ArrowLeftIcon";
+import ArrowRightIcon from "@ui/component/icon/ArrowRightIcon";
+import CalendarIcon from "@ui/component/icon/CalendarIcon";
+import DownloadIcon from "@ui/component/icon/DownloadIcon";
+import ExternalIcon from "@ui/component/icon/ExternalIcon";
+import ExternalLink from "@ui/component/ExternalLink";
+import Footer from "@ui/component/Footer.astro";
+import Header from "@ui/component/Header.astro";
+import Layout from "@ui/layout/Layout.astro";
+import Main from "@ui/layout/Main.astro";
+import { BREADCRUMB_HOME } from "@app/configuration/navigation/BreadcrumbHome";
+import CopyableCommand from "@ui/component/CopyableCommand.astro";
+import type { RepositoryProfile } from "@app/feature/repository/profile/RepositoryProfile";
+import type { RepositoryRelease } from "@app/feature/repository/release/RepositoryRelease";
+import { ROUTES } from "@app/configuration/route/Routes";
+import { SITE } from "@app/configuration/site/Site";
+import TagIcon from "@ui/component/icon/TagIcon";
+
+import type { ReleasePageMetadata } from "@app/feature/repository/release/ReleasePageMetadata";
+import type { StructuredData } from "@app/util/seo/StructuredData";
+import type { RepositoryLanguage } from "@app/feature/repository/profile/RepositoryLanguage";
+
+import type { BreadcrumbStep } from "@app/util/seo/breadcrumb/BreadcrumbStep";
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { BreadcrumbStepsFactory } from "@app/util/seo/breadcrumb/BreadcrumbStepsFactory.ts";
+import { ReleaseMessaging } from "@app/feature/repository/release/ReleaseMessaging.ts";
+import { RepositoryPageNavigationFactory } from "@app/feature/repository/page/RepositoryPageNavigationFactory.ts";
+import { DatetimeFormatter } from "@app/util/datetime/DatetimeFormatter.ts";
+import { NumberFormatter } from "@app/util/text/NumberFormatter.ts";
+import { ReleaseComparisonResolver } from "@app/feature/repository/release/ReleaseComparisonResolver.ts";
+import { ReleaseInstallCommandResolver } from "@app/feature/repository/release/ReleaseInstallCommandResolver.ts";
+import { ReleaseNotesRenderer } from "@app/feature/repository/release/ReleaseNotesRenderer.ts";
+import { ReleasePageMetadataFactory } from "@app/feature/repository/release/ReleasePageMetadataFactory.ts";
+import { ReleaseAddressResolver } from "@app/feature/repository/release/ReleaseAddressResolver.ts";
+import { RoutePathResolver } from "@app/util/routing/RoutePathResolver.ts";
+import { SchemaIdentifiers } from "@app/util/seo/SchemaIdentifiers.ts";
+import { SoftwareReleaseSchemaBuilder } from "@app/util/seo/software/SoftwareReleaseSchemaBuilder.ts";
+
+const RELEASE_MESSAGING: ReleaseMessaging = CONTEXT.resolve(ReleaseMessaging);
+const BREADCRUMB_STEPS_FACTORY: BreadcrumbStepsFactory = CONTEXT.resolve(BreadcrumbStepsFactory);
+const REPOSITORY_PAGE_NAVIGATION_FACTORY: RepositoryPageNavigationFactory = CONTEXT.resolve(
+    RepositoryPageNavigationFactory
+);
+const DATETIME_FORMATTER: DatetimeFormatter = CONTEXT.resolve(DatetimeFormatter);
+const NUMBER_FORMATTER: NumberFormatter = CONTEXT.resolve(NumberFormatter);
+const RELEASE_COMPARISON_RESOLVER: ReleaseComparisonResolver = CONTEXT.resolve(ReleaseComparisonResolver);
+const RELEASE_INSTALL_COMMAND_RESOLVER: ReleaseInstallCommandResolver = CONTEXT.resolve(ReleaseInstallCommandResolver);
+const RELEASE_NOTES_RENDERER: ReleaseNotesRenderer = CONTEXT.resolve(ReleaseNotesRenderer);
+const RELEASE_PAGE_METADATA_FACTORY: ReleasePageMetadataFactory = CONTEXT.resolve(ReleasePageMetadataFactory);
+const RELEASE_ADDRESS_RESOLVER: ReleaseAddressResolver = CONTEXT.resolve(ReleaseAddressResolver);
+const ROUTE_PATH_RESOLVER: RoutePathResolver = CONTEXT.resolve(RoutePathResolver);
+const SCHEMA_IDENTIFIERS: SchemaIdentifiers = CONTEXT.resolve(SchemaIdentifiers);
+const SOFTWARE_RELEASE_SCHEMA_BUILDER: SoftwareReleaseSchemaBuilder = CONTEXT.resolve(SoftwareReleaseSchemaBuilder);
+export interface Props {
+    profile: RepositoryProfile;
+    release: RepositoryRelease;
+    previous?: RepositoryRelease | null;
+    next?: RepositoryRelease | null;
+    alias?: boolean;
+}
+
+const { profile, release, previous = null, next = null, alias = false } = Astro.props;
+
+const install: string | null = RELEASE_INSTALL_COMMAND_RESOLVER.resolve(profile.packages, release.getTag());
+const comparison: string | null = previous
+    ? RELEASE_COMPARISON_RESOLVER.resolve(profile.url, previous.getTag(), release.getTag())
+    : null;
+
+const canonical: string = new URL(RELEASE_ADDRESS_RESOLVER.of(profile.slug, release), SITE.getWebsite()).href;
+const project: string = ROUTE_PATH_RESOLVER.resolveRepository(profile.slug);
+
+const metadata: ReleasePageMetadata = RELEASE_PAGE_METADATA_FACTORY.create(
+    profile,
+    release,
+    SITE.getTitle(),
+    SITE.getAuthor()
+);
+
+const notes: string = await RELEASE_NOTES_RENDERER.render(release.getNotes(), profile.url);
+
+const [registry] = profile.packages;
+
+const schema: StructuredData[] = [
+    SOFTWARE_RELEASE_SCHEMA_BUILDER.build({
+        name: profile.name,
+        version: release.getTag(),
+        url: canonical,
+        releaseNotes: release.getNotes(),
+        datePublished: release.getPublishedAt(),
+        author: SITE.getAuthor(),
+        authorUrl: SITE.getWebsite(),
+        authorId: SCHEMA_IDENTIFIERS.person(SITE.getWebsite()),
+        downloadUrl: registry?.getUrl() ?? null,
+        image: new URL(ROUTE_PATH_RESOLVER.resolveRepositoryImage(profile.slug), SITE.getWebsite()).href,
+        programmingLanguage: profile.languages.map(({ name }: RepositoryLanguage) => name),
+    }),
+];
+
+const trail: TrailStep[] = [
+    new TrailStep("Software", `${ROUTES.software}/`),
+    new TrailStep(profile.name, project),
+    new TrailStep("Releases", ROUTE_PATH_RESOLVER.resolveRepositoryReleases(profile.slug)),
+    new TrailStep(release.getTag(), RELEASE_ADDRESS_RESOLVER.of(profile.slug, release)),
+];
+
+const breadcrumbs: BreadcrumbStep[] = BREADCRUMB_STEPS_FACTORY.create(trail, BREADCRUMB_HOME, SITE.getWebsite());
+---
+
+<Layout
+    title={metadata.getTitle()}
+    description={metadata.getDescription()}
+    ogImage={ROUTE_PATH_RESOLVER.resolveRepositoryImage(profile.slug)}
+    canonicalURL={canonical}
+    modDatetime={new Date(release.getPublishedAt())}
+    schema={schema}
+    breadcrumbs={breadcrumbs}
+    noindex={alias}
+>
+    <Header activeNav="software" />
+    <Main pageTitle={`${profile.name} ${release.getTag()}`} pageDesc={profile.logline} {trail}>
+        <RepositoryPageNav pages={REPOSITORY_PAGE_NAVIGATION_FACTORY.create(profile, "releases")} />
+
+        <RepositoryPageNav pages={REPOSITORY_PAGE_NAVIGATION_FACTORY.create(profile, "releases")} />
+
+        <div class="release-meta">
+            <span title="Published">
+                <CalendarIcon className="card-meta-icon" ariaHidden />
+                <time datetime={release.getPublishedAt()}>
+                    {DATETIME_FORMATTER.formatDate(release.getPublishedAt())}
+                </time>
+            </span>
+            {
+                release.getDownloads() > 0 && (
+                    <span title="Downloads of the attached files">
+                        <DownloadIcon className="card-meta-icon" ariaHidden />
+                        {NUMBER_FORMATTER.display(release.getDownloads())}
+                    </span>
+                )
+            }
+            <a href={ROUTE_PATH_RESOLVER.resolveRepositoryReleases(profile.slug)} class="release-project">
+                <TagIcon className="card-meta-icon" />
+                All releases
+            </a>
+            {
+                comparison && (
+                    <ExternalLink href={comparison} className="release-source">
+                        Compare with {previous?.getTag()}
+                        <ExternalIcon className="release-out" ariaHidden />
+                    </ExternalLink>
+                )
+            }
+            <ExternalLink href={release.getUrl()} className="release-source">
+                On GitHub
+                <ExternalIcon className="release-out" ariaHidden />
+            </ExternalLink>
+        </div>
+
+        {install && <CopyableCommand command={install} label="Install this version" />}
+
+        {
+            notes ? (
+                <article class="release-notes prose" set:html={notes} />
+            ) : (
+                <p class="release-empty">{RELEASE_MESSAGING.NO_NOTES}</p>
+            )
+        }
+
+        {
+            (previous || next) && (
+                <nav class="release-steps" aria-label="Other releases">
+                    {previous ? (
+                        <a href={RELEASE_ADDRESS_RESOLVER.of(profile.slug, previous)} class="release-step">
+                            <ArrowLeftIcon ariaHidden />
+                            <span>
+                                <span class="band-label">Previous</span>
+                                {previous.getTag()}
+                            </span>
+                        </a>
+                    ) : (
+                        <span />
+                    )}
+                    {next && (
+                        <a
+                            href={RELEASE_ADDRESS_RESOLVER.of(profile.slug, next)}
+                            class="release-step release-step-next"
+                        >
+                            <span>
+                                <span class="band-label">Next</span>
+                                {next.getTag()}
+                            </span>
+                            <ArrowRightIcon ariaHidden />
+                        </a>
+                    )}
+                </nav>
+            )
+        }
+    </Main>
+    <Footer />
+</Layout>
+
+<style>
+    @reference "../../../style/theme.css";
+
+    .release-meta {
+        @apply mb-head flex flex-wrap items-center gap-x-part gap-y-inline text-sm;
+    }
+    .release-meta > span,
+    .release-meta > a {
+        @apply inline-flex items-center gap-inline opacity-80;
+    }
+    .release-meta :global(a) {
+        @apply no-underline hover:text-skin-accent hover:opacity-100;
+    }
+    .release-meta :global(.release-out) {
+        @apply h-2.5 w-2.5 fill-skin-base opacity-60;
+    }
+    .release-notes {
+        @apply mt-head max-w-article;
+    }
+    .release-empty {
+        @apply italic opacity-80;
+    }
+    .release-steps {
+        @apply mt-group flex items-center justify-between gap-text border-t border-skin-line pt-part;
+    }
+    .release-step {
+        @apply inline-flex items-center gap-text no-underline hover:text-skin-accent;
+    }
+    .release-step span span {
+        @apply block;
+    }
+    .release-step-next {
+        @apply ml-auto text-right;
+    }
+</style>

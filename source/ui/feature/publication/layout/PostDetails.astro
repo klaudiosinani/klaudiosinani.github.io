@@ -1,0 +1,350 @@
+---
+import { render } from "astro:content";
+import ExternalLink from "@ui/component/ExternalLink";
+import type { ShareLink } from "@app/feature/publication/share/ShareLink";
+import type { Props as LayoutProps } from "@ui/layout/Layout.astro";
+import { BreadcrumbStep } from "@app/util/seo/breadcrumb/BreadcrumbStep";
+import ArrowLeftIcon from "@ui/component/icon/ArrowLeftIcon";
+import ArrowRightIcon from "@ui/component/icon/ArrowRightIcon";
+import Card from "@ui/feature/publication/component/Card";
+import ChevronLeftIcon from "@ui/component/icon/ChevronLeftIcon";
+import ClockIcon from "@ui/component/icon/ClockIcon";
+import type { PublicationNeighbours } from "@app/feature/publication/related/PublicationNeighbours";
+import SectionHeading from "@ui/component/SectionHeading.astro";
+import Layout from "@ui/layout/Layout.astro";
+import Header from "@ui/component/Header.astro";
+import Footer from "@ui/component/Footer.astro";
+import Tag from "@ui/feature/publication/component/Tag.astro";
+import Datetime from "@ui/feature/publication/component/Datetime";
+import SectionRail from "@ui/component/SectionRail.astro";
+import TableOfContents from "@ui/component/TableOfContents.astro";
+import type { CollectionEntry } from "astro:content";
+import { BREADCRUMB_HOME } from "@app/configuration/navigation/BreadcrumbHome";
+import { LOCALE } from "@app/configuration/site/SiteLocale";
+import { ROUTES } from "@app/configuration/route/Routes";
+import { SITE } from "@app/configuration/site/Site";
+import type { StructuredData } from "@app/util/seo/StructuredData";
+
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { ViewTransitionName } from "@app/util/routing/ViewTransitionName.ts";
+import { ShareLinksFactory } from "@app/feature/publication/share/ShareLinksFactory.ts";
+import { ReadingTimeResolver } from "@app/feature/publication/reading/ReadingTimeResolver.ts";
+import { RoutePathResolver } from "@app/util/routing/RoutePathResolver.ts";
+import { SlugFormatter } from "@app/util/text/SlugFormatter.ts";
+import { WordCounter } from "@app/util/text/WordCounter.ts";
+import { BlogPostingSchemaBuilder } from "@app/util/seo/article/BlogPostingSchemaBuilder.ts";
+import { PageTitleFormatter } from "@app/util/text/PageTitleFormatter.ts";
+import { SchemaIdentifiers } from "@app/util/seo/SchemaIdentifiers.ts";
+
+const VIEW_TRANSITION_NAME: ViewTransitionName = CONTEXT.resolve(ViewTransitionName);
+const SHARE_LINKS_FACTORY: ShareLinksFactory = CONTEXT.resolve(ShareLinksFactory);
+const READING_TIME_RESOLVER: ReadingTimeResolver = CONTEXT.resolve(ReadingTimeResolver);
+const ROUTE_PATH_RESOLVER: RoutePathResolver = CONTEXT.resolve(RoutePathResolver);
+const SLUG_FORMATTER: SlugFormatter = CONTEXT.resolve(SlugFormatter);
+const WORD_COUNTER: WordCounter = CONTEXT.resolve(WordCounter);
+const BLOG_POSTING_SCHEMA_BUILDER: BlogPostingSchemaBuilder = CONTEXT.resolve(BlogPostingSchemaBuilder);
+const PAGE_TITLE_FORMATTER: PageTitleFormatter = CONTEXT.resolve(PageTitleFormatter);
+const SCHEMA_IDENTIFIERS: SchemaIdentifiers = CONTEXT.resolve(SchemaIdentifiers);
+
+export interface Props {
+    post: CollectionEntry<"blog">;
+    neighbours: PublicationNeighbours;
+    related: CollectionEntry<"blog">[];
+}
+
+const { post, neighbours, related } = Astro.props;
+
+const newerPublication: CollectionEntry<"blog"> | null = neighbours.getNewer();
+const olderPublication: CollectionEntry<"blog"> | null = neighbours.getOlder();
+
+const { title, author, description, ogImage, canonicalURL, pubDatetime, modDatetime, tags, seoTitle } = post.data;
+
+const { Content, headings } = await render(post);
+
+const canonical: string =
+    canonicalURL ?? new URL(ROUTE_PATH_RESOLVER.resolvePublication(post.id), SITE.getWebsite()).href;
+
+const ogImageUrl: string | undefined = typeof ogImage === "string" ? ogImage : ogImage?.src;
+const ogUrl: string = new URL(
+    ogImageUrl ?? ROUTE_PATH_RESOLVER.resolvePublicationImage(SLUG_FORMATTER.format(title)),
+    Astro.url.origin
+).href;
+
+const breadcrumbs: BreadcrumbStep[] = [
+    new BreadcrumbStep(BREADCRUMB_HOME, SITE.getWebsite()),
+    new BreadcrumbStep("Publications", new URL(`${ROUTES.publications}/`, SITE.getWebsite()).href),
+    new BreadcrumbStep(title, new URL(ROUTE_PATH_RESOLVER.resolvePublication(post.id), SITE.getWebsite()).href),
+];
+
+const schema: StructuredData[] = [
+    BLOG_POSTING_SCHEMA_BUILDER.build({
+        headline: title,
+        image: ogUrl,
+        author,
+        profile: SITE.getProfile(),
+        authorId: SCHEMA_IDENTIFIERS.person(SITE.getWebsite()),
+        pubDatetime,
+        modDatetime,
+        description,
+        url: new URL(ROUTE_PATH_RESOLVER.resolvePublication(post.id), SITE.getWebsite()).href,
+        keywords: tags,
+        wordCount: WORD_COUNTER.count(post.body ?? ""),
+        inLanguage: LOCALE.getLanguage(),
+    }),
+];
+
+const layoutProps: LayoutProps = {
+    title: seoTitle ?? PAGE_TITLE_FORMATTER.format(title, SITE.getTitle()),
+    author,
+    description,
+    pubDatetime,
+    modDatetime,
+    canonicalURL,
+    ogImage: ogUrl,
+    scrollSmooth: true,
+    ogType: "article" as const,
+    tags,
+    breadcrumbs,
+    schema,
+};
+---
+
+<Layout {...layoutProps}>
+    <Header />
+    <div id="reading-progress" aria-hidden="true"></div>
+
+    <div class="mx-auto flex w-full max-w-app justify-start px-gutter">
+        <a
+            href={`${ROUTES.publications}/`}
+            class="focus-outline mt-head mb-inline -ml-tight flex items-center no-underline hover:opacity-80"
+        >
+            <ChevronLeftIcon /><span>All publications</span>
+        </a>
+    </div>
+    <main id="main-content">
+        <h1 transition:name={VIEW_TRANSITION_NAME.of("publication", title)} class="post-title">
+            {title}
+        </h1>
+        <div class="post-meta">
+            <Datetime pubDatetime={pubDatetime} modDatetime={modDatetime} size="lg" className="opacity-80" />
+            <span class="post-meta-read">
+                <ClockIcon className="card-meta-icon" ariaHidden />
+                {READING_TIME_RESOLVER.minutes(post.body ?? "")} min read
+            </span>
+            <ul class="post-meta-keywords">
+                {tags.map((tag: string) => <Tag tag={SLUG_FORMATTER.format(tag)} />)}
+            </ul>
+        </div>
+        <div class="reading-rail" aria-hidden="true"></div>
+        <div class="article-layout">
+            <SectionRail headings={headings} label="Sections of this article" />
+            <div class="article-column">
+                <div class="article-contents">
+                    <TableOfContents headings={headings} />
+                </div>
+                <article id="article" class="prose mt-head max-w-article lg:mt-0">
+                    <Content />
+                </article>
+            </div>
+        </div>
+
+        <div class="post-share">
+            <p class="band-label">Share</p>
+            <div class="post-share-links">
+                <button type="button" class="post-share-link focus-outline" data-copy-address>
+                    Copy the address
+                </button>
+                {
+                    SHARE_LINKS_FACTORY.create(title, canonical).map((shareLink: ShareLink) => (
+                        <ExternalLink href={shareLink.getHref()} className="post-share-link">
+                            {shareLink.getName()}
+                        </ExternalLink>
+                    ))
+                }
+            </div>
+        </div>
+
+        {
+            (newerPublication || olderPublication) && (
+                <nav class="post-steps" aria-label="Other articles">
+                    {olderPublication ? (
+                        <a href={ROUTE_PATH_RESOLVER.resolvePublication(olderPublication.id)} class="post-step">
+                            <ArrowLeftIcon ariaHidden />
+                            <span>
+                                <span class="band-label">Older</span>
+                                {olderPublication.data.title}
+                            </span>
+                        </a>
+                    ) : (
+                        <span />
+                    )}
+                    {newerPublication && (
+                        <a
+                            href={ROUTE_PATH_RESOLVER.resolvePublication(newerPublication.id)}
+                            class="post-step post-step-next"
+                        >
+                            <span>
+                                <span class="band-label">Newer</span>
+                                {newerPublication.data.title}
+                            </span>
+                            <ArrowRightIcon ariaHidden />
+                        </a>
+                    )}
+                </nav>
+            )
+        }
+
+        {
+            related.length > 0 && (
+                <section class="post-related">
+                    <SectionHeading title="Read next" href={`${ROUTES.publications}/`} more="All publications" />
+                    <ul class="card-grid">
+                        {related.map((entry: CollectionEntry<"blog">) => (
+                            <Card
+                                href={ROUTE_PATH_RESOLVER.resolvePublication(entry.id)}
+                                frontmatter={entry.data}
+                                minutes={READING_TIME_RESOLVER.minutes(entry.body ?? "")}
+                                secHeading={false}
+                            />
+                        ))}
+                    </ul>
+                </section>
+            )
+        }
+
+        <div
+            class="flex flex-col-reverse items-center justify-between gap-part sm:flex-row-reverse sm:items-end sm:gap-text"
+        >
+            <button id="back-to-top" class="focus-outline py-tight whitespace-nowrap hover:opacity-80">
+                <ChevronLeftIcon className="rotate-90" />
+                <span>Back to Top</span>
+            </button>
+        </div>
+    </main>
+    <Footer />
+</Layout>
+
+<style>
+    @reference "../../../style/theme.css";
+
+    .post-share {
+        @apply mt-group border-t border-skin-line pt-part;
+    }
+    .post-share :global(.band-label) {
+        @apply mb-text block;
+    }
+    .post-share-links {
+        @apply flex flex-wrap items-center gap-inline text-sm;
+    }
+    .post-share :global(.post-share-link) {
+        @apply rounded-sm border border-skin-line px-text py-tight no-underline opacity-80 hover:border-skin-accent hover:text-skin-accent hover:opacity-100;
+    }
+
+    #article :global(table) {
+        @apply block w-full overflow-x-auto;
+    }
+
+    .post-meta {
+        @apply mt-inline flex flex-wrap items-center gap-x-text gap-y-inline text-sm;
+    }
+    .post-meta-read {
+        @apply inline-flex items-center gap-inline opacity-80;
+    }
+    .post-meta-keywords {
+        @apply flex flex-wrap items-center gap-inline;
+    }
+    .post-steps {
+        @apply mt-group flex items-start justify-between gap-part border-t border-skin-line pt-part text-sm;
+    }
+    .post-step {
+        @apply inline-flex max-w-[45%] items-start gap-text no-underline hover:text-skin-accent;
+    }
+    .post-step-next {
+        @apply text-right;
+    }
+    .post-step span span {
+        @apply block;
+    }
+    .post-step :global(svg) {
+        @apply mt-tight h-3.5 w-3.5 shrink-0 fill-skin-base opacity-70;
+    }
+    .post-related {
+        @apply mt-group;
+    }
+
+    .reading-rail {
+        @apply pointer-events-none fixed inset-x-0 top-0 z-50 hidden h-0.5 origin-left bg-skin-live;
+    }
+    @supports (animation-timeline: scroll()) {
+        @media (prefers-reduced-motion: no-preference) {
+            .reading-rail {
+                @apply block;
+                scale: 0 1;
+                animation: reading-rail linear both;
+                animation-timeline: scroll(root block);
+            }
+        }
+    }
+    @keyframes reading-rail {
+        to {
+            scale: 1 1;
+        }
+    }
+    .article-layout {
+        @apply mt-head gap-x-group lg:grid lg:grid-cols-[13rem_minmax(0,1fr)];
+    }
+    .article-column {
+        @apply min-w-0 lg:col-start-2 lg:row-start-1;
+    }
+    .article-contents {
+        @apply lg:hidden;
+    }
+    #reading-progress {
+        @apply fixed inset-x-0 top-0 z-50 h-0.5 origin-left bg-skin-accent;
+        transform: scaleX(0);
+    }
+
+    main {
+        @apply mx-auto w-full max-w-app px-gutter pb-group;
+    }
+    .post-title {
+        @apply font-semibold tracking-tight text-skin-accent;
+        font-size: clamp(1.5rem, 1.15rem + 1.6vw, 1.875rem);
+    }
+    .keywords {
+        @apply my-head;
+    }
+    .keyword-list {
+        @apply mt-text flex flex-wrap gap-inline;
+    }
+</style>
+
+<script>
+    import { BACK_TO_TOP_BUTTON } from "@ui/script/BackToTopButton";
+    import { CODE_COPY_BUTTONS } from "@ui/script/CodeCopyButtons";
+    import { HEADING_ANCHORS } from "@ui/script/HeadingAnchors";
+    import { HISTORY_BACK_BUTTON } from "@ui/script/HistoryBackButton";
+    import { READING_PROGRESS } from "@ui/script/ReadingProgress";
+
+    const mount = (): void => {
+        READING_PROGRESS.mount();
+        HEADING_ANCHORS.mount();
+        CODE_COPY_BUTTONS.mount();
+        BACK_TO_TOP_BUTTON.mount();
+        HISTORY_BACK_BUTTON.mount();
+    };
+
+    mount();
+</script>
+
+<script>
+    import { COPY_ADDRESS_BUTTON } from "@ui/script/CopyAddressButton";
+    import { SECTION_NAVIGATION } from "@ui/script/SectionNavigation";
+
+    const mount = (): void => {
+        COPY_ADDRESS_BUTTON.mount();
+        SECTION_NAVIGATION.mount();
+    };
+
+    mount();
+</script>

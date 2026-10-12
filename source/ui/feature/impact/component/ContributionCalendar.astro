@@ -1,0 +1,119 @@
+---
+import type { ContributionDay } from "@app/feature/impact/github/ContributionDay";
+import { CONTRIBUTION_LEVEL_RESOLVER } from "@ui/feature/impact/component/ContributionLevelResolver";
+import { CONTRIBUTION_WEEKS_FACTORY } from "@ui/feature/impact/component/ContributionWeeksFactory";
+
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { DatetimeFormatter } from "@app/util/datetime/DatetimeFormatter.ts";
+import { NumberFormatter } from "@app/util/text/NumberFormatter.ts";
+
+const DATETIME_FORMATTER: DatetimeFormatter = CONTEXT.resolve(DatetimeFormatter);
+const NUMBER_FORMATTER: NumberFormatter = CONTEXT.resolve(NumberFormatter);
+export interface Props {
+    days: ContributionDay[];
+}
+
+const { days } = Astro.props;
+
+const weeks: (ContributionDay | null)[][] = CONTRIBUTION_WEEKS_FACTORY.create(days);
+const total: number = days.reduce(
+    (sum: number, contributionDay: ContributionDay) => sum + contributionDay.getCount(),
+    0
+);
+const active: number = days.filter((contributionDay: ContributionDay) => contributionDay.getCount() > 0).length;
+---
+
+{
+    weeks.length > 0 && (
+        <section class="calendar" id="calendar">
+            <div class="calendar-head">
+                <p class="band-label">The last year, day by day</p>
+                <p class="calendar-total">
+                    {NUMBER_FORMATTER.display(total)} contributions on {active} days
+                </p>
+            </div>
+
+            <div class="calendar-scroll">
+                <div class="calendar-grid" role="img" aria-label={`${total} contributions in the last year`}>
+                    {weeks.map((week: (ContributionDay | null)[]) => (
+                        <div class="calendar-week">
+                            {week.map((day: ContributionDay | null) =>
+                                day ? (
+                                    <span
+                                        class="calendar-day"
+                                        data-level={CONTRIBUTION_LEVEL_RESOLVER.resolve(day.getCount())}
+                                        title={`${day.getCount()} on ${DATETIME_FORMATTER.formatDate(day.getDate())}`}
+                                    />
+                                ) : (
+                                    <span class="calendar-day calendar-day-empty" />
+                                )
+                            )}
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            <p class="calendar-key">
+                <span>Less</span>
+                {[0, 1, 2, 3, 4].map((level: number) => (
+                    <span class="calendar-day" data-level={level} />
+                ))}
+                <span>More</span>
+            </p>
+        </section>
+    )
+}
+
+<style>
+    @reference "../../../style/theme.css";
+
+    .calendar {
+        @apply pt-head pb-inline;
+    }
+    .calendar-head {
+        @apply flex flex-wrap items-baseline justify-between gap-x-part gap-y-tight;
+    }
+    .calendar-total {
+        @apply text-xs tabular-nums opacity-70;
+    }
+    .calendar-scroll {
+        @apply mt-text overflow-x-auto pb-tight;
+    }
+    .calendar-grid {
+        @apply flex gap-[3px];
+    }
+    .calendar-week {
+        @apply flex flex-1 flex-col gap-[3px];
+        min-width: 0.625rem;
+    }
+    .calendar-day {
+        @apply h-2.5 w-2.5 rounded-mark bg-skin-card;
+    }
+    .calendar-week .calendar-day {
+        @apply aspect-square h-auto w-full;
+    }
+    .calendar-day[data-level="1"] {
+        @apply bg-skin-live/25;
+    }
+    .calendar-day[data-level="2"] {
+        @apply bg-skin-live/45;
+    }
+    .calendar-day[data-level="3"] {
+        @apply bg-skin-live/70;
+    }
+    .calendar-day[data-level="4"] {
+        @apply bg-skin-live;
+    }
+    .calendar-day-empty {
+        @apply bg-transparent;
+    }
+    .calendar-key {
+        @apply mt-text flex items-center gap-inline text-xs opacity-70;
+    }
+    .calendar-key span:first-child {
+        @apply mr-tight;
+    }
+    .calendar-key span:last-child {
+        @apply ml-tight;
+    }
+</style>

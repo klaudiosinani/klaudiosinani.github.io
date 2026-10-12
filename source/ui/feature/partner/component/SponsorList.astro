@@ -1,0 +1,36 @@
+---
+import type { Sponsor } from "@app/configuration/sponsor/Sponsor";
+import MarkCard from "@ui/library/element/MarkCard.astro";
+
+export interface Props {
+    sponsors: readonly Sponsor[];
+}
+
+const { sponsors } = Astro.props;
+---
+
+<ul class="sponsor-list">
+    {
+        sponsors.map((sponsor: Sponsor) => (
+            <li class="sponsor-item">
+                <MarkCard
+                    href={sponsor.getWebsite()}
+                    mark={sponsor.getMark()}
+                    name={sponsor.getName()}
+                    detail={sponsor.getWebsiteHost()}
+                />
+            </li>
+        ))
+    }
+</ul>
+
+<style>
+    @reference "../../../style/theme.css";
+
+    .sponsor-list {
+        @apply m-0 grid list-none gap-part p-0 sm:grid-cols-2 lg:grid-cols-4;
+    }
+    .sponsor-item {
+        @apply flex flex-col;
+    }
+</style>

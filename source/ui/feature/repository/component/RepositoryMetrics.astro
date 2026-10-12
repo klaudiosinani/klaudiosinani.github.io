@@ -1,0 +1,61 @@
+---
+import MetricTile from "@ui/library/element/MetricTile.astro";
+import type { RepositoryFigure } from "@app/feature/repository/page/RepositoryFigure";
+import type { RepositoryProfile } from "@app/feature/repository/profile/RepositoryProfile";
+
+import type { RepositoryFigureCluster } from "@app/feature/repository/page/RepositoryFigureCluster";
+
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { NumberFormatter } from "@app/util/text/NumberFormatter.ts";
+import { RepositoryFigureClusterFactory } from "@app/feature/repository/page/RepositoryFigureClusterFactory.ts";
+
+const NUMBER_FORMATTER: NumberFormatter = CONTEXT.resolve(NumberFormatter);
+const REPOSITORY_FIGURE_CLUSTER_FACTORY: RepositoryFigureClusterFactory =
+    CONTEXT.resolve(RepositoryFigureClusterFactory);
+export interface Props {
+    profile: RepositoryProfile;
+}
+
+const { profile } = Astro.props;
+
+const clusters: RepositoryFigureCluster[] = REPOSITORY_FIGURE_CLUSTER_FACTORY.create(profile);
+---
+
+<div class="metric-clusters">
+    {
+        clusters.map((cluster: RepositoryFigureCluster) => (
+            <div
+                class="metric-cluster"
+                role="group"
+                aria-label={cluster.getName()}
+                style={`--tiles:${cluster.getFigures().length}`}
+            >
+                <p class="metric-cluster-label">{cluster.getName()}</p>
+                <dl class="metric-cluster-tiles">
+                    {cluster.getFigures().map((repositoryFigure: RepositoryFigure) => {
+                        const value: number | null = repositoryFigure.getValue();
+                        const label: string = repositoryFigure.getLabel();
+
+                        return (
+                            <MetricTile
+                                label={label}
+                                icon={repositoryFigure.getIcon()}
+                                title={value === null ? `${label}: not available` : repositoryFigure.getTitle()}
+                            >
+                                {value === null ? (
+                                    <span class="metric-tile-unknown" aria-label={`${label}: not available`}>
+                                        —
+                                    </span>
+                                ) : (
+                                    <span aria-label={`${NUMBER_FORMATTER.exact(value)} ${label}`}>
+                                        {NUMBER_FORMATTER.display(value)}
+                                    </span>
+                                )}
+                            </MetricTile>
+                        );
+                    })}
+                </dl>
+            </div>
+        ))
+    }
+</div>

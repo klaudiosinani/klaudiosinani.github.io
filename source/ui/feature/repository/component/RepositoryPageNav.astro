@@ -1,0 +1,37 @@
+---
+import type { RepositoryPage } from "@app/feature/repository/page/RepositoryPage";
+
+export interface Props {
+    pages: RepositoryPage[];
+}
+
+const { pages } = Astro.props;
+---
+
+{
+    pages.length > 1 && (
+        <nav class="nav-bar pages" aria-label="Pages of this project">
+            <ol class="nav-bar-list">
+                {pages.map((repositoryPage: RepositoryPage) => (
+                    <li>
+                        <a
+                            href={repositoryPage.getHref()}
+                            class:list={["nav-link", "nav-bar-link", repositoryPage.isCurrent() && "is-current"]}
+                            aria-current={repositoryPage.isCurrent() ? "page" : undefined}
+                        >
+                            {repositoryPage.getLabel()}
+                        </a>
+                    </li>
+                ))}
+            </ol>
+        </nav>
+    )
+}
+
+<style>
+    @reference "../../../style/theme.css";
+
+    .pages {
+        @apply static -mx-text mt-head mb-inline px-text;
+    }
+</style>

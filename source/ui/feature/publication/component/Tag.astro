@@ -1,0 +1,35 @@
+---
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { KeywordNameFormatter } from "@app/util/text/KeywordNameFormatter.ts";
+import { RoutePathResolver } from "@app/util/routing/RoutePathResolver.ts";
+import { ViewTransitionName } from "@app/util/routing/ViewTransitionName.ts";
+
+const KEYWORD_NAME_FORMATTER: KeywordNameFormatter = CONTEXT.resolve(KeywordNameFormatter);
+const ROUTE_PATH_RESOLVER: RoutePathResolver = CONTEXT.resolve(RoutePathResolver);
+const VIEW_TRANSITION_NAME: ViewTransitionName = CONTEXT.resolve(ViewTransitionName);
+
+export interface Props {
+    tag: string;
+    count?: number;
+}
+const { tag, count } = Astro.props;
+---
+
+<li class="inline-block">
+    <a
+        href={`${ROUTE_PATH_RESOLVER.resolveTag(tag)}/`}
+        transition:name={VIEW_TRANSITION_NAME.of("keyword", tag)}
+        class="chip"
+    >
+        {KEYWORD_NAME_FORMATTER.format(tag)}
+        {count !== undefined && <span class="chip-count">{count}</span>}
+    </a>
+</li>
+
+<style>
+    @reference "../../../style/theme.css";
+
+    .chip-count {
+        @apply ml-inline tabular-nums opacity-70;
+    }
+</style>

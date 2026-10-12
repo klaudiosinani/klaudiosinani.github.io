@@ -1,0 +1,124 @@
+---
+import { TrailStep } from "@app/util/routing/TrailStep";
+import { CollectionItem } from "@app/util/seo/page/CollectionItem";
+import { ROUTES } from "@app/configuration/route/Routes";
+import Tag from "@ui/feature/publication/component/Tag.astro";
+import type { Tag as PublicationTag } from "@app/feature/publication/tag/Tag";
+import { type CollectionEntry } from "astro:content";
+import Layout from "@ui/layout/Layout.astro";
+import Main from "@ui/layout/Main.astro";
+import Header from "@ui/component/Header.astro";
+import Footer from "@ui/component/Footer.astro";
+import Card from "@ui/feature/publication/component/Card";
+import Pagination from "@ui/feature/pagination/component/Pagination.astro";
+import type { PaginatedResult } from "@app/feature/pagination/PaginatedResult";
+import { LOCALE } from "@app/configuration/site/SiteLocale";
+import { SITE } from "@app/configuration/site/Site";
+import type { TagPageMetadata } from "@app/feature/publication/tag/TagPageMetadata";
+import type { StructuredData } from "@app/util/seo/StructuredData";
+
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { ViewTransitionName } from "@app/util/routing/ViewTransitionName.ts";
+import { KeywordNameFormatter } from "@app/util/text/KeywordNameFormatter.ts";
+import { RoutePathResolver } from "@app/util/routing/RoutePathResolver.ts";
+import { ReadingTimeResolver } from "@app/feature/publication/reading/ReadingTimeResolver.ts";
+import { CollectionPageSchemaBuilder } from "@app/util/seo/page/CollectionPageSchemaBuilder.ts";
+import { PageTitleFormatter } from "@app/util/text/PageTitleFormatter.ts";
+import { SchemaIdentifiers } from "@app/util/seo/SchemaIdentifiers.ts";
+import { TagPageMetadataResolver } from "@app/feature/publication/tag/TagPageMetadataResolver.ts";
+
+const VIEW_TRANSITION_NAME: ViewTransitionName = CONTEXT.resolve(ViewTransitionName);
+const KEYWORD_NAME_FORMATTER: KeywordNameFormatter = CONTEXT.resolve(KeywordNameFormatter);
+const ROUTE_PATH_RESOLVER: RoutePathResolver = CONTEXT.resolve(RoutePathResolver);
+const READING_TIME_RESOLVER: ReadingTimeResolver = CONTEXT.resolve(ReadingTimeResolver);
+const COLLECTION_PAGE_SCHEMA_BUILDER: CollectionPageSchemaBuilder = CONTEXT.resolve(CollectionPageSchemaBuilder);
+const PAGE_TITLE_FORMATTER: PageTitleFormatter = CONTEXT.resolve(PageTitleFormatter);
+const SCHEMA_IDENTIFIERS: SchemaIdentifiers = CONTEXT.resolve(SchemaIdentifiers);
+const TAG_PAGE_METADATA_RESOLVER: TagPageMetadataResolver = CONTEXT.resolve(TagPageMetadataResolver);
+
+export interface Props {
+    pagination: PaginatedResult<CollectionEntry<"blog">>;
+    tag: string;
+    tagName: string;
+    others?: PublicationTag[];
+}
+
+const { pagination, tag, tagName, others = [] } = Astro.props;
+const totalPages = pagination.getPaginationBand().getTotalPages();
+const items = pagination.getItems();
+
+const metadata: TagPageMetadata = TAG_PAGE_METADATA_RESOLVER.resolve(
+    tagName,
+    SITE.getAuthor(),
+    items.map(({ data }: CollectionEntry<"blog">) => data.title)
+);
+
+const schema: StructuredData[] = [
+    COLLECTION_PAGE_SCHEMA_BUILDER.build({
+        name: metadata.getTitle(),
+        url: new URL(ROUTE_PATH_RESOLVER.resolveTag(tag), SITE.getWebsite()).href,
+        description: metadata.getDescription(),
+        author: {
+            name: SITE.getAuthor(),
+            url: SITE.getWebsite(),
+            id: SCHEMA_IDENTIFIERS.person(SITE.getWebsite()),
+        },
+        image: new URL(ROUTE_PATH_RESOLVER.resolveTagImage(tag), SITE.getWebsite()).href,
+        inLanguage: LOCALE.getLanguage(),
+        siteId: SCHEMA_IDENTIFIERS.website(SITE.getWebsite()),
+        items: items.map(
+            ({ data, id }: CollectionEntry<"blog">) =>
+                new CollectionItem(
+                    data.title,
+                    new URL(ROUTE_PATH_RESOLVER.resolvePublication(id), SITE.getWebsite()).href
+                )
+        ),
+    }),
+];
+---
+
+<Layout
+    title={PAGE_TITLE_FORMATTER.format(metadata.getTitle(), SITE.getTitle())}
+    description={metadata.getDescription()}
+    ogImage={ROUTE_PATH_RESOLVER.resolveTagImage(tag)}
+    schema={schema}
+>
+    <Header activeNav="tags" />
+    <Main
+        pageTitle={["Articles on", KEYWORD_NAME_FORMATTER.format(tagName)]}
+        titleTransition={VIEW_TRANSITION_NAME.of("keyword", tag)}
+        trail={[
+            new TrailStep("Keywords", `${ROUTES.tags}/`),
+            new TrailStep(KEYWORD_NAME_FORMATTER.format(tagName), `${ROUTE_PATH_RESOLVER.resolveTag(tag)}/`),
+        ]}
+        pageDesc={`The articles about ${KEYWORD_NAME_FORMATTER.format(tagName)}.`}
+    >
+        <ul class="card-grid keyword-posts">
+            {
+                items.map(({ data, id, body }: CollectionEntry<"blog">) => (
+                    <Card
+                        href={ROUTE_PATH_RESOLVER.resolvePublication(id)}
+                        frontmatter={data}
+                        minutes={READING_TIME_RESOLVER.minutes(body ?? "")}
+                    />
+                ))
+            }
+        </ul>
+        {
+            others.length > 0 && (
+                <div class="keyword-others">
+                    <p class="band-label">Other keywords</p>
+                    <ul class="keyword-list">
+                        {others.map((other: PublicationTag) => (
+                            <Tag tag={other.getTag()} count={other.getCount()} />
+                        ))}
+                    </ul>
+                </div>
+            )
+        }
+    </Main>
+
+    <Pagination band={pagination.getPaginationBand()} />
+
+    <Footer noMarginTop={totalPages > 1} />
+</Layout>

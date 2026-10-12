@@ -1,0 +1,38 @@
+---
+export interface Props {
+    title: string;
+    href?: string;
+    more?: string;
+    index?: string;
+    id?: string;
+}
+
+const { title, href, more, index, id } = Astro.props;
+---
+
+<div class="section-heading">
+    <h2 id={id}>{index && <span class="section-heading-index">{index}</span>}{title}</h2>
+    <slot />
+    {
+        href && more && (
+            <a href={href} class="section-heading-link focus-outline">
+                {more}
+            </a>
+        )
+    }
+</div>
+
+<style>
+    @reference "../style/theme.css";
+
+    .section-heading {
+        @apply flex flex-wrap items-center gap-text;
+    }
+    .section-heading h2 {
+        @apply font-semibold tracking-tight;
+        font-size: clamp(1.25rem, 1.11rem + 0.64vw, 1.5rem);
+    }
+    .section-heading-index {
+        @apply mr-text text-base font-semibold text-skin-live-strong tabular-nums;
+    }
+</style>

@@ -1,0 +1,158 @@
+---
+import type { ContributedRepository } from "@app/configuration/repository/ContributedRepository";
+import type { Contribution } from "@app/feature/contribution/work/Contribution";
+import type { ContributionSummary } from "@app/feature/contribution/work/ContributionSummary";
+import ExternalLink from "@ui/component/ExternalLink";
+import type { MonthGroup } from "@app/util/period/MonthGroup";
+import type { TextSegment } from "@app/feature/contribution/commit/TextSegment";
+
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { CodeSegmenter } from "@app/feature/contribution/commit/CodeSegmenter.ts";
+import { DatetimeFormatter } from "@app/util/datetime/DatetimeFormatter.ts";
+import { MonthGrouper } from "@app/util/period/MonthGrouper.ts";
+import { NumberFormatter } from "@app/util/text/NumberFormatter.ts";
+
+const CODE_SEGMENTER: CodeSegmenter = CONTEXT.resolve(CodeSegmenter);
+const DATETIME_FORMATTER: DatetimeFormatter = CONTEXT.resolve(DatetimeFormatter);
+const MONTH_GROUPER: MonthGrouper = CONTEXT.resolve(MonthGrouper);
+const NUMBER_FORMATTER: NumberFormatter = CONTEXT.resolve(NumberFormatter);
+
+interface Props {
+    readonly repository: ContributedRepository;
+    readonly contributions: readonly Contribution[];
+    readonly summary: ContributionSummary | null;
+}
+
+const { repository, contributions, summary } = Astro.props;
+
+type CommitMonth = MonthGroup<Contribution>;
+
+const months: CommitMonth[] = MONTH_GROUPER.group(contributions, (contribution: Contribution) =>
+    contribution.getDate()
+);
+---
+
+<section class="contribution" aria-label={repository.getTitle()}>
+    <div class="contribution-head">
+        <p class="contribution-about">{repository.getSummary()}</p>
+        <p class="contribution-role">{repository.getRole()}</p>
+
+        {
+            summary && (
+                <p class="contribution-figures">
+                    <span>{NUMBER_FORMATTER.display(summary.getCommits())} commits</span>
+                    <span aria-hidden="true">·</span>
+                    <span>{NUMBER_FORMATTER.display(summary.getTickets())} pieces of work</span>
+                    <span aria-hidden="true">·</span>
+                    <span>
+                        <time datetime={summary.getFrom()}>{DATETIME_FORMATTER.formatDate(summary.getFrom())}</time>
+                        {" – "}
+                        <time datetime={summary.getTo()}>{DATETIME_FORMATTER.formatDate(summary.getTo())}</time>
+                    </span>
+                    <span aria-hidden="true">·</span>
+                    <ExternalLink href={repository.getUrl()} className="contribution-link">
+                        {`The ${repository.getTitle()} repository`}
+                    </ExternalLink>
+                </p>
+            )
+        }
+    </div>
+
+    {
+        months.map((month: CommitMonth) => (
+            <div class="contribution-month">
+                <p class="band-label band-label-sticky">{month.getName()}</p>
+                <ol class="commits">
+                    {month.getItems().map((commit: Contribution) => (
+                        <li class="list-row commit">
+                            {commit.getTicket() ? (
+                                <span class="commit-ticket">{commit.getTicket()}</span>
+                            ) : (
+                                <span class="commit-ticket commit-ticket-none">No ticket</span>
+                            )}
+                            <p class="commit-subject">
+                                <a
+                                    class="commit-link"
+                                    href={commit.getUrl()}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    title={`The commit ${commit.getShortSha()} in ${repository.getTitle()} on GitHub`}
+                                >
+                                    {CODE_SEGMENTER.segment(commit.getSubject()).map((segment: TextSegment) =>
+                                        segment.isCode() ? <code>{segment.getText()}</code> : segment.getText()
+                                    )}
+                                </a>
+                            </p>
+                            <span class="commit-facts">
+                                <span class="commit-sha">{commit.getShortSha()}</span>
+                                <time datetime={commit.getDate()}>
+                                    {DATETIME_FORMATTER.formatDate(commit.getDate())}
+                                </time>
+                            </span>
+                        </li>
+                    ))}
+                </ol>
+            </div>
+        ))
+    }
+</section>
+
+<style>
+    @reference "../../../style/theme.css";
+
+    .contribution {
+        @apply mt-inline;
+    }
+    .contribution-head {
+        @apply border-b border-skin-line pb-part;
+    }
+    .contribution-head :global(.contribution-link) {
+        @apply underline-offset-4 hover:text-skin-accent;
+    }
+    .contribution-about {
+        @apply mt-inline max-w-2xl text-sm leading-relaxed opacity-80;
+    }
+    .contribution-role {
+        @apply mt-tight max-w-2xl text-sm leading-relaxed opacity-80;
+    }
+    .contribution-figures {
+        @apply mt-text flex flex-wrap items-baseline gap-x-inline gap-y-tight text-sm tabular-nums opacity-70;
+    }
+    .contribution-month {
+        @apply mt-part;
+    }
+    .commits {
+        @apply mt-tight;
+    }
+    .commit {
+        @apply relative grid grid-cols-1 gap-x-text sm:grid-cols-[7.5rem_1fr_auto] sm:items-baseline;
+    }
+    .commit-ticket {
+        @apply text-xs tabular-nums opacity-70;
+    }
+    .commit-ticket-none {
+        @apply italic opacity-70;
+    }
+    .commit-subject {
+        @apply leading-relaxed;
+    }
+    .commit-link {
+        @apply no-underline hover:text-skin-accent;
+    }
+    .commit-link::after {
+        @apply absolute inset-0 z-10;
+        content: "";
+    }
+    .commit:hover .commit-sha {
+        @apply opacity-100;
+    }
+    .commit-subject :global(code) {
+        @apply rounded-sm glass-inline px-tight text-[0.9em];
+    }
+    .commit-facts {
+        @apply flex items-baseline gap-x-text tabular-nums opacity-70 sm:justify-end;
+    }
+    .commit-sha {
+        @apply tabular-nums;
+    }
+</style>

@@ -1,0 +1,217 @@
+---
+import DownloadIcon from "@ui/component/icon/DownloadIcon";
+import InfoTooltip from "@ui/component/InfoTooltip.astro";
+import type { ChartPoint } from "@app/util/chart/ChartPoint";
+import type { CountedDownloadSource } from "@app/feature/repository/download/CountedDownloadSource";
+
+import type { TrendPlot } from "@app/util/chart/TrendPlot";
+
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { TrendMarkerCalculator } from "@app/util/chart/TrendMarkerCalculator.ts";
+import { TrendPlotCalculator } from "@app/util/chart/TrendPlotCalculator.ts";
+import { ListFormatter } from "@app/util/text/ListFormatter.ts";
+import { NumberFormatter } from "@app/util/text/NumberFormatter.ts";
+import { ChartPointsFactory } from "@app/util/chart/ChartPointsFactory.ts";
+import { LastCompleteMonthResolver } from "@app/util/period/LastCompleteMonthResolver.ts";
+import { MonthEndCalculator } from "@app/util/period/MonthEndCalculator.ts";
+import { ReportingWindowFormatter } from "@app/util/period/ReportingWindowFormatter.ts";
+
+const TREND_MARKER_CALCULATOR: TrendMarkerCalculator = CONTEXT.resolve(TrendMarkerCalculator);
+const TREND_PLOT_CALCULATOR: TrendPlotCalculator = CONTEXT.resolve(TrendPlotCalculator);
+const LIST_FORMATTER: ListFormatter = CONTEXT.resolve(ListFormatter);
+const NUMBER_FORMATTER: NumberFormatter = CONTEXT.resolve(NumberFormatter);
+const CHART_POINTS_FACTORY: ChartPointsFactory = CONTEXT.resolve(ChartPointsFactory);
+const REPORTING_WINDOW_FORMATTER: ReportingWindowFormatter = CONTEXT.resolve(ReportingWindowFormatter);
+const LAST_COMPLETE_MONTH_RESOLVER: LastCompleteMonthResolver = CONTEXT.resolve(LastCompleteMonthResolver);
+const MONTH_END_CALCULATOR: MonthEndCalculator = CONTEXT.resolve(MonthEndCalculator);
+export interface Props {
+    downloads: number;
+    trend: number[];
+    sources: CountedDownloadSource[];
+    caveats: string[];
+    lastPublishedDay: string | null;
+}
+
+const { downloads, trend, sources, caveats, lastPublishedDay } = Astro.props;
+
+const counted: string = LIST_FORMATTER.format(
+    sources.map((countedDownloadSource: CountedDownloadSource) => countedDownloadSource.getLabel())
+);
+
+const WIDTH: number = 960;
+const HEIGHT: number = 180;
+const CYCLE: number = 1;
+
+const plot: TrendPlot = TREND_PLOT_CALCULATOR.compute(trend, WIDTH, HEIGHT, CYCLE);
+const marker: string | null = TREND_MARKER_CALCULATOR.compute(plot.getEnd(), WIDTH, HEIGHT);
+
+const end: Date | null = LAST_COMPLETE_MONTH_RESOLVER.resolve(lastPublishedDay);
+const start: Date | null = end && trend.length > 0 ? MONTH_END_CALCULATOR.shiftBack(end, trend.length) : null;
+const range: string = end ? REPORTING_WINDOW_FORMATTER.between(start, end) : "";
+
+const points: ChartPoint[] = CHART_POINTS_FACTORY.createMonthly(trend, end);
+---
+
+<figure class="repository-chart">
+    <figcaption class="repository-headline">
+        <span class="repository-headline-figure">
+            <DownloadIcon className="repository-headline-icon" ariaHidden />
+            <span class="repository-downloads" aria-label={`${NUMBER_FORMATTER.exact(downloads)} downloads`}
+                >{NUMBER_FORMATTER.display(downloads)}</span
+            >
+        </span>
+        <span class="repository-downloads-label">
+            downloads
+            <InfoTooltip label="What the downloads figure counts" id="repository-downloads-info">
+                How many times this project has been downloaded from {counted}. The curve follows the registry, month by
+                month.
+                {caveats.map((caveat: string) => <span class="downloads-caveat">{caveat}.</span>)}
+            </InfoTooltip>
+        </span>
+    </figcaption>
+    <div
+        class="repository-plot-frame"
+        data-repository-plot
+        data-readout-frame
+        tabindex="0"
+        role="slider"
+        aria-label="Read the downloads of a month"
+        aria-valuemin="0"
+        aria-valuemax={Math.max(points.length - 1, 0)}
+        aria-valuenow="0"
+        aria-valuetext="Point at the curve, or use the arrow keys"
+    >
+        <span class="chart-readout-rule" data-readout-rule aria-hidden="true"></span>
+        <span class="chart-readout-dot" data-readout-dot aria-hidden="true"></span>
+        <span class="chart-readout-bubble" data-readout-bubble aria-hidden="true"></span>
+        <svg
+            class="repository-plot"
+            viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
+            preserveAspectRatio="none"
+            role="img"
+            aria-label="Downloads month by month, since the first release"
+        >
+            <defs>
+                <linearGradient id="repository-fade" x1="0" y1="0" x2="0" y2="1">
+                    <stop class="repository-fade-top" offset="0%"></stop>
+                    <stop class="repository-fade-bottom" offset="100%"></stop>
+                </linearGradient>
+                <linearGradient id="repository-stroke" x1="0" y1="0" x2="1" y2="0">
+                    <stop class="repository-stroke-start" offset="0%"></stop>
+                    <stop class="repository-stroke-end" offset="35%"></stop>
+                </linearGradient>
+            </defs>
+            <path class="repository-area" d={plot.getArea()}></path>
+            <path class="repository-line" data-chart pathLength="1" d={plot.getLine()}></path>
+        </svg>
+        {marker && <span class="repository-point" data-point style={marker} />}
+        <script is:inline type="application/json" data-readout-points set:html={JSON.stringify(points)} />
+    </div>
+    <p class="repository-range">{range}</p>
+</figure>
+
+<style>
+    @reference "../../../style/theme.css";
+
+    .repository-chart {
+        @apply relative;
+    }
+    .repository-headline {
+        @apply relative px-0;
+    }
+    .repository-headline-figure {
+        @apply flex items-center gap-text;
+    }
+    .repository-headline-icon {
+        @apply h-7 w-7 shrink-0 fill-skin-base opacity-70 sm:h-8 sm:w-8;
+    }
+    .repository-downloads {
+        @apply block text-4xl font-semibold tabular-nums sm:text-5xl;
+    }
+    .repository-downloads-label {
+        @apply mt-tight block text-sm opacity-80 first-letter:uppercase;
+    }
+    .repository-range {
+        @apply mt-inline text-right text-xs tabular-nums opacity-70;
+    }
+    .downloads-caveat {
+        @apply mt-inline block opacity-80;
+    }
+    .repository-plot-frame {
+        @apply relative mt-text;
+    }
+    .repository-plot {
+        @apply block h-36 w-full sm:h-44;
+    }
+    .repository-line {
+        @apply fill-none;
+        stroke: url(#repository-stroke);
+        stroke-width: 2;
+        stroke-linejoin: round;
+        stroke-linecap: round;
+        vector-effect: non-scaling-stroke;
+        animation: repository-draw 1.1s ease-out both;
+    }
+    .repository-stroke-start {
+        stop-color: rgba(var(--color-live), 0.25);
+    }
+    .repository-stroke-end {
+        stop-color: rgb(var(--color-live));
+    }
+    .repository-point {
+        @apply absolute block h-2 w-2 rounded-full bg-skin-live;
+        transform: translate(-50%, -50%);
+        box-shadow: 0 0 0 2px rgb(var(--color-fill));
+        animation: repository-appear 0.4s 0.9s ease-out both;
+    }
+    @supports (animation-timeline: view()) {
+        @media (prefers-reduced-motion: no-preference) {
+            .repository-line {
+                animation: repository-draw linear both;
+                animation-timeline: view();
+                animation-range: entry 25% cover 45%;
+            }
+        }
+    }
+
+    @keyframes repository-draw {
+        from {
+            stroke-dasharray: 1;
+            stroke-dashoffset: 1;
+        }
+        99% {
+            stroke-dasharray: 1;
+            stroke-dashoffset: 0;
+        }
+        to {
+            stroke-dasharray: none;
+            stroke-dashoffset: 0;
+        }
+    }
+    @keyframes repository-appear {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+    .repository-area {
+        @apply stroke-none;
+        fill: url(#repository-fade);
+    }
+    .repository-fade-top {
+        stop-color: rgba(var(--color-live), 0.28);
+    }
+    .repository-fade-bottom {
+        stop-color: rgba(var(--color-live), 0.02);
+    }
+</style>
+
+<script>
+    import { CHART_READOUTS } from "@ui/script/ChartReadouts";
+
+    const mount = (): void => CHART_READOUTS.mount();
+
+    mount();
+</script>

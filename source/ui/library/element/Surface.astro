@@ -1,0 +1,12 @@
+---
+import type { GlassDepthName } from "../token/GlassDepthName";
+
+export interface Props {
+    depth: GlassDepthName;
+    className?: string;
+}
+
+const { depth, className } = Astro.props;
+---
+
+<div class:list={[`glass-${depth}`, className]}><slot /></div>

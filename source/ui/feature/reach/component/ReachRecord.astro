@@ -1,0 +1,55 @@
+---
+import type { Reach } from "@app/feature/reach/Reach";
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { NumberFormatter } from "@app/util/text/NumberFormatter.ts";
+import { ReachConfiguration } from "@app/feature/reach/ReachConfiguration.ts";
+import { ReachPhraser } from "@app/feature/reach/ReachPhraser.ts";
+
+export interface Props {
+    reach: Reach;
+}
+
+const NUMBER_FORMATTER: NumberFormatter = CONTEXT.resolve(NumberFormatter);
+const REACH_CONFIGURATION: ReachConfiguration = CONTEXT.resolve(ReachConfiguration);
+const REACH_PHRASER: ReachPhraser = CONTEXT.resolve(ReachPhraser);
+
+const { reach } = Astro.props;
+
+const dependentRepositories: number | null = reach.getDependentRepositories();
+---
+
+<dl class="reach-record">
+    <div class="reach-record-entry">
+        <dt class="reach-record-meaning">downloads since {REACH_CONFIGURATION.getRecordStartYear()}</dt>
+        <dd class="reach-record-figure">{NUMBER_FORMATTER.exact(reach.getDownloadsAllTime())}</dd>
+    </div>
+    {
+        dependentRepositories !== null && (
+            <div class="reach-record-entry">
+                <dt class="reach-record-meaning">{REACH_PHRASER.dependentsMeaning()}</dt>
+                <dd class="reach-record-figure">{NUMBER_FORMATTER.exact(dependentRepositories)}</dd>
+            </div>
+        )
+    }
+    <div class="reach-record-entry">
+        <dt class="reach-record-meaning">stars on GitHub</dt>
+        <dd class="reach-record-figure">{NUMBER_FORMATTER.exact(reach.getStars())}</dd>
+    </div>
+</dl>
+
+<style>
+    @reference "../../../style/theme.css";
+
+    .reach-record {
+        @apply grid gap-part sm:grid-cols-3;
+    }
+    .reach-record-entry {
+        @apply flex flex-col-reverse justify-end border-t border-skin-line pt-text;
+    }
+    .reach-record-figure {
+        @apply text-4xl font-semibold tracking-tight tabular-nums lg:text-5xl;
+    }
+    .reach-record-meaning {
+        @apply mt-tight font-serif text-base leading-snug opacity-80;
+    }
+</style>

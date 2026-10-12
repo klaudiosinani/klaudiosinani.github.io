@@ -1,0 +1,67 @@
+---
+import Breadcrumbs from "@ui/component/Breadcrumbs.astro";
+import type { TrailStep } from "@app/util/routing/TrailStep";
+
+interface StringTitleProp {
+    pageTitle: string;
+    pageDesc?: string;
+    trail?: TrailStep[];
+    titleTransition?: string;
+}
+
+interface ArrayTitleProp {
+    pageTitle: [string, string];
+    titleTransition: string;
+    pageDesc?: string;
+    trail?: TrailStep[];
+}
+
+export type Props = StringTitleProp | ArrayTitleProp;
+
+const { props } = Astro;
+---
+
+<Breadcrumbs trail={props.trail} />
+<main id="main-content">
+    <div class="page-heading">
+        {
+            Array.isArray(props.pageTitle) ? (
+                <h1>
+                    {props.pageTitle[0]}
+                    <span transition:name={props.titleTransition}>{props.pageTitle[1]}</span>
+                </h1>
+            ) : props.titleTransition ? (
+                <h1 transition:name={props.titleTransition}>{props.pageTitle}</h1>
+            ) : (
+                <h1>{props.pageTitle}</h1>
+            )
+        }
+        <slot name="title-adornment" />
+    </div>
+    {props.pageDesc && <p class="page-desc">{props.pageDesc}</p>}
+    <slot />
+</main>
+
+<style>
+    @reference "../style/theme.css";
+
+    #main-content {
+        @apply mx-auto w-full max-w-app px-gutter pb-text;
+    }
+    #main-content :global(section) {
+        @apply px-0;
+    }
+    .page-heading {
+        @apply flex flex-wrap items-center gap-text;
+    }
+    #main-content h1 {
+        @apply font-semibold tracking-tight;
+        font-size: clamp(1.5rem, 1.15rem + 1.6vw, 1.875rem);
+    }
+    #main-content p {
+        @apply mt-inline mb-part italic;
+    }
+    #main-content p.page-desc {
+        @apply max-w-3xl leading-relaxed opacity-90 sm:text-lg;
+    }
+</style>

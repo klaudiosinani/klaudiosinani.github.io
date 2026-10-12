@@ -1,0 +1,42 @@
+---
+import type { MarkdownHeading } from "astro";
+
+export interface Props {
+    headings: MarkdownHeading[];
+    label: string;
+}
+
+const { headings, label } = Astro.props;
+
+const SHOWN_DEPTH: number = 2;
+
+const sections: MarkdownHeading[] = headings.filter(({ depth }: MarkdownHeading) => depth === SHOWN_DEPTH);
+---
+
+{
+    sections.length > 0 && (
+        <nav class="section-rail" data-section-rail aria-label={label}>
+            <p class="section-rail-label band-label">On this page</p>
+            <ol class="nav-rail-list">
+                {sections.map(({ slug, text }: MarkdownHeading) => (
+                    <li>
+                        <a href={`#${slug}`} class="nav-link nav-rail-link">
+                            {text}
+                        </a>
+                    </li>
+                ))}
+            </ol>
+        </nav>
+    )
+}
+
+<style>
+    @reference "../style/theme.css";
+
+    .section-rail {
+        @apply hidden lg:sticky lg:top-8 lg:col-start-1 lg:row-start-1 lg:block lg:self-start;
+    }
+    .section-rail-label {
+        @apply mb-text;
+    }
+</style>

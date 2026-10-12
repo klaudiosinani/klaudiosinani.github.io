@@ -1,0 +1,13 @@
+---
+export interface Props {
+    label: string;
+    className?: string;
+}
+
+const { label, className } = Astro.props;
+---
+
+<figure class:list={["terminal", className]} aria-label={label}>
+    <div class="terminal-bar"><slot name="bar" /></div>
+    <div class="terminal-body"><slot /></div>
+</figure>

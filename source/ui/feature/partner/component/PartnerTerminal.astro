@@ -1,0 +1,46 @@
+---
+import SignalLog from "@ui/library/element/SignalLog.astro";
+import Terminal from "@ui/library/element/Terminal.astro";
+import type { SignalLine } from "@app/util/signal/SignalLine";
+
+export interface Props {
+    lines: readonly SignalLine[];
+    brand: string;
+}
+
+const { lines, brand } = Astro.props;
+---
+
+<Terminal label="Where your brand would stand, with the reach of each place" className="partner-terminal">
+    <label slot="bar" class="partner-prompt" for="partner-brand">
+        <span aria-hidden="true">~ $ partner --brand</span>
+        <span class="sr-only">Type the name of your brand</span>
+    </label>
+    <input
+        slot="bar"
+        id="partner-brand"
+        class="partner-field"
+        type="text"
+        name="brand"
+        placeholder={brand}
+        autocomplete="organization"
+        spellcheck="false"
+        maxlength="40"
+        data-brand-input
+    />
+    <SignalLog lines={lines} brand={brand} />
+</Terminal>
+
+<style>
+    @reference "../../../style/theme.css";
+
+    .partner-prompt {
+        @apply shrink-0;
+    }
+    .partner-field {
+        @apply min-w-0 flex-1 bg-transparent font-semibold text-skin-terminal-ink caret-skin-signal-fav placeholder:font-semibold placeholder:text-skin-terminal-muted focus:outline-hidden;
+    }
+    .partner-field:focus-visible {
+        @apply underline decoration-skin-signal-fav decoration-2 underline-offset-4;
+    }
+</style>

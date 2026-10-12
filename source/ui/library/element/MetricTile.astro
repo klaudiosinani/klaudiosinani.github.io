@@ -1,0 +1,24 @@
+---
+import type { IconComponent } from "@ui/icon/IconComponent";
+
+export interface Props {
+    label: string;
+    icon: IconComponent;
+    note?: string;
+    title?: string;
+}
+
+const { label, icon, note, title } = Astro.props;
+const Icon: IconComponent = icon;
+---
+
+<div class="metric-tile" title={title}>
+    <dt class="metric-tile-label">
+        {label}
+        {note && <span class="metric-caveat">{note}</span>}
+    </dt>
+    <dd class="metric-tile-value">
+        <Icon className="metric-tile-icon" ariaHidden />
+        <slot />
+    </dd>
+</div>

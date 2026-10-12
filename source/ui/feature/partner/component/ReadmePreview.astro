@@ -1,0 +1,59 @@
+---
+export interface Props {
+    repository: string;
+    description: string;
+    brand: string;
+}
+
+const { repository, description, brand } = Astro.props;
+---
+
+<figure class="readme" aria-label={`The readme of ${repository} on GitHub, with your brand in place`}>
+    <div class="readme-bar">README.md</div>
+    <div class="readme-body">
+        <p class="readme-title">{repository}</p>
+        <p class="readme-description">{description}</p>
+        <div class="readme-sponsor">
+            <p class="readme-sponsor-kicker">Sponsored by</p>
+            <p class="readme-sponsor-name" data-brand-name>{brand}</p>
+            <p class="readme-sponsor-line">One line about your product, written by you, with a link to it.</p>
+        </div>
+        <p class="readme-rest">The rest of the readme follows, as it stands today.</p>
+    </div>
+</figure>
+
+<style>
+    @reference "../../../style/theme.css";
+
+    .readme {
+        @apply overflow-hidden rounded-xl border border-skin-line bg-skin-fill;
+        box-shadow: var(--glass-shadow-raised);
+    }
+    .readme-bar {
+        @apply border-b border-skin-line px-part py-text font-mono text-sm opacity-80;
+    }
+    .readme-body {
+        @apply px-part py-part;
+    }
+    .readme-title {
+        @apply text-3xl font-semibold tracking-tight;
+    }
+    .readme-description {
+        @apply mt-tight text-base opacity-80;
+    }
+    .readme-sponsor {
+        @apply mt-part rounded-lg border-2 border-skin-signal-fav p-part;
+    }
+    .readme-sponsor-kicker {
+        @apply text-sm font-semibold text-skin-signal-fav;
+    }
+    .readme-sponsor-name {
+        @apply mt-tight text-2xl font-semibold tracking-tight;
+    }
+    .readme-sponsor-line {
+        @apply mt-tight text-sm opacity-80;
+    }
+    .readme-rest {
+        @apply mt-part text-sm italic opacity-70;
+    }
+</style>

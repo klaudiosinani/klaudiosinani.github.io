@@ -1,0 +1,21 @@
+---
+export interface Props {
+    href?: string;
+    title?: string;
+    className?: string;
+}
+
+const { href, title, className } = Astro.props;
+---
+
+{
+    href ? (
+        <a href={href} title={title} class:list={["chip", className]}>
+            <slot />
+        </a>
+    ) : (
+        <span title={title} class:list={["chip", className]}>
+            <slot />
+        </span>
+    )
+}

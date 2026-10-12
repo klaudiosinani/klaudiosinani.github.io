@@ -1,0 +1,68 @@
+---
+import type { IconComponent } from "@ui/icon/IconComponent";
+import ExternalIcon from "@ui/component/icon/ExternalIcon";
+import type { RepositoryProfile } from "@app/feature/repository/profile/RepositoryProfile";
+import type { RepositoryLink } from "@app/feature/repository/page/RepositoryLink";
+
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { RepositoryLinkFactory } from "@app/feature/repository/page/RepositoryLinkFactory.ts";
+
+const REPOSITORY_LINK_FACTORY: RepositoryLinkFactory = CONTEXT.resolve(RepositoryLinkFactory);
+export interface Props {
+    profile: RepositoryProfile;
+}
+
+const { profile } = Astro.props;
+
+const links: RepositoryLink[] = REPOSITORY_LINK_FACTORY.create(profile);
+---
+
+<div class="registries">
+    {
+        links.map((repositoryLink: RepositoryLink) => {
+            const Icon: IconComponent = repositoryLink.getIcon();
+            const color: string | null = repositoryLink.getColor();
+
+            return (
+                <a
+                    href={repositoryLink.getHref()}
+                    class="registry control"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={color ? `--brand: ${color}` : undefined}
+                >
+                    <Icon className="registry-mark" />
+                    <span class="registry-name">{repositoryLink.getLabel()}</span>
+                    <ExternalIcon className="registry-out" ariaHidden />
+                </a>
+            );
+        })
+    }
+</div>
+
+<style>
+    @reference "../../../style/theme.css";
+
+    .registries {
+        @apply flex flex-wrap items-center gap-inline;
+    }
+    .registry {
+        @apply glass-raised;
+        border-color: color-mix(in srgb, var(--brand, transparent) 35%, rgb(var(--color-border)));
+    }
+    .registry:hover {
+        border-color: var(--brand, rgb(var(--color-accent)));
+        background-color: color-mix(in srgb, var(--brand, rgb(var(--color-card))) 12%, transparent);
+        color: var(--brand, rgb(var(--color-accent)));
+    }
+    .registry :global(.registry-mark) {
+        @apply h-5! w-5! shrink-0;
+        fill: var(--brand, rgb(var(--color-text-base)));
+    }
+    .registry-name {
+        @apply leading-none;
+    }
+    .registry :global(.registry-out) {
+        @apply h-2.5! w-2.5! shrink-0 fill-skin-base opacity-60;
+    }
+</style>

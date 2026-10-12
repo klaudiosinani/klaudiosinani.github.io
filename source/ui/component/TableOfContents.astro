@@ -1,0 +1,59 @@
+---
+import type { MarkdownHeading } from "astro";
+
+export interface Props {
+    headings: MarkdownHeading[];
+}
+
+const { headings } = Astro.props;
+
+const SHOWN_DEPTH: number = 2;
+
+const WORTH_LISTING: number = 3;
+
+const sections: MarkdownHeading[] = headings.filter(({ depth }: MarkdownHeading) => depth === SHOWN_DEPTH);
+---
+
+{
+    sections.length >= WORTH_LISTING && (
+        <details class="toc">
+            <summary class="toc-summary band-label focus-outline">
+                Contents
+                <span class="toc-count">{sections.length}</span>
+            </summary>
+            <ol class="toc-list">
+                {sections.map(({ slug, text }: MarkdownHeading) => (
+                    <li>
+                        <a href={`#${slug}`}>{text}</a>
+                    </li>
+                ))}
+            </ol>
+        </details>
+    )
+}
+
+<style>
+    @reference "../style/theme.css";
+
+    .toc {
+        @apply mt-head rounded-xl border border-skin-line glass-raised px-text py-text;
+    }
+    .toc-summary {
+        @apply inline-flex cursor-pointer items-center gap-inline select-none hover:opacity-100;
+    }
+    .toc-count {
+        @apply rounded-md glass-inline px-inline text-3xs tracking-normal;
+    }
+    .toc-list {
+        @apply mt-text space-y-inline text-sm;
+    }
+    .toc-list a {
+        @apply decoration-solid underline-offset-4 opacity-80 hover:underline hover:opacity-100;
+    }
+    .toc-summary::-webkit-details-marker {
+        display: none;
+    }
+    .toc-summary::marker {
+        content: "";
+    }
+</style>

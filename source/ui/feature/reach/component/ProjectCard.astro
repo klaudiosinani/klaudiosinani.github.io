@@ -1,0 +1,87 @@
+---
+import Panel from "@ui/library/element/Panel.astro";
+import type { IconComponent } from "@ui/icon/IconComponent";
+import type { SurfaceReach } from "@app/feature/reach/surface/SurfaceReach";
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { NumberFormatter } from "@app/util/text/NumberFormatter.ts";
+import { ProjectGlyphResolver } from "@ui/feature/software/glyph/ProjectGlyphResolver";
+
+export interface Props {
+    surfaceReach: SurfaceReach;
+}
+
+const NUMBER_FORMATTER: NumberFormatter = CONTEXT.resolve(NumberFormatter);
+const PROJECT_GLYPH_RESOLVER: ProjectGlyphResolver = new ProjectGlyphResolver();
+
+const { surfaceReach } = Astro.props;
+
+const Glyph: IconComponent = PROJECT_GLYPH_RESOLVER.resolve(surfaceReach.getName());
+const candidates: [string, number | null][] = [
+    ["Stars", surfaceReach.getStars()],
+    ["Downloads", surfaceReach.getDownloads()],
+    ["Used by", surfaceReach.getDependentRepositories()],
+    ["Clones", surfaceReach.getClones()],
+];
+const figures: [string, number][] = candidates.filter(
+    (candidate: [string, number | null]): candidate is [string, number] => candidate[1] !== null
+);
+---
+
+<Panel still className="project-card">
+    <div class="project-head">
+        <span class="project-tile" aria-hidden="true">
+            <Glyph ariaHidden />
+        </span>
+        <div class="project-titles">
+            <a class="project-name" href={surfaceReach.getHref()}>{surfaceReach.getName()}</a>
+            <p class="project-note">{surfaceReach.getNote()}</p>
+        </div>
+    </div>
+    {
+        figures.length > 0 && (
+            <dl class="project-figures">
+                {figures.map(([label, value]: [string, number]) => (
+                    <div class="project-figure">
+                        <dt class="project-figure-label">{label}</dt>
+                        <dd class="project-figure-value">{NUMBER_FORMATTER.exact(value)}</dd>
+                    </div>
+                ))}
+            </dl>
+        )
+    }
+</Panel>
+
+<style>
+    @reference "../../../style/theme.css";
+
+    .project-head {
+        @apply flex items-start gap-text;
+    }
+    .project-tile {
+        @apply flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-skin-line bg-white text-black;
+    }
+    .project-tile :global(svg) {
+        @apply fill-current;
+    }
+    .project-titles {
+        @apply min-w-0 flex-1;
+    }
+    .project-name {
+        @apply text-lg font-semibold no-underline hover:text-skin-accent hover:underline;
+    }
+    .project-note {
+        @apply mt-tight text-sm leading-snug opacity-80;
+    }
+    .project-figures {
+        @apply mt-part flex flex-wrap gap-x-part gap-y-text border-t border-skin-line pt-text;
+    }
+    .project-figure {
+        @apply flex flex-col gap-tight;
+    }
+    .project-figure-label {
+        @apply text-xs opacity-80;
+    }
+    .project-figure-value {
+        @apply text-base font-semibold tabular-nums;
+    }
+</style>

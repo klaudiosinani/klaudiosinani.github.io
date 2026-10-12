@@ -1,0 +1,99 @@
+---
+import { CollectionItem } from "@app/util/seo/page/CollectionItem";
+import type { CollectionEntry } from "astro:content";
+import Layout from "@ui/layout/Layout.astro";
+import Main from "@ui/layout/Main.astro";
+import Header from "@ui/component/Header.astro";
+import Footer from "@ui/component/Footer.astro";
+import Pagination from "@ui/feature/pagination/component/Pagination.astro";
+import type { PaginatedResult } from "@app/feature/pagination/PaginatedResult";
+import Card from "@ui/feature/publication/component/Card";
+import { PAGE_DESCRIPTIONS } from "@app/configuration/page/PageDescriptions";
+import { ROUTES } from "@app/configuration/route/Routes";
+import { PAGE_TITLES } from "@app/configuration/page/PageTitles";
+import { LOCALE } from "@app/configuration/site/SiteLocale";
+import { SITE } from "@app/configuration/site/Site";
+import type { StructuredData } from "@app/util/seo/StructuredData";
+
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { RoutePathResolver } from "@app/util/routing/RoutePathResolver.ts";
+import { ReadingTimeResolver } from "@app/feature/publication/reading/ReadingTimeResolver.ts";
+import { CollectionPageSchemaBuilder } from "@app/util/seo/page/CollectionPageSchemaBuilder.ts";
+import { PageTitleFormatter } from "@app/util/text/PageTitleFormatter.ts";
+import { SchemaIdentifiers } from "@app/util/seo/SchemaIdentifiers.ts";
+
+const ROUTE_PATH_RESOLVER: RoutePathResolver = CONTEXT.resolve(RoutePathResolver);
+const READING_TIME_RESOLVER: ReadingTimeResolver = CONTEXT.resolve(ReadingTimeResolver);
+const COLLECTION_PAGE_SCHEMA_BUILDER: CollectionPageSchemaBuilder = CONTEXT.resolve(CollectionPageSchemaBuilder);
+const PAGE_TITLE_FORMATTER: PageTitleFormatter = CONTEXT.resolve(PageTitleFormatter);
+const SCHEMA_IDENTIFIERS: SchemaIdentifiers = CONTEXT.resolve(SchemaIdentifiers);
+
+export interface Props {
+    pagination: PaginatedResult<CollectionEntry<"blog">>;
+}
+
+const { pagination } = Astro.props;
+const totalPages = pagination.getPaginationBand().getTotalPages();
+const items = pagination.getItems();
+
+const schema: StructuredData[] = [
+    COLLECTION_PAGE_SCHEMA_BUILDER.build({
+        author: {
+            name: SITE.getAuthor(),
+            url: SITE.getWebsite(),
+            id: SCHEMA_IDENTIFIERS.person(SITE.getWebsite()),
+        },
+        image: new URL(ROUTE_PATH_RESOLVER.resolvePageImage("publications"), SITE.getWebsite()).href,
+        inLanguage: LOCALE.getLanguage(),
+        siteId: SCHEMA_IDENTIFIERS.website(SITE.getWebsite()),
+        name: "Publications",
+        url: new URL(`${ROUTES.publications}/`, SITE.getWebsite()).href,
+        description: PAGE_DESCRIPTIONS.publications,
+        items: items.map(
+            ({ data, id }: CollectionEntry<"blog">) =>
+                new CollectionItem(
+                    data.title,
+                    new URL(ROUTE_PATH_RESOLVER.resolvePublication(id), SITE.getWebsite()).href
+                )
+        ),
+    }),
+];
+---
+
+<Layout
+    title={PAGE_TITLE_FORMATTER.format(PAGE_TITLES.publications, SITE.getTitle())}
+    description={PAGE_DESCRIPTIONS.publications}
+    ogImage={ROUTE_PATH_RESOLVER.resolvePageImage("publications")}
+    schema={schema}
+>
+    <Header activeNav="posts" />
+    <Main
+        pageTitle="Publications"
+        pageDesc="Articles about software engineering, programming languages and open source work."
+    >
+        <a href="/rss.xml" class="posts-feed" slot="title-adornment"> The RSS feed </a>
+        <ul class="card-grid">
+            {
+                items.map(({ data, id, body }: CollectionEntry<"blog">) => (
+                    <Card
+                        href={ROUTE_PATH_RESOLVER.resolvePublication(id)}
+                        frontmatter={data}
+                        minutes={READING_TIME_RESOLVER.minutes(body ?? "")}
+                    />
+                ))
+            }
+        </ul>
+    </Main>
+
+    <Pagination band={pagination.getPaginationBand()} />
+
+    <Footer noMarginTop={totalPages > 1} />
+</Layout>
+
+<style>
+    @reference "../../../style/theme.css";
+
+    .posts-feed {
+        @apply ml-auto text-sm no-underline opacity-70 hover:text-skin-accent hover:opacity-100;
+    }
+</style>

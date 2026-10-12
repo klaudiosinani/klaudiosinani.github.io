@@ -1,0 +1,18 @@
+---
+export interface Props {
+    pressed: boolean;
+    className?: string;
+    [key: string]: unknown;
+}
+
+const { pressed, className, ...rest } = Astro.props;
+---
+
+<button
+    type="button"
+    class:list={["filter-option", "focus-outline", className]}
+    aria-pressed={pressed ? "true" : "false"}
+    {...rest}
+>
+    <slot />
+</button>

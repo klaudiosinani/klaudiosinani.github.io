@@ -1,0 +1,49 @@
+---
+import type { PublicationEntry } from "@app/feature/publication/entry/PublicationEntry";
+
+export interface Props {
+    publicationEntries: readonly PublicationEntry[];
+}
+
+const { publicationEntries } = Astro.props;
+---
+
+<ol class="publication-list">
+    {
+        publicationEntries.map((publicationEntry: PublicationEntry) => (
+            <li class="publication-entry">
+                <span class="publication-year">{publicationEntry.getYear()}</span>
+                <div>
+                    <a class="publication-title" href={publicationEntry.getHref()}>
+                        {publicationEntry.getTitle()}
+                    </a>
+                    <p class="publication-note">{publicationEntry.getNote()}</p>
+                </div>
+                <span class="publication-kind">{publicationEntry.getKind()}</span>
+            </li>
+        ))
+    }
+</ol>
+
+<style>
+    @reference "../../../style/theme.css";
+
+    .publication-list {
+        @apply border-b border-skin-line;
+    }
+    .publication-entry {
+        @apply grid items-baseline gap-x-part gap-y-tight border-t border-skin-line py-part sm:grid-cols-[9rem_minmax(0,1fr)_9rem];
+    }
+    .publication-year {
+        @apply text-sm tabular-nums opacity-80;
+    }
+    .publication-title {
+        @apply text-lg font-semibold no-underline hover:text-skin-accent hover:underline;
+    }
+    .publication-note {
+        @apply mt-tight font-serif text-base leading-snug opacity-80;
+    }
+    .publication-kind {
+        @apply text-sm opacity-80 sm:text-right;
+    }
+</style>

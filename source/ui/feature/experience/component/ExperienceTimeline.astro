@@ -1,0 +1,205 @@
+---
+import { EXPERIENCE } from "@app/configuration/experience/Experiences";
+import type { ExperienceStay } from "@app/feature/experience/ExperienceStay";
+import type { HeldPost } from "@app/feature/experience/HeldPost";
+import ExternalLink from "@ui/component/ExternalLink";
+
+import { CONTEXT } from "@app/ApplicationContext.ts";
+import { ExperienceStayFactory } from "@app/feature/experience/ExperienceStayFactory.ts";
+import { SystemClock } from "@app/util/datetime/SystemClock.ts";
+
+const EXPERIENCE_STAY_FACTORY: ExperienceStayFactory = CONTEXT.resolve(ExperienceStayFactory);
+const SYSTEM_CLOCK: SystemClock = CONTEXT.resolve(SystemClock);
+const today: Date = SYSTEM_CLOCK.now();
+
+const stays: ExperienceStay[] = EXPERIENCE_STAY_FACTORY.create(EXPERIENCE, today);
+---
+
+<ol class="experience">
+    {
+        stays.map((experienceStay: ExperienceStay) => (
+            <li class="experience-stay" data-current={experienceStay.getSpan().isCurrent() ? "" : undefined}>
+                <p class="experience-when">
+                    <span class="experience-years">
+                        <time datetime={experienceStay.getSpan().getFromAt()}>
+                            {experienceStay.getSpan().getFromYear()}
+                        </time>
+                        <span aria-hidden="true">{" – "}</span>
+                        {experienceStay.getSpan().getToAt() ? (
+                            <time datetime={experienceStay.getSpan().getToAt()}>
+                                {experienceStay.getSpan().getToYear()}
+                            </time>
+                        ) : (
+                            <span>{experienceStay.getSpan().getToYear()}</span>
+                        )}
+                    </span>
+                    <span class="experience-length">{experienceStay.getSpan().getLength()}</span>
+                </p>
+
+                <span class="experience-rail" aria-hidden="true">
+                    <span class="experience-node" />
+                </span>
+
+                <div class="experience-body">
+                    <img
+                        class="experience-mark"
+                        src={experienceStay.getAt().getMark()}
+                        alt=""
+                        width="120"
+                        height="120"
+                        loading="lazy"
+                        decoding="async"
+                    />
+                    <h3 class="experience-title">
+                        {experienceStay.getAt().getUrl() ? (
+                            <ExternalLink href={experienceStay.getAt().getUrl() ?? ""} className="experience-org">
+                                {experienceStay.getAt().getOrganisation()}
+                            </ExternalLink>
+                        ) : (
+                            experienceStay.getAt().getOrganisation()
+                        )}
+                    </h3>
+                    <p class="experience-where">
+                        {experienceStay.getAt().getLocation()}
+                        <span aria-hidden="true">·</span>
+                        {experienceStay.getAt().getCommitment()}
+                    </p>
+
+                    <ol class="experience-posts">
+                        {experienceStay.getPosts().map((heldPost: HeldPost) => (
+                            <li class="experience-post">
+                                <h4 class="experience-post-title">{heldPost.getRole().getTitle()}</h4>
+                                {experienceStay.getPosts().length > 1 && (
+                                    <p class="experience-post-when">
+                                        <span class="experience-months">
+                                            <time datetime={heldPost.getSpan().getFromAt()}>
+                                                {heldPost.getSpan().getFrom()}
+                                            </time>
+                                            <span aria-hidden="true">{" – "}</span>
+                                            {heldPost.getSpan().getToAt() ? (
+                                                <time datetime={heldPost.getSpan().getToAt()}>
+                                                    {heldPost.getSpan().getTo()}
+                                                </time>
+                                            ) : (
+                                                <span>{heldPost.getSpan().getTo()}</span>
+                                            )}
+                                        </span>
+                                        <span class="experience-length">{heldPost.getSpan().getLength()}</span>
+                                    </p>
+                                )}
+                                {heldPost.getRole().getSummary() && (
+                                    <p class="experience-summary">{heldPost.getRole().getSummary()}</p>
+                                )}
+                            </li>
+                        ))}
+                    </ol>
+
+                    {experienceStay.getAt().getPage() && (
+                        <p class="experience-page">
+                            <a class="accent-link" href={experienceStay.getAt().getPage()?.getHref()}>
+                                {experienceStay.getAt().getPage()?.getLabel()}
+                            </a>
+                        </p>
+                    )}
+                </div>
+            </li>
+        ))
+    }
+</ol>
+
+<style>
+    @reference "../../../style/theme.css";
+
+    .experience {
+        @apply mt-part;
+    }
+    .experience-stay {
+        @apply grid grid-cols-[auto_1fr] gap-x-text pb-head last:pb-0 sm:grid-cols-[7rem_auto_1fr] sm:gap-x-part;
+    }
+
+    .experience-when {
+        @apply col-start-2 row-start-1 flex flex-wrap items-baseline gap-x-inline tabular-nums sm:col-start-1 sm:mt-[3px] sm:flex-col sm:items-start sm:gap-y-[2px];
+    }
+    .experience-years {
+        @apply text-sm font-medium whitespace-nowrap opacity-80;
+    }
+    .experience-stay[data-current] .experience-years {
+        @apply opacity-100;
+    }
+    .experience-length {
+        @apply text-xs whitespace-nowrap opacity-70 before:pr-inline before:content-['·'];
+    }
+    .experience-when .experience-length {
+        @apply sm:before:content-none;
+    }
+
+    .experience-rail {
+        @apply relative col-start-1 row-span-2 row-start-1 flex w-2.5 justify-center self-stretch sm:col-start-2 sm:row-span-1;
+    }
+    .experience-stay:not(:last-child) .experience-rail::after {
+        @apply absolute left-1/2 w-px -translate-x-1/2 bg-skin-card-muted;
+        top: 1.25rem;
+        bottom: calc(-1 * var(--spacing-head));
+        content: "";
+    }
+    @media (width >= theme(--breakpoint-sm)) {
+        .experience-stay:not(:last-child) .experience-rail::after {
+            top: 1.625rem;
+        }
+    }
+    .experience-node {
+        @apply mt-tight h-2.5 w-2.5 shrink-0 rounded-full border border-skin-base/60 bg-skin-fill sm:mt-inline;
+    }
+    .experience-stay[data-current] .experience-node {
+        @apply border-skin-accent bg-skin-accent outline-1 outline-offset-2 outline-skin-accent/40 outline-solid;
+    }
+
+    .experience-body {
+        @apply col-start-2 row-start-2 mt-text grid min-w-0 grid-cols-[auto_1fr] items-center gap-x-text sm:col-start-3 sm:row-start-1 sm:mt-0;
+    }
+    .experience-mark {
+        @apply row-span-2 h-10 w-10 shrink-0 rounded-lg border border-skin-line object-contain;
+    }
+    .experience-title,
+    .experience-where {
+        @apply col-start-2;
+    }
+    .experience-title {
+        @apply text-base leading-snug font-medium tracking-tight sm:text-lg;
+    }
+    .experience-title :global(.experience-org) {
+        @apply no-underline hover:text-skin-accent;
+    }
+    .experience-where {
+        @apply flex flex-wrap items-center gap-x-inline text-sm opacity-70;
+    }
+
+    .experience-posts,
+    .experience-page {
+        @apply col-span-2 sm:col-span-1 sm:col-start-2;
+    }
+    .experience-posts {
+        @apply mt-text space-y-part;
+    }
+    .experience-post-title {
+        @apply text-base font-medium tracking-tight;
+    }
+    .experience-post-when {
+        @apply mt-[2px] flex flex-wrap items-baseline tabular-nums;
+    }
+    .experience-months {
+        @apply text-xs whitespace-nowrap opacity-70;
+    }
+    .experience-post-when .experience-length {
+        @apply before:px-inline;
+    }
+    .experience-summary {
+        @apply mt-tight max-w-2xl font-serif text-base leading-snug opacity-80;
+    }
+    .experience-page {
+        @apply mt-text text-sm;
+    }
+    .experience-page a {
+        @apply underline underline-offset-4;
+    }
+</style>

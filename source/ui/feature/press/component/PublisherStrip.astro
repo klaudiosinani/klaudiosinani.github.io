@@ -1,0 +1,45 @@
+---
+import type { PublisherMark } from "@app/feature/press/mark/PublisherMark";
+
+export interface Props {
+    publishers: readonly PublisherMark[];
+}
+
+const { publishers } = Astro.props;
+---
+
+{
+    publishers.length > 0 && (
+        <p class="publisher-strip">
+            <span class="publisher-label band-label">Written about by</span>
+            {publishers.map((publisherMark: PublisherMark) => (
+                <span class="publisher">
+                    <img
+                        src={publisherMark.getMark()}
+                        alt=""
+                        class="publisher-mark"
+                        width="16"
+                        height="16"
+                        loading="lazy"
+                        decoding="async"
+                    />
+                    {publisherMark.getName()}
+                </span>
+            ))}
+        </p>
+    )
+}
+
+<style>
+    @reference "../../../style/theme.css";
+
+    .publisher-strip {
+        @apply mt-text flex flex-wrap items-center gap-x-text gap-y-inline text-xs;
+    }
+    .publisher {
+        @apply inline-flex items-center gap-inline opacity-80;
+    }
+    .publisher-mark {
+        @apply h-4 w-4 shrink-0 rounded-thumbnail bg-white object-contain p-px;
+    }
+</style>

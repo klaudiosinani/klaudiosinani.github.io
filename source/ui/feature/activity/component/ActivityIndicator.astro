@@ -1,0 +1,21 @@
+---
+export interface Props {
+    label?: string;
+}
+
+const { label = "Live" } = Astro.props;
+---
+
+<span class="activity-indicator band-label">
+    <span class="activity-dot" aria-hidden="true"></span>
+    <span class="sr-only">Status:</span>
+    {label}
+</span>
+
+<style>
+    @reference "../../../style/theme.css";
+
+    .activity-indicator {
+        @apply inline-flex items-center gap-inline;
+    }
+</style>

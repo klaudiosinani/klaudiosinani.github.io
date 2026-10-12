@@ -1,0 +1,24 @@
+---
+export interface Props {
+    command: string;
+    label: string;
+}
+
+const { command, label } = Astro.props;
+---
+
+<div class="command command-box">
+    <p class="command-label band-label">{label}</p>
+    <pre><code>{command}</code></pre>
+</div>
+
+<style>
+    @reference "../style/theme.css";
+
+    .command {
+        @apply mt-part;
+    }
+    .command-label {
+        @apply mb-inline;
+    }
+</style>

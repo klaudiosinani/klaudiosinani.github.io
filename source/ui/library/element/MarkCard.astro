@@ -1,0 +1,68 @@
+---
+import Panel from "./Panel.astro";
+import ExternalIcon from "@ui/component/icon/ExternalIcon";
+
+export interface Props {
+    href: string;
+    mark: string | null;
+    name: string;
+    detail: string;
+}
+
+const { href, mark, name, detail } = Astro.props;
+---
+
+<a class="mark-card" href={href}>
+    <Panel>
+        <span class="mark-card-row">
+            {
+                mark ? (
+                    <img
+                        class="mark-card-mark"
+                        src={mark}
+                        alt=""
+                        width="64"
+                        height="64"
+                        loading="lazy"
+                        decoding="async"
+                    />
+                ) : (
+                    <span class="mark-card-mark" aria-hidden="true" />
+                )
+            }
+            <span class="mark-card-text">
+                <span class="card-title mark-card-name">{name}</span>
+                <span class="mark-card-detail">
+                    {detail}
+                    <ExternalIcon className="mark-card-out" ariaHidden />
+                </span>
+            </span>
+        </span>
+    </Panel>
+</a>
+
+<style>
+    @reference "../../style/theme.css";
+
+    .mark-card {
+        @apply flex h-full flex-col no-underline;
+    }
+    .mark-card-row {
+        @apply flex items-center gap-text;
+    }
+    .mark-card-mark {
+        @apply h-12 w-12 shrink-0 rounded-lg border border-skin-line bg-white;
+    }
+    .mark-card-text {
+        @apply flex min-w-0 flex-col gap-tight;
+    }
+    .mark-card-name {
+        @apply truncate text-lg font-semibold;
+    }
+    .mark-card-detail {
+        @apply inline-flex items-center gap-inline text-sm opacity-70;
+    }
+    .mark-card-out {
+        @apply h-3 w-3 shrink-0 fill-current;
+    }
+</style>

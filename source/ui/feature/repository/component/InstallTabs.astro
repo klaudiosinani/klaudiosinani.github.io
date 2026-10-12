@@ -1,0 +1,59 @@
+---
+import FilterGroup from "@ui/library/element/FilterGroup.astro";
+import FilterOption from "@ui/library/element/FilterOption.astro";
+import type { InstallCommand } from "@app/feature/repository/package/InstallCommand";
+
+export interface Props {
+    commands: InstallCommand[];
+    label: string;
+}
+
+const { commands, label } = Astro.props;
+---
+
+<div class="install" data-install>
+    <div class="install-head">
+        <p class="install-label band-label">{label}</p>
+        <FilterGroup label="Package manager" className="install-tabs">
+            {
+                commands.map((installCommand: InstallCommand, index: number) => (
+                    <FilterOption pressed={index === 0} data-install-tab={installCommand.getManager()}>
+                        {installCommand.getManager()}
+                    </FilterOption>
+                ))
+            }
+        </FilterGroup>
+    </div>
+
+    {
+        commands.map((installCommand: InstallCommand, index: number) => (
+            <div
+                class="install-command command-box"
+                data-install-command={installCommand.getManager()}
+                hidden={index !== 0}
+            >
+                {/* prettier-ignore */}
+                <pre><code set:text={installCommand.getCommand()} /></pre>
+            </div>
+        ))
+    }
+</div>
+
+<style>
+    @reference "../../../style/theme.css";
+
+    .install {
+        @apply mt-part;
+    }
+    .install-head {
+        @apply mb-inline flex flex-wrap items-center gap-x-text gap-y-tight;
+    }
+</style>
+
+<script>
+    import { INSTALL_SELECTION } from "@ui/script/InstallSelection";
+
+    const mount = (): void => INSTALL_SELECTION.mount();
+
+    mount();
+</script>
