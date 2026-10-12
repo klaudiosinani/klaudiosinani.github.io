@@ -32,9 +32,10 @@ pnpm-debug.log*
 .vscode/
 .idea/
 
-coverage/
+/coverage/
 
 .data/
 .cache/
 
 .*/
+!/.github/
